@@ -1,8 +1,8 @@
 # ArdEnvironment Station v1.0 WinCC-OA
 
-#Sensor: BME280
+#Sensor: Adafruit BME280
 
-#Arduino: MEGA 2560
+#Arduino: MEGA 2560 + W5500 Ethernet Shield
 
 #Communication: i2c Protocol
 
