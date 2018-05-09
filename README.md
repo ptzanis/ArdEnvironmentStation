@@ -19,9 +19,14 @@ SCK -> SCL
 
 
 #Config File (Windows Project)
-OPC DA Client -> -num 10
+OPC DA Client -> -num 10 -event 10.0.0.4 -data 10.0.0.4
 [opc_10]
 server="ArduinoOPCServer""ArduinoOPCServer.2"
+
+#OPC DPT Creation
+Manual DP creation
+_OPCServer -> _ArduinoOPCServer
+_OPCGroup  -> _arduino
 
 #Disable Firewall
 systemctl disable firewalld
