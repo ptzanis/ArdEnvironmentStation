@@ -1,6 +1,4 @@
-# ArdEnvironment Station v1.0
-
-# BME280 I2C ARDUINO 
+# ArdEnvironment Station v1.0 - BME280 I2C ARDUINO 
 
 
  #Static IPs:
