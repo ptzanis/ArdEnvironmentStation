@@ -1,0 +1,370 @@
+V 14
+2
+LANG:1 0 
+LANG:10001 0 
+PANEL,-1 -1 410 417 N "_3DFace" 0
+"main()
+{
+  initPanel();
+}
+" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "initPanel()
+{
+  int remoteReduHostNum = myReduHostNum()==1?2:1;
+  string remoteReduHost = fwInstallationRedu_getPair();
+  frmDelete.text = \"View components on \" + remoteReduHost + \" (#\" + remoteReduHostNum + \", REMOTE)\";
+  fwInstallation_getInstalledComponentsUI(remoteReduHostNum);
+  
+}
+
+
+
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+30 13
+"frmDelete"
+""
+1 400 475 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1 0 0.9474726923474043 -400.0000000000002 -37.89890769389617 0 E 400 40 810 480
+2
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,75,0,0,0,0,0
+0 2
+LANG:1 24 View / delete components
+LANG:10001 24 View / Delete Components
+2 14
+"installedComponentsLabel"
+""
+1 9 20 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 11 22 142 37
+0 2 0 "0s" 0 0 0 192 0 0  11 22 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 21 Installed Components:
+LANG:10001 21 Installed Components:
+25 15
+"tblInstalledComponents"
+""
+1 -77.03846153846151 -81.4285714285714 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  fwInstallation_ui_componentsTableRightClickPopupMenu(getShape(\"\"), row, column);
+}" 0
+ "/**	if the user double clicks on the componentName column 
+the panel with the component details is shown
+*/
+main()
+{	
+	
+	int xpos;
+	string columnName;
+	int columnNr;
+	string componentName;
+	string descFile = \"\";
+	string typeOfDescription = \"PVSSDB\";
+
+	// get shape of the table	
+	shape tab = getShape(\"tblInstalledComponents\");
+	
+	// get the coordinates of current cell	
+	getValue(tab, \"currentCell\", xpos, columnNr);
+	
+	// get the column name
+	columnName = tab.currentColumn();
+
+	 if((columnName == \"componentName\") || (columnName == \"componentVersion\"))
+	 {
+		// get the name of a component  
+		componentName += tab.cellValueRC(xpos, \"componentName\");
+			 
+  int reduHostNum = myReduHostNum()==1?2:1;
+			// display the panel with component details 
+	 		ChildPanelOnCentral(\"fwInstallation/fwInstallationComponentDetails.pnl\", \"fwInstallation_ComponentDetails:PVSS\",
+			 makeDynString(\"$componentName:\" + componentName, \"$descFile:\" + descFile , \"$typeOfDescription:\" + typeOfDescription, \"$reduHostNum:\" + reduHostNum));
+		 }
+}
+" 0
+
+15 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  9 40 400 346
+"main()
+{
+  //FVR: Moves this script to panel init()
+  
+	// get all installed components and display it in a table
+//	fwInstallation_getInstalledComponentsUI();
+}" 0
+"/**	if the user  clicks on the Status column 
+the column value is changed ( Delete -> \"\" , or \"\" -> Delete
+*/
+main(int row, string column, string value)
+{
+  string helpComponent;
+  if(column == \"helpFile\")
+  {
+    getValue(\"\", \"cellValueRC\", row, \"componentName\", helpComponent);
+    if(strpos(helpComponent, \"_\") == 0)
+      helpComponent = substr(helpComponent, 1, strlen(helpComponent));
+       
+		fwInstallation_showHelpFile(helpComponent);
+  }
+}
+
+
+" 0
+ 1 0 1 6 1 "componentName" 25 1 0 "s" 2
+LANG:1 4 Name
+LANG:10001 14 Component Name
+E
+2
+LANG:1 50 Subcomponents are shown with a leading underscore.
+LANG:10001 50 Subcomponents are shown with a leading underscore.
+
+288 "componentVersion" 6 1 0 "s" 2
+LANG:1 7 Version
+LANG:10001 7 Version
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+80 "colStatus" 4 0 0 "s" 2
+LANG:1 8 Delete ?
+LANG:10001 8 Delete ?
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+60 "helpFile" 4 0 0 "s" 2
+LANG:1 4 Help
+LANG:10001 4 Help
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+60 "overparameterized" 0 0 0 "s" 2
+LANG:1 4 Help
+LANG:10001 13 OvParam Files
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+0 "overparameterizedFiles" 0 0 0 "s" 2
+LANG:1 4 Help
+LANG:10001 23 Overparameterized Files
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+0 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 1 7
+1 0
+20 16
+"ShowInstalledSubComponents"
+""
+1 247 20.00000000000001 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  245 18 406 41
+1
+T 
+2
+LANG:1 19 Show sub-components
+LANG:10001 24 Show also Sub-Components
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, bool state)
+{
+	// get all installed components and display it in a table
+	initPanel();
+}
+" 0
+13 17
+"btnRefresh"
+""
+1 11 354 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  9 352 38 381
+
+P 
+4294967295
+"pictures/StandardIcons/refresh_20.png"
+2
+LANG:1 7 Refresh
+LANG:10001 7 Refresh
+"main()
+{
+  // refresh the  table widget
+  initPanel();
+}
+
+" 0
+ E E E
+2 18
+"fileIssueFeedbackText"
+""
+1 22.99999999999992 352 E E E 1 E 0 E N "red" E N "_Transparent" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 22.99999999999992 390 136 405
+0 2 2 "0s" 0 0 0 192 0 0  22.99999999999992 390 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 19 File issue feedback
+LANG:10001 79 Agent synchronization with System Configuration DB in progress. Please wait....
+10 19
+"fileIssueFeedbackArrow"
+""
+1 10 770 E E E 1 E 0 E N "red" E N "red" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.7259259259259259 0 0.6825000000000002 3.740740740740741 -134.5250000000002 1 E 5 10 770
+10 790
+20 780
+10 770
+10 790
+ 1
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

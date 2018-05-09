@@ -1,0 +1,1145 @@
+V 14
+2
+LANG:1 0 
+LANG:10001 31 fwInstallation_ComponentDetails
+PANEL,-1 -1 699 897 N "_3DFace" 4
+"$componentName"
+"$descFile"
+"$reduHostNum"
+"$typeOfDescription"
+"/**
+This panel reads the component information either from the description file (the component is not installed) 
+or from the WinCC database (the component is installed) and displays it.
+
+Required $-parameters:
+
+$componentName - string - the name of the component
+$descFile - string - the name of the description file ( full path ) 
+$typeOfDescription - string - it contains the following values: xml - the component is not installed and the panel should read the details from the description file, PVSSDB - the component is installed and the panel should read the details from the PVSS database
+*/
+
+main()
+{
+	string componentName = $componentName;
+	string descFile = $descFile;
+    
+  g_sDescriptionType = $typeOfDescription;
+
+	selectionConfigFiles_general.deleteAllItems();
+	selectionConfigFiles_linux.deleteAllItems();
+	selectionConfigFiles_windows.deleteAllItems();
+	selectionInitFiles.deleteAllItems();
+	selectionOtherFiles.deleteAllItems();
+	selectionDplistFiles.deleteAllItems();
+
+	switch(g_sDescriptionType)
+	{
+		case \"xml\":
+			fwInstallationXml_getComponentDescription(descFile);
+      setXmlDescriptionTypeLayout();
+			break;
+		case \"PVSSDB\":
+      fwInstallation_getComponentDescriptionPVSSDB(componentName, $reduHostNum);
+      if(fwInstallationRedu_myReduHostNum() != $reduHostNum)
+        setXmlDescriptionTypeLayout();//hide source directory and buttons to manage source file hashes when showing component detail for other peer (as this might be confusing)
+			break;
+	}
+  
+  refreshButtonResetHash();
+}
+
+setXmlDescriptionTypeLayout()
+{
+  const int Y_MOVE = 75;
+  isAccessibleLabel.visible = false;
+  TextIsAccessible.visible = false;
+  btnCalculateHash.visible = false;
+  sourceDirectoryLabel.visible = false;
+  TextSourceDirectory.visible = false;
+  LINE1.visible = false;
+  btnClose.positionAsDyn = makeDynInt(btnClose.positionAsDyn()[1], btnClose.positionAsDyn()[2] - Y_MOVE);
+  const int x=699,y=897;
+  this.size(x, y-Y_MOVE);
+}
+
+
+
+
+
+
+
+" 0
+ E E E E 1 -1 -1 0  30 20
+""0  1
+E "#uses \"fwInstallation.ctl\"
+
+string g_sDescriptionType;
+
+dyn_string getFilesWithAdoptedHashes()
+{
+  string componentName = getDollarValue(\"$componentName\");
+  dyn_string fileList;
+  fwInstallation_getComponentFilesWithAlternativeHash(componentName, fileList);
+  return fileList;
+}
+
+refreshButtonResetHash()
+{
+  btnResetHash.enabled = (dynlen(getFilesWithAdoptedHashes()) > 0);
+}
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 2
+"txtName"
+""
+1 8 12 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 14 50 29
+0 2 0 "0s" 0 0 0 192 0 0  10 14 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 5 Name:
+LANG:10001 5 Name:
+2 3
+"versionLabel"
+""
+1 348 12 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 350 14 400 29
+0 2 0 "0s" 0 0 0 192 0 0  350 14 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 8 Version:
+LANG:10001 8 Version:
+2 4
+"dateLabel"
+""
+1 478 12 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 480 14 513 29
+0 2 0 "0s" 0 0 0 192 0 0  480 14 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 5 Date:
+LANG:10001 5 Date:
+2 5
+"otherFilesLabel"
+""
+1 8 700 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 702 75 717
+0 2 0 "0s" 0 0 0 192 0 0  10 702 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 12 Other files:
+LANG:10001 12 Other files:
+2 12
+"configGeneralLabel"
+""
+1 8 119 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 121 106 136
+0 2 0 "0s" 0 0 0 192 0 0  10 121 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 17 Config (general):
+LANG:10001 14 Config General
+2 13
+"initFilesLabel"
+""
+1 8 280 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 282 60 297
+0 2 0 "0s" 0 0 0 192 0 0  10 282 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 11 Init files:
+LANG:10001 11 Init files:
+2 17
+"dpFilesLabel"
+""
+1 8 380 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 382 76 397
+0 2 0 "0s" 0 0 0 192 0 0  10 382 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 13 Dplist files:
+LANG:10001 13 Dplist files:
+2 19
+"requiredComponentsLabel"
+""
+1 8 528 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 530 87 561
+0 2 0 "0s" 0 0 0 192 0 0  10 530 2
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 8 Required
+LANG:10001 8 Required
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 11 components:
+LANG:10001 10 components
+2 22
+"configLinuxLabel"
+""
+1 8 169 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 171 95 186
+0 2 0 "0s" 0 0 0 192 0 0  10 171 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 15 Config (Linux):
+LANG:10001 12 Config Linux
+2 23
+"configWindowsLabel"
+""
+1 8 219 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 221 117 236
+0 2 0 "0s" 0 0 0 192 0 0  10 221 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 17 Config (Windows):
+LANG:10001 14 Config Windows
+2 25
+"subComponentsLabel"
+""
+1 8 614 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 616 114 631
+0 2 0 "0s" 0 0 0 192 0 0  10 616 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 15 Sub-components:
+LANG:10001 14 Subcomponents:
+2 29
+"scriptsLabel"
+""
+1 8 448 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 450 57 465
+0 2 0 "0s" 0 0 0 192 0 0  10 450 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 8 Scripts:
+LANG:10001 8 Scripts:
+2 31
+"postInstallFilesLabel"
+""
+1 8 330 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 332 104 347
+0 2 0 "0s" 0 0 0 192 0 0  10 332 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 18 PostInstall files:
+LANG:10001 19 post-install files:
+2 34
+"descriptionLabel"
+""
+1 34 115 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 57 81 72
+0 2 0 "0s" 0 0 0 192 0 0  10 57 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 12 Description:
+LANG:10001 12 Description:
+14 7
+"TextName"
+""
+1 55 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  53 8 341 34
+2 "0s" 0 0 0 0 0 -1  E E E
+14 8
+"TextVersion"
+""
+1 130 140 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  402 8 471 34
+2 "0s" 0 0 0 0 0 -1  E E E
+14 9
+"TextDate"
+""
+1 518 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  516 8 691 34
+2 "0s" 0 0 0 0 0 -1  E E E
+13 10
+"btnClose"
+""
+1 613 867 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  611 865 689 893
+
+T 
+2
+LANG:1 5 Close
+LANG:10001 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+17 11
+"selectionOtherFiles"
+""
+1 140 482 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 696 691 775
+0
+
+E
+E
+E
+
+0 0
+17 14
+"selectionConfigFiles_general"
+""
+1 140 176 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 115 691 158
+0
+
+E
+E
+E
+
+0 0
+17 15
+"selectionInitFiles"
+""
+1 140 270 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 276 691 319
+0
+
+E
+E
+E
+
+0 0
+17 16
+"selectionDplistFiles"
+""
+1 140 347 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 376 691 437
+0
+
+E
+E
+E
+
+0 0
+17 18
+"selectionRequiredComponents"
+""
+1 140 387 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 524 691 603
+0
+
+E
+E
+E
+
+0 0
+17 20
+"selectionConfigFiles_linux"
+""
+1 140 207 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 165 691 208
+0
+
+E
+E
+E
+
+0 0
+17 21
+"selectionConfigFiles_windows"
+""
+1 140 238 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 215 691 258
+0
+
+E
+E
+E
+
+0 0
+17 26
+"selectionSubComponents"
+""
+1 140 552 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E "main()
+{
+	string componentName, descFile;  
+  	
+	shape shape_selectionSubComponents = getShape(\"selectionSubComponents\");
+
+	componentName = selectionSubComponents.selectedText();
+  descFile = selectionSubComponents.selectedText();
+ 			 
+	ChildPanelOnCentral(\"fwInstallation/fwInstallationComponentDetails.pnl\", 
+                      \"Details for \" + componentName,
+			                makeDynString(\"$componentName:\" + componentName, \"$descFile:\" + descFile , \"$typeOfDescription:\" + g_sDescriptionType, \"$reduHostNum:\"+fwInstallationRedu_myReduHostNum())
+                      );
+}
+
+
+" 0
+
+25 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 610 691 689
+0
+
+E
+E
+E
+
+0 0
+17 28
+"selectionScripts"
+""
+1 140 461 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 444 691 505
+0
+
+E
+E
+E
+
+0 0
+17 30
+"selectionPostInstallFiles"
+""
+1 140 311 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 326 691 369
+0
+
+E
+E
+E
+
+0 0
+17 33
+"selectionDescription"
+""
+1 280 380 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 51 691 97
+0
+
+E
+E
+E
+
+0 0
+2 36
+"sourceDirectoryLabel"
+""
+1 8 796 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 798 111 813
+0 2 0 "0s" 0 0 0 192 0 0  10 798 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 17 Source directory:
+LANG:10001 12 Other files:
+14 37
+"TextSourceDirectory"
+""
+1 55 20 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+36 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  120 793 691 819
+2 "0s" 0 0 0 0 0 -1  E E E
+2 39
+"isAccessibleLabel"
+""
+1 122 828.5 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+38 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 124 830.5 206 846
+0 2 0 "0s" 0 0 0 192 0 0  124 830.5 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 14 Is accessible:
+LANG:10001 12 Other files:
+14 40
+"TextIsAccessible"
+""
+1 218.9999999999999 827.25 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  217 825 260 851
+2 "0s" 0 0 0 0 0 -1  E E E
+13 41
+"btnCalculateHash"
+""
+1 367 830 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+40 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,11,5,50,0,0,0,0,0
+0  355 824 518 852
+
+T 
+1
+LANG:1 29 Calculate Source Files Hashes
+"main(mapping event)
+{
+  string componentName = $componentName;
+  
+  dyn_string ds;
+  dyn_float df;
+  string text = \"Are you sure you want to calculate source files'\\nhashes of component \" + componentName + \"?\\nAny adopted file hash values will be removed.\";
+  ChildPanelOnCentralReturn(\"fwInstallation/fwInstallation_messageInfo.pnl\", \"Source files hashes calculation\", makeDynString(\"$text:\" + text), df, ds);
+  if(!dynlen(df) || df[1] != 1.)
+    return;
+  
+  if(fwInstallation_calculateComponentSourceFilesHashes(componentName) != 0)
+    fwInstallation_popup(\"Failed to calculate \" + componentName + \" component source files hashes.\");
+  else
+    fwInstallation_popup(\"Calculation of source files' hashes of \" + componentName + \" component completed.\", FW_INSTALLATION_POPUP_TITLE_INFORMATION);
+  
+  refreshButtonResetHash();
+}
+
+" 0
+ E E E
+4 42
+"LINE1"
+""
+1 11.00000000000028 860 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "1"
+E E 0 1 3 2 1 E  11.00000000000028 860 688.0000000000002 860
+4 43
+"LINE2"
+""
+1 11.00000000000028 515 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+42 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "1"
+E E 0 1 3 2 1 E  11.00000000000028 515 688.0000000000002 515
+4 44
+"LINE3"
+""
+1 11.00000000000028 267 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "1"
+E E 0 1 3 2 1 E  11.00000000000028 267 688.0000000000002 267
+4 45
+"LINE4"
+""
+1 11.00000000000003 106 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+44 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "1"
+E E 0 1 3 2 1 E  11.00000000000003 106 688.0000000000001 106
+4 46
+"LINE5"
+""
+1 11.00000000000028 785 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "1"
+E E 0 1 3 2 1 E  11.00000000000028 785 688.0000000000002 785
+4 47
+"LINE6"
+""
+1 11.00000000000028 43 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "1"
+E E 0 1 3 2 1 E  11.00000000000028 43 688.0000000000002 43
+13 49
+"btnResetHash"
+""
+1 540 830 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,11,5,50,0,0,0,0,0
+0  528 824 691 852
+
+T 
+1
+LANG:1 26 Reset Adopted Files Hashes
+"main(mapping event)
+{
+  string componentName = $componentName;
+  dyn_string fileNames = getFilesWithAdoptedHashes();
+  dyn_string ds;
+  dyn_float df;
+  dyn_string dollars = makeDynString(\"$files:\" + strjoin(fileNames, \"|\"),
+                                     \"$header:Select files to reset adopted hash value\");
+  
+  ChildPanelOnCentralReturn(\"fwInstallation/fwInstallation_selectFiles.pnl\", \"ResetAdoptedFilesHashes\", dollars, df, ds);
+  if(dynlen(ds) <= 0)
+    return;
+  
+  dyn_string fileNamesToReset = ds;
+  int fileNamesToResetLen = dynlen(fileNamesToReset);
+  int errorCount = 0;  
+  for(int i=1;i<=fileNamesToResetLen;i++)
+  {
+    if(fwInstallation_resetAlternativeComponentFileHash(componentName, fileNamesToReset[i]) != 0)
+    {
+      fwInstallation_throw(\"Failed to reset adopted hash value for component file: \" + fileNamesToReset[i]);
+      errorCount++;
+    }
+  }
+  if(errorCount == 0)
+    fwInstallation_popup(\"Resetting selected adopted source files' hashes of \" + componentName + \" component completed.\", FW_INSTALLATION_POPUP_TITLE_INFORMATION);
+  else
+    fwInstallation_popup(\"Resetting selected adopted source files' hashes of \" + componentName + \" component finished with errors, see log for details.\");
+  
+  refreshButtonResetHash();
+}
+
+
+
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

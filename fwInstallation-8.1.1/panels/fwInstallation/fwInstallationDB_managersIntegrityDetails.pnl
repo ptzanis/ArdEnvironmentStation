@@ -1,0 +1,447 @@
+V 13
+1
+LANG:1 0 
+PANEL,-1 -1 1230 340 N "_3DFace" 0
+"main()
+{
+  init();
+}" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"fwInstallationDB.ctl\"
+
+init()
+{
+  bool isOk;
+  dyn_dyn_mixed dbManagersInfo, pvssManagersInfo;
+  
+  clear();
+  
+  if(fwInstallationDB_connect())
+  {
+     DebugN(\"Could not connect to DB. Please, check connection parameters and availability of the server.\");
+     return;
+  }
+   
+  if(fwInstallationDBAgent_checkProjectManagersInfo(isOk, dbManagersInfo, pvssManagersInfo) != 0)
+  {
+     DebugN(\"ERROR -> Could not check consistency between PVSS and DB for project managers\");
+  }
+  else
+  { 
+    for(int i = 1; i <= dynlen(pvssManagersInfo); i++)   
+    {
+      string col = \"yellow\";
+      tbPvssManagers.appendLine(\"manager\", pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_NAME_IDX], 
+                                  \"start\", pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_START_IDX],
+                                  \"restart\", pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_RESTART_IDX], 
+                                  \"reset\", pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_RESETMIN_IDX],
+                                  \"seckill\", pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_SECKILL_IDX], 
+                                  \"options\", pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX],
+                                  \"alerts\", pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_TRIGGERS_ALERTS_IDX]);
+      
+      for(int j = 1; j <= dynlen(dbManagersInfo); j++)
+      {     
+        if(pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_NAME_IDX] == dbManagersInfo[j][FW_INSTALLATION_DB_MANAGER_NAME_IDX] && 
+           pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_START_IDX] == dbManagersInfo[j][FW_INSTALLATION_DB_MANAGER_START_IDX] &&
+           pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX] == dbManagersInfo[j][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX])
+        {
+//          DebugN(pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_NAME_IDX],
+//                 pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX],
+//                 pvssManagersInfo[i][FW_INSTALLATION_DB_MANAGER_START_IDX], 
+//                 dbManagersInfo[j][FW_INSTALLATION_DB_MANAGER_START_IDX]);
+          
+          col = \"_Window\";
+          break;
+        }
+      }   
+      
+      tbPvssManagers.cellBackColRC(i-1, \"manager\",  col);
+      tbPvssManagers.cellBackColRC(i-1, \"start\", col);
+      tbPvssManagers.cellBackColRC(i-1, \"restart\", col);
+      tbPvssManagers.cellBackColRC(i-1, \"reset\", col);
+      tbPvssManagers.cellBackColRC(i-1, \"seckill\", col);
+      tbPvssManagers.cellBackColRC(i-1, \"options\", col);
+      tbPvssManagers.cellBackColRC(i-1, \"alerts\", col);
+      
+    }
+    for(int i = 1; i <= dynlen(dbManagersInfo); i++)   
+    {
+      string col = \"yellow\";
+      
+      //Savannah #55313: UI crash if values are not initialized.
+      string temp = dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX];      
+      dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX] = temp;
+          
+      tbDbManagers.appendLine(\"manager2\", dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_NAME_IDX], 
+                                  \"start2\", dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_START_IDX],
+                                  \"restart2\", dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_RESTART_IDX], 
+                                  \"reset2\", dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_RESETMIN_IDX],
+                                  \"seckill2\", dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_SECKILL_IDX], 
+                                  \"options2\", dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX],
+                                  \"alerts2\", dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_TRIGGERS_ALERTS_IDX]);
+    
+      
+      
+      for(int j = 1; j <= dynlen(pvssManagersInfo); j++)
+      {     
+        if(pvssManagersInfo[j][FW_INSTALLATION_DB_MANAGER_NAME_IDX] == dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_NAME_IDX] && 
+           pvssManagersInfo[j][FW_INSTALLATION_DB_MANAGER_START_IDX] == dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_START_IDX] &&
+           pvssManagersInfo[j][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX] == dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX])
+        {
+//          DebugN(pvssManagersInfo[j][FW_INSTALLATION_DB_MANAGER_NAME_IDX],
+//                 pvssManagersInfo[j][FW_INSTALLATION_DB_MANAGER_OPTIONS_IDX],
+//                 pvssManagersInfo[j][FW_INSTALLATION_DB_MANAGER_START_IDX], 
+//                 dbManagersInfo[i][FW_INSTALLATION_DB_MANAGER_START_IDX]);
+          col = \"_Window\";
+          break;
+        }
+      }
+      
+      tbDbManagers.cellBackColRC(i-1, \"manager2\",  col);
+      tbDbManagers.cellBackColRC(i-1, \"start2\", col);
+      tbDbManagers.cellBackColRC(i-1, \"restart2\", col);
+      tbDbManagers.cellBackColRC(i-1, \"reset2\", col);
+      tbDbManagers.cellBackColRC(i-1, \"seckill2\", col);
+      tbDbManagers.cellBackColRC(i-1, \"options2\", col);
+      tbDbManagers.cellBackColRC(i-1, \"alerts2\", col);
+    }
+  } 
+}
+
+void clear()
+{
+  tbPvssManagers.deleteAllLines();
+  tbDbManagers.deleteAllLines();
+}
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 65
+"projectIndicatorBg"
+""
+1 150 440 E E E 1 E 1 E N "lightgrey" E N "lightgrey" E E
+ E E
+127 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 614 294
+6 66
+"databaseIndicatorBg"
+""
+1 480 415 E E E 1 E 1 E N "white" E N "white" E E
+ E E
+128 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 615 0 1229 294
+2 67
+"projectIndicatorLabel"
+""
+1 -256 374 E E E 1 E 1 E N "white" E N "_Window" E E
+ E E
+129 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 6.123233995736766e-17 -1 1 6.123233995736766e-17 -450 384 0 E 190 460 283 480
+0 2 2 "0s" 0 0 0 192 0 0  190 460 1
+1
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+0 1
+LANG:1 7 PROJECT
+2 68
+"databaseIndicatorLabel"
+""
+1 1584 1126 E E E 1 E 1 E N "lightgrey" E N "_Window" E E
+ E E
+130 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 6.123233995736766e-17 1 -1 6.123233995736766e-17 1680 -94.00000000000003 0 E 190 460 294 480
+0 2 2 "0s" 0 0 0 192 0 0  190 460 1
+1
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+0 1
+LANG:1 8 DATABASE
+13 56
+"btnCheck"
+""
+1 1050 275 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+113 0 0 0 0 0
+E E E
+0
+1
+LANG:1 25 Check PVSS_DB consistency
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 303 37 332
+
+P 
+4294967295
+"pictures/StandardIcons/refresh_20.png"
+1
+LANG:1 7 Refresh
+"main()
+{  
+  init();
+}" 0
+ E E E
+13 57
+"closeButton"
+""
+1 1145 320 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+115 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  1143 303 1221 331
+
+T 
+1
+LANG:1 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+25 58
+"tbPvssManagers"
+""
+1 40 30 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+116 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  38 28 606 286
+EE 1 0 1 7 0 "manager" 6 1 0 "s" 1
+LANG:1 7 Manager
+E
+1
+LANG:1 0 
+
+80 "start" 5 1 0 "s" 1
+LANG:1 10 Start mode
+E
+1
+LANG:1 0 
+
+73 "restart" 4 1 0 "s" 1
+LANG:1 7 Restart
+E
+1
+LANG:1 0 
+
+52 "reset" 4 1 0 "s" 1
+LANG:1 5 Reset
+E
+1
+LANG:1 7 Minutes
+
+55 "seckill" 3 1 0 "s" 1
+LANG:1 4 Kill
+E
+1
+LANG:1 7 Seconds
+
+42 "options" 17 1 0 "s" 1
+LANG:1 7 Options
+E
+1
+LANG:1 0 
+
+200 "alerts" 3 1 0 "s" 1
+LANG:1 6 Alerts
+E
+1
+LANG:1 0 
+
+42 
+20 20 10 10
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+25 62
+"tbDbManagers"
+""
+1 625 36.3870967741935 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+124 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  623 28 1191 286
+EE 1 0 1 7 0 "manager2" 6 1 0 "s" 1
+LANG:1 7 Manager
+E
+1
+LANG:1 0 
+
+80 "start2" 5 1 0 "s" 1
+LANG:1 10 Start mode
+E
+1
+LANG:1 0 
+
+73 "restart2" 4 1 0 "s" 1
+LANG:1 7 Restart
+E
+1
+LANG:1 0 
+
+53 "reset2" 4 1 0 "s" 1
+LANG:1 5 Reset
+E
+1
+LANG:1 7 Minutes
+
+55 "seckill2" 3 1 0 "s" 1
+LANG:1 8 Sec Kill
+E
+1
+LANG:1 0 
+
+42 "options2" 17 1 0 "s" 1
+LANG:1 7 Options
+E
+1
+LANG:1 0 
+
+200 "alerts2" 3 1 0 "s" 1
+LANG:1 6 Alerts
+E
+1
+LANG:1 0 
+
+42 
+20 20 10 10
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+2 63
+"runningProjectLabel"
+""
+1 40 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+125 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 40 10 136 24
+0 2 2 "0s" 0 0 0 192 0 0  40 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 16 Running project:
+2 64
+"databaseLabel"
+""
+1 625 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+126 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 625 10 686 24
+0 2 2 "0s" 0 0 0 192 0 0  625 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 9 Database:
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

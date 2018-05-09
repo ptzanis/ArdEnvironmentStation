@@ -1,0 +1,212 @@
+V 13
+2
+LANG:1 11 Information
+LANG:0 11 Information
+PANEL,-1 -1 400 160 N "_3DFace" 2
+"$help"
+"$text"
+"main()
+{
+  messageLabel.text = $text;
+  messageLabel.visible = TRUE;
+  
+  if(isDollarDefined(\"$help\"))
+  {
+	  g_sHelpLink = $help;
+  }
+  else
+  {
+    helpButton.enabled(FALSE);
+  }
+}
+
+" 0
+ E E E E 1 -1 -1 0  251 55
+""0  1
+E "string g_sHelpLink;" 0
+ 3
+"CBRef" "0"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+13 8
+"cancelButton"
+""
+1 243 81 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 27 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+0
+2
+LANG:1 26 arial,-1,13,5,50,0,0,0,0,0
+LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+0  313 123 391 151
+
+T 
+2
+LANG:1 6 Cancel
+LANG:0 9 Abbrechen
+"main()
+{
+  PanelOffReturn(makeDynFloat(0.),makeDynString());
+}
+
+
+" 0
+ E E E
+13 0
+"okButton"
+""
+1 105 81 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+0
+2
+LANG:1 26 arial,-1,13,5,50,0,0,0,0,0
+LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+0  231 123 309 151
+
+T 
+2
+LANG:1 2 OK
+LANG:0 2 OK
+"main()
+{
+  PanelOffReturn(makeDynFloat(1.),makeDynString());
+}
+
+
+" 0
+ E E E
+13 10
+"helpButton"
+""
+1 358 14 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  362 8 391 37
+
+P 
+14215660
+"pictures/help_2.xpm"
+1
+LANG:1 0 
+"main()
+{
+  std_help(g_sHelpLink);
+}
+
+" 0
+ E E E
+6 11
+"backgroundRectangle"
+""
+1 110 10 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 74 159
+6 12
+"imgInfo"
+""
+1 14 14 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+3
+LANG:1 0 
+LANG:10001 0 
+LANG:0 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1 0 1 7 50 2  0 3  "pictures/info2_en.gif" 13434828 E 14 14 45 45
+2 13
+"messageLabel"
+""
+1 85 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 85 60 388 91
+0 2 2 "0s" 0 0 0 192 0 0  85 60 2
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 52 This is an example text that serves as a placeholder
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 38 with two lines in case of a long text.
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

@@ -1,0 +1,218 @@
+V 13
+2
+LANG:1 0 
+LANG:10001 0 
+PANEL,-1 -1 400 160 N "_3DFace" 3
+"$1"
+"$2"
+"$3"
+"main()
+{  
+  int iSeconds;
+
+  if(isDollarDefined(\"$1\"))
+  {
+    messageLabel.text = $1;
+  }
+  
+  if(isDollarDefined(\"$2\"))
+  {
+    tfValue.format = $2;
+  }
+  
+  if(isDollarDefined(\"$3\"))
+  {
+    tfValue.text = $3;
+  }
+
+  if(isDollarDefined(\"$4\"))
+  {
+    iSeconds = getDollarValue(\"$4\");
+    if(iSeconds > 0)
+    {
+      g_iTimeout = iSeconds;
+    }
+  }
+  
+  for(int i = g_iTimeout; i > 0; i--)
+  {
+    btnOK.text = \"OK (\" + i + \" s)\";
+    delay(1);
+  }
+  
+  returnValues();
+}
+" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "int g_iTimeout = 60;
+
+returnValues()
+{
+  dyn_float df;
+  dyn_string ds;
+  df[1] = 1;
+  ds[1] = tfValue.text;
+  PanelOffReturn(df,ds); 
+}" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+14 4
+"tfValue"
+""
+1 72 26 E E E 1 E 1 E N {0,0,0} E N "Weiss" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+3
+LANG:1 0 
+LANG:10001 0 
+LANG:0 0 
+
+0
+3
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 arial,-1,13,5,50,0,0,0,0,0
+LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+0  83 61 391 87
+3 "0s" 0 0 0 0 0 -1  E E E
+13 5
+"cmdCancel"
+""
+1 313 123 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+5 0 0 0 27 0
+E E E
+0
+3
+LANG:1 0 
+LANG:10001 0 
+LANG:0 0 
+
+0
+3
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 arial,-1,13,5,50,0,0,0,0,0
+LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+0  313 123 391 151
+
+T 
+3
+LANG:1 6 Cancel
+LANG:10001 6 Cancel
+LANG:0 9 Abbrechen
+"main()
+{
+  dyn_float df;
+  dyn_string ds;
+  df[1] = 0;
+  PanelOffReturn(df,ds); 
+}
+" 0
+ E E E
+13 6
+"btnOK"
+""
+1 191 123 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+3
+LANG:1 0 
+LANG:10001 0 
+LANG:0 0 
+
+0
+3
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 arial,-1,13,5,50,0,0,0,0,0
+LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+0  231 123 309 151
+
+T 
+3
+LANG:1 2 OK
+LANG:10001 2 OK
+LANG:0 2 OK
+"main()
+{
+  returnValues();
+}" 0
+ E E E
+2 7
+"messageLabel"
+""
+1 85 43 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 85 43 259 57
+0 2 2 "0s" 0 0 0 192 0 0  85 43 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 30 Placeholder for feedback text:
+6 8
+"backgroundRectangle"
+""
+1 110 10 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 74 159
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

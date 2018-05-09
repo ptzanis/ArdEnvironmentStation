@@ -1,0 +1,263 @@
+V 14
+1
+LANG:1 0 
+PANEL,-1 -1 788 338 N "_3DFace" 0
+"main()
+{
+  if(!isDollarDefined(\"$files\") || !isDollarDefined(\"$header\"))
+  {
+    fwInstallation_throw(\"Missing required dollar parameters. This panel requires both $files and $header. Cannot continue\");
+    PanelOffReturn(makeDynFloat(), makeDynString());
+  }
+  
+  title.text = getDollarValue(\"$header\");
+  
+  dyn_string files = strsplit(getDollarValue(\"$files\"), \"|\");
+  int filesLen = dynlen(files);
+  for(int i=1;i<=filesLen;i++)
+    TABLE2.appendLine(\"FileName\", files[i], \"Select\", false);
+  TABLE2.columnEditable(0, true);
+  TABLE2.adjustColumn(1);
+}
+
+
+
+" 0
+ E E E E 1 -1 -1 0  50 30
+""0  1
+E "setSelectedFiles(bool select)
+{
+  int tblLines = TABLE2.lineCount();
+  for(int i=0;i<tblLines;i++)
+    TABLE2.cellValueRC(i, \"Select\", select);
+}
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+13 1
+"btnOk"
+""
+1 570 311 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  568 300 668.4534883720929 328
+
+T 
+1
+LANG:1 2 Ok
+"main(mapping event)
+{
+  dyn_string selectedFiles;
+  int tblLines = TABLE2.lineCount();
+  for(int i=0;i<tblLines;i++)
+    if(TABLE2.cellValueRC(i, \"Select\"))
+      dynAppend(selectedFiles, TABLE2.cellValueRC(i, \"FileName\"));
+  PanelOffReturn(makeDynFloat(), selectedFiles);
+}
+" 0
+ E E E
+13 2
+"btnCancel"
+""
+1 732.3837209302328 310 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  681.5465116279072 300 782.0000000000001 328
+
+T 
+1
+LANG:1 6 Cancel
+"main(mapping event)
+{
+  PanelOffReturn(makeDynFloat(), makeDynString());
+}" 0
+ E E E
+6 5
+"bgRectangle"
+""
+1 20 530 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.6233254531126871 0 1 -0.3766745468872891 0.5 1 E -1 -1 1268 29
+2 6
+"title"
+""
+1 9 1 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 11 3 307 24
+0 2 0 "0s" 0 0 0 192 0 0  11 3 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,40,0,0,0,0,0
+0 2
+LANG:1 36 Select files for adopting hash value
+LANG:10001 47 JCOP Framework Installation Description Creator
+25 8
+"TABLE2"
+""
+1 8.000000000000032 71 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 35 MS Shell Dlg 2,-1,11,5,50,0,0,0,0,0
+0  6.000000000000032 69 782.0000000000001 292
+E"main(int row, string column, string value)
+{
+  if(column != \"Select\" && row < TABLE2.lineCount())
+    TABLE2.cellValueRC(row, \"Select\", (!TABLE2.cellValueRC(row, \"Select\")));
+}" 0
+ 1 0 1 2 0 "Select" 4 1 0 "s" 1
+LANG:1 6 Select
+E
+1
+LANG:1 0 
+
+40 "FileName" 90 1 0 "s" 1
+LANG:1 9 File name
+E
+1
+LANG:1 0 
+
+730 
+20 20 10 0
+1
+LANG:1 35 MS Shell Dlg 2,-1,11,5,50,0,0,0,0,0
+0 0 1 1 1 7
+1 0
+13 11
+"btnClear"
+""
+1 168.3837209302327 46 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  117.5465116279072 36 218 64
+
+T 
+1
+LANG:1 9 Clear All
+"main(mapping event)
+{
+  setSelectedFiles(false);
+}
+" 0
+ E E E
+13 12
+"btnSelAll"
+""
+1 56.83720930232562 46 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  6.000000000000227 36 106.453488372093 64
+
+T 
+1
+LANG:1 10 Select All
+"main(mapping event)
+{
+  setSelectedFiles(true);
+}
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

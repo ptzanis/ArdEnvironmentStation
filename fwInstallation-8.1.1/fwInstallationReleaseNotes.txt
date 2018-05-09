@@ -1,0 +1,23 @@
+15-03-2018 Release Notes for fwInstallation 8.1.1
+
+Fixed bugs:
+FWINS-1888:	Attempting to connect to a DB without the Configuration DB System Information schema results in a growing memory leak.
+FWINS-2088:	Backslashes in paths to component description files stored in the DB schema (FW_SYS_STAT_COMP_IN_GROUPS.DESCRIPTION_FILE column) are not handled properly.
+FWINS-2097:	Installation of a component that has duplicated sections in its config file (i.e. [ui] repeated twice) leads to inconsistent entries in the project's config file.
+FWINS-2098:	fwInstallationManager_remove() function cannot remove managers from remote project's console as it ignores non-default host and port parameters.
+FWINS-2100:	Re-installation or installation of a new version of a component on Linux operating system results in duplication of entries in the config file when it is saved with Windows (CR+LF) line endings.
+FWINS-2109:	Component version comparison doesn't treat pre-release tags (e.g. X.Y.Z-beta-W) correctly.
+
+New features:
+FWINS-2094:	Added a possibility to hide certain components in the list of available components (e.g. test components). In order to do that, following entry has to be added to the component XML file: <hiddenComponent>Yes</hiddenComponent>. User can enable displaying of hidden components by selecting 'Show hidden components' option.
+FWINS-2103:	List of installed components can be now copied as a text. To do so, right-click on the components table and select option 'Copy components list to clipboard' in the pop-up menu.
+FWINS-2110:	Added a new API function fwInstallation_getSections() that returns all sections from the project config file that match a specified pattern.
+
+Improvements:
+FWINS-2022:	XML parser no longer displays errors in the log when it encounters non-component XML files (e.g. when searching recursively for components).
+FWINS-2026:	Database configuration pop-up at the first start of the main Installation panel was removed. It still accessible in the 'Advanced options' window.
+FWINS-2027:	'Select directory' pop-up at the first start of the main Installation panel now contains additional predefined directories, selectable from the drop-down list. Added a warning when selected directory is not empty.
+FWINS-2090:	Standardized retrieval of file name and directory path from file paths in fwInstallation libraries. Functions to perform these actions are implemented using native WinCC OA functions.
+FWINS-2102:	Added information on what is the default option when drivers and simulators are added to the project console during component installation (the options are: activate driver, activate simulator, do not activate any).
+FWINS-2105:	Checking of component init and post-install scripts at the beginning of installation is now disabled due to side-effects of the WinCC OA checkScript() function (loading of libraries and misleading error messages in the log).
+

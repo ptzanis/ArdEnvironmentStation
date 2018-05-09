@@ -1,0 +1,411 @@
+V 13
+1
+LANG:1 0 
+PANEL,-1 -1 900 460 N "_3DFace" 0
+"main()
+{
+  init();
+}" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"fwInstallationDB.ctl\"
+
+dyn_dyn_mixed g_ddmDbComponentsInfo, g_ddmPvssComponentsInfo;
+
+// ------------------------------------------------------------------------------------------------
+
+init()
+{
+  bool isOk;
+ 
+  tbPvssComponents.deleteAllLines();
+  tbDbComponents.deleteAllLines();
+  
+  if(fwInstallationDB_connect())
+  {
+     DebugN(\"Could not connect to DB. Please, check connection parameters and availability of the server.\");
+     return;
+  }
+   
+  if(fwInstallationDBAgent_checkComponents(isOk, g_ddmDbComponentsInfo, g_ddmPvssComponentsInfo))
+  {
+     DebugN(\"ERROR -> Could not check consistency between PVSS and DB for FW components info\");
+     ChildPanelOnCentral(\"vision/MessageInfo1\", \"DB Connection Error\", makeDynString(\"Could not check consistency between WinCC and DB for FW components info.\"));
+     return;
+  }
+
+  for(int i = dynlen(g_ddmPvssComponentsInfo); i >= 1 ; i--)  
+  {
+    tbPvssComponents.appendLine(\"component\", g_ddmPvssComponentsInfo[i][FW_INSTALLATION_DB_COMPONENT_NAME_IDX], \"version\", g_ddmPvssComponentsInfo[i][FW_INSTALLATION_DB_COMPONENT_VERSION_IDX]);
+    if(componentNotInDB(g_ddmPvssComponentsInfo[i][FW_INSTALLATION_DB_COMPONENT_NAME_IDX]))
+    {
+      tbPvssComponents.cellBackColRC(tbPvssComponents.lineCount()-1, \"component\", \"yellow\");
+      tbPvssComponents.cellBackColRC(tbPvssComponents.lineCount()-1, \"version\", \"yellow\");
+    }
+  }
+  projectNumberLabel.text(dynlen(g_ddmPvssComponentsInfo));
+    
+  for(int i = 1; i <= dynlen(g_ddmDbComponentsInfo); i++) 
+  { 
+    tbDbComponents.appendLine(\"component\", g_ddmDbComponentsInfo[i][FW_INSTALLATION_DB_COMPONENT_NAME_IDX], \"version\", g_ddmDbComponentsInfo[i][FW_INSTALLATION_DB_COMPONENT_VERSION_IDX]);
+    if(componentNotInProject(g_ddmDbComponentsInfo[i][FW_INSTALLATION_DB_COMPONENT_NAME_IDX]))
+    {
+      tbDbComponents.cellBackColRC(tbDbComponents.lineCount()-1, \"component\", \"yellow\");
+      tbDbComponents.cellBackColRC(tbDbComponents.lineCount()-1, \"version\", \"yellow\");
+    }
+  }
+  dbNumberLabel.text(dynlen(g_ddmDbComponentsInfo));
+  
+  tbPvssComponents.sort(\"component\");  
+  tbDbComponents.sort(\"component\");  
+}
+
+// ------------------------------------------------------------------------------------------------
+
+bool componentNotInDB(string componentName)
+{
+  bool bMissing = TRUE;
+
+  for(int i = 1; i <= dynlen(g_ddmDbComponentsInfo); i++)
+  {
+    if(g_ddmDbComponentsInfo[i][FW_INSTALLATION_DB_COMPONENT_NAME_IDX] == componentName)
+    {
+      bMissing = FALSE;
+      break;
+    }
+  }
+  
+  return bMissing;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+bool componentNotInProject(string componentName)
+{
+  bool bMissing = TRUE;
+  
+  for(int i = 1; i <= dynlen(g_ddmPvssComponentsInfo); i++)
+  {
+    if(g_ddmPvssComponentsInfo[i][FW_INSTALLATION_DB_COMPONENT_NAME_IDX] == componentName)
+    {
+      bMissing = FALSE;
+      break;
+    }
+  }
+  
+  return bMissing;
+}
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 73
+"projectIndicatorBg"
+""
+1 150 440 E E E 1 E 1 E N "lightgrey" E N "lightgrey" E E
+ E E
+138 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 449 414
+6 72
+"databaseIndicatorBg"
+""
+1 150 440 E E E 1 E 1 E N "white" E N "white" E E
+ E E
+137 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -30 0 1 E 480 0 929 414
+13 56
+"reloadButton"
+""
+1 900 405 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+113 0 0 0 0 0
+E E E
+0
+1
+LANG:1 25 Check PVSS_DB consistency
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 423 37 452
+
+P 
+4294967295
+"pictures/StandardIcons/refresh_20.png"
+1
+LANG:1 7 Refresh
+"main()
+{  
+  init();
+}" 0
+ E E E
+13 57
+"closeButton"
+""
+1 815 425 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+115 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  813 423 891 451
+
+T 
+1
+LANG:1 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+25 58
+"tbPvssComponents"
+""
+1 -252 57.9999999999988 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+116 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  38 28 441 406
+EE 1 0 1 2 0 "component" 26 1 0 "s" 1
+LANG:1 9 Component
+E
+1
+LANG:1 0 
+
+300 "version" 6 1 0 "s" 1
+LANG:1 7 Version
+E
+1
+LANG:1 0 
+
+80 
+20 20 10 10
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+25 63
+"tbDbComponents"
+""
+1 460 29.9999999999988 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+126 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  458 28 861 406
+EE 1 0 1 2 0 "component" 26 1 0 "s" 1
+LANG:1 9 Component
+E
+1
+LANG:1 0 
+
+300 "version" 6 1 0 "s" 1
+LANG:1 7 Version
+E
+1
+LANG:1 0 
+
+80 
+20 20 10 10
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+2 67
+"databaseLabel"
+""
+1 460 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+132 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 460 10 610 24
+0 2 2 "0s" 0 0 0 192 0 0  460 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 23 Components in database:
+2 68
+"projectLabel"
+""
+1 40 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+133 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 40 10 222 24
+0 2 2 "0s" 0 0 0 192 0 0  40 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 30 Components in running project:
+2 69
+"projectIndicatorLabel"
+""
+1 190 460.0000000000001 E E E 1 E 1 E N "white" E N "_Window" E E
+ E E
+134 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 6.123233995736766e-17 -1 1 6.123233995736767e-17 -450 444.0000000000001 0 E 190 460 283 480
+0 2 2 "0s" 0 0 0 192 0 0  190 460 1
+1
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+0 1
+LANG:1 7 PROJECT
+2 70
+"databaseIndicatorLabel"
+""
+1 190 400.0000000000001 E E E 1 E 1 E N "lightgrey" E N "_Window" E E
+ E E
+135 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 6.123233995736766e-17 1 -1 6.123233995736767e-17 1350 -34.00000000000003 0 E 190 460 294 480
+0 2 2 "0s" 0 0 0 192 0 0  190 460 1
+1
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+0 1
+LANG:1 8 DATABASE
+2 74
+"projectNumberLabel"
+""
+1 440 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+139 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 395 10 440 24
+0 2 2 "0s" 0 0 0 194 0 0  440 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 6 Number
+2 75
+"dbNumberLabel"
+""
+1 860 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+140 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 815 10 860 24
+0 2 2 "0s" 0 0 0 194 0 0  860 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 6 Number
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

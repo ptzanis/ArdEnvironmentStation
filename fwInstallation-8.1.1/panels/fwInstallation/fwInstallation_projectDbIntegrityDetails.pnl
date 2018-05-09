@@ -1,0 +1,727 @@
+V 13
+1
+LANG:1 20 Database Consistency
+PANEL,-1 -1 350 350 N "_3DFace" 0
+"main()
+{
+   if(fwInstallationDB_connect())
+   {
+      DebugN(\"Could not connect to database. Please check connection parameters and availability of the server.\");
+      return;
+   }
+   
+   dpConnect(\"projectStatusCB\", \"fwInstallation_agentParametrization.db.projectStatus\", \"fwInstallation_agentParametrization.db.projectStatus:_original.._stime\");
+
+}
+" 0
+ E E E E 1 -1 -1 0  12 30
+""0  1
+E "#uses \"fwInstallationDB.ctl\"
+
+void projectStatusCB(string dpe, dyn_int val, string dpe2, time tTimestamp)
+{
+  string col;
+  dyn_dyn_mixed dbInfo, pvssInfo;
+  bool isOk = false;
+  
+  switch(val[FW_INSTALLATION_DB_STATUS_PVSS_INFO]){
+   case FW_INSTALLATION_DB_PROJECT_OK: 
+     col = \"green\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_MISSMATCH: 
+     col = \"red\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_NEVER_CHECKED: 
+     col = \"_dpdoesnotexist\";
+     break;
+   default: 
+     col = \"white\";
+  }
+  pvssStatus.backCol = col;
+
+  switch(val[FW_INSTALLATION_DB_STATUS_PVSS_PATCH_INFO]){
+   case FW_INSTALLATION_DB_PROJECT_OK: 
+     col = \"green\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_MISSMATCH: 
+     col = \"red\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_NEVER_CHECKED: 
+     col = \"_dpdoesnotexist\";
+     break;
+   default: 
+     col = \"white\";
+  }
+  patchStatus.backCol = col;
+  
+  switch(val[FW_INSTALLATION_DB_STATUS_HOST_INFO]){
+   case FW_INSTALLATION_DB_PROJECT_OK: 
+     col = \"green\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_MISSMATCH: 
+     col = \"red\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_NEVER_CHECKED: 
+     col = \"_dpdoesnotexist\";
+     break;
+   default: 
+     col = \"white\";
+  }
+  hostStatus.backCol = col;
+
+  switch(val[FW_INSTALLATION_DB_STATUS_PROJECT_INFO]){
+   case FW_INSTALLATION_DB_PROJECT_OK: 
+     col = \"green\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_MISSMATCH: 
+     col = \"red\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_NEVER_CHECKED: 
+     col = \"_dpdoesnotexist\";
+     break;
+   default: 
+     col = \"white\";
+  }
+  projectStatus.backCol = col;
+  
+  switch(val[FW_INSTALLATION_DB_STATUS_PATH_INFO]){
+   case FW_INSTALLATION_DB_PROJECT_OK: 
+     col = \"green\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_MISSMATCH: 
+     col = \"red\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_NEVER_CHECKED: 
+     col = \"_dpdoesnotexist\";
+     break;
+   default: 
+     col = \"white\";
+  }
+  pathStatus.backCol = col;
+
+  switch(val[FW_INSTALLATION_DB_STATUS_MANAGER_INFO]){
+   case FW_INSTALLATION_DB_PROJECT_OK: 
+     col = \"green\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_MISSMATCH: 
+     col = \"red\"; 
+     break;
+   case FW_INSTALLATION_DB_PROJECT_NEVER_CHECKED: 
+     col = \"_dpdoesnotexist\";
+     break;
+   default: 
+     col = \"white\";
+  }
+  managerStatus.backCol = col;
+
+  fwInstallationDBAgent_checkComponents(isOk, dbInfo, pvssInfo);  
+  if(isOk)
+  {
+    col = \"green\";
+  }
+  else
+  {
+    col = \"red\";
+  }  
+  componentStatus.backCol = col;
+
+  projTs.text = \"Last check: \" + formatTime(\"%d/%m/%Y - %H:%M:%S\", tTimestamp);  
+}         
+
+
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 8
+"txProjectStatus"
+""
+1 36 -9 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 31 155 98 169
+0 2 2 "0s" 0 0 0 192 0 0  31 155 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 12 Project info
+2 10
+"txPvssStatus"
+""
+1 33 3 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 31 90 118 104
+0 2 2 "0s" 0 0 0 192 0 0  31 90 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 13 WinCC version
+2 12
+"txPatchStatus"
+""
+1 33 -1 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 31 110 96 124
+0 2 2 "0s" 0 0 0 192 0 0  31 110 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 11 Patch level
+2 14
+"txHostStatus"
+""
+1 27 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 31 44 60 58
+0 2 2 "0s" 0 0 0 192 0 0  31 44 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 4 Host
+2 16
+"txPathStatus"
+""
+1 35 -11 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 31 175 110 189
+0 2 2 "0s" 0 0 0 192 0 0  31 175 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 13 Project paths
+2 18
+"txManagerStatus"
+""
+1 -1618 -1883.911933995134 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 0.99375 -126 -151.675 1 E 157 374 216 388
+0 2 2 "0s" 0 0 0 192 0 0  157 374 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 8 Managers
+13 28
+"closeButton"
+""
+1 265 314.7000000000001 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  263 313 341 341
+
+T 
+1
+LANG:1 5 Close
+"main()
+{
+ PanelOff();
+}" 0
+ E E E
+13 30
+"moreButton2"
+""
+1 265 142 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+53 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  263 93 341 121
+
+T 
+1
+LANG:1 8 More ...
+"main()
+{
+  ChildPanelOnCentralModal(\"fwInstallation/fwInstallationDB_pvssIntegrityDetails.pnl\", \"WinCC Setup Consistency\", makeDynString(\"\"));
+  
+}
+
+" 0
+ E E E
+13 32
+"moreButton1"
+""
+1 265 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+57 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  263 38 341 66
+
+T 
+1
+LANG:1 8 More ...
+"main()
+{
+  ChildPanelOnCentralModal(\"fwInstallation/fwInstallationDB_hostIntegrityDetails.pnl\", \"Host Info Consistency\", makeDynString(\"\"));
+  
+}
+" 0
+ E E E
+13 35
+"moreButton3"
+""
+1 265 210 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+63 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  263 158 341 186
+
+T 
+1
+LANG:1 8 More ...
+"main()
+{
+  ChildPanelOnCentralModal(\"fwInstallation/fwInstallationDB_projectIntegrityDetails.pnl\", \"WinCC Setup Consistency\", makeDynString(\"\"));
+  
+}
+
+" 0
+ E E E
+13 38
+"moreButton4"
+""
+1 265 260 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+69 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  263 214 341 242
+
+T 
+1
+LANG:1 8 More ...
+"main()
+{
+  ChildPanelOnCentralModal(\"fwInstallation/fwInstallationDB_managersIntegrityDetails.pnl\", \"WinCC Setup Consistency\", makeDynString(\"\"));
+  
+}
+
+" 0
+ E E E
+13 40
+"moreButton5"
+""
+1 265 307 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+73 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  263 259 341 287
+
+T 
+1
+LANG:1 8 More ...
+"main()
+{
+  ChildPanelOnCentralModal(\"fwInstallation/fwInstallationDB_componentIntegrityDetails.pnl\", \"FW Components Consistency\", makeDynString(\"\"));
+  
+}
+
+" 0
+ E E E
+2 44
+"componentsLabel"
+""
+1 -6677 3532.516756226245 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+81 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1.00065104166666 -425 182.9466145833339 1 E 456 82 554 96
+0 2 2 "0s" 0 0 0 192 0 0  456 82 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 13 FW components
+2 52
+"projTs"
+""
+1 10 319 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+89 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 10 319 148 333
+0 2 2 "0s" 0 0 0 192 0 0  10 319 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 22 Last check: xx/xx/xxxx
+4 53
+"separator1"
+""
+1 10 -13 E E E 1 E 1 E N "grey" E N {255,255,255} E E
+ E E
+90 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E  10 74 339 74
+4 54
+"separator2"
+""
+1 10 53 E E E 1 E 1 E N "grey" E N {255,255,255} E E
+ E E
+91 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E  10 140 339 140
+4 55
+"separator3"
+""
+1 10 118 E E E 1 E 1 E N "grey" E N {255,255,255} E E
+ E E
+92 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E  10 205 339 205
+4 56
+"separator4"
+""
+1 10 163 E E E 1 E 1 E N "grey" E N {255,255,255} E E
+ E E
+93 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E  10 250 339 250
+4 57
+"separator5"
+""
+1 10 208 E E E 1 E 1 E N "grey" E N {255,255,255} E E
+ E E
+94 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E  10 295 339 295
+6 58
+"bgRectangle"
+""
+1 20 530 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+95 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E -1 -1 1268 29
+2 59
+"title"
+""
+1 7.999999999999986 2 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+96 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 9.999999999999986 4 202 24
+0 2 0 "0s" 0 0 0 192 0 0  9.999999999999986 4 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,40,0,0,0,0,0
+0 2
+LANG:1 20 Database Consistency
+LANG:10001 47 JCOP Framework Installation Description Creator
+6 60
+"hostStatus"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+97 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -10 -246 1 E 20 290 35 305
+6 61
+"pvssStatus"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+98 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -10 -200 1 E 20 290 35 305
+6 62
+"patchStatus"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+99 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -10 -180 1 E 20 290 35 305
+6 63
+"projectStatus"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+100 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -10 -135 1 E 20 290 35 305
+6 64
+"pathStatus"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+101 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -10 -115 1 E 20 290 35 305
+6 65
+"managerStatus"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+102 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -10 -70 1 E 20 290 35 305
+6 66
+"componentStatus"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+103 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -10 -25 1 E 20 290 35 305
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

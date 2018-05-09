@@ -1,0 +1,213 @@
+V 14
+1
+LANG:1 0 
+PANEL,-1 -1 524 106 N "_3DFace" 5
+"$alias"
+"$dpe"
+"$purpose"
+"$x"
+"$y"
+"main()
+{
+    int x1 = (int)$x + 59;
+    int x2 = (int)$x + 153;
+    int y = (int)$y;
+    string purpose=$purpose;
+   // string dpeBare = substr(dpe, strlen(getSystemName()));
+    dyn_string parameters;
+  
+
+  if(purpose==\"temperature\")
+  {
+   
+ 
+    parameters = makeDynString(\"$dpe:\" +dpe+\"BME280.temperatureMon\", \"$format:[2.2f]\",
+                                        \"$parameter:\",
+                                        \"$unit: C\",
+                                        \"$width:\",
+                                        \"$color:black\",
+                                        \"$bgcolor:_Transparent\",
+                                        \"$qualityEl:\"+\"\");
+    
+    addSymbol(myModuleName(), myPanelName(), \"objects/parameterArdEnv.pnl\", \"parameter_pnl_Ref\",
+              parameters, x1, y+8, 0, 1, 0.8);
+    
+  }
+   
+    if(purpose==\"pressure\")
+  {
+   
+ 
+    parameters = makeDynString(\"$dpe:\" +dpe+\"BME280.pressureMon\", \"$format:[4.2f]\",
+                                        \"$parameter:\",
+                                        \"$unit: kPa\",
+                                        \"$width:\",
+                                        \"$color:black\",
+                                        \"$bgcolor:_Transparent\",
+                                        \"$qualityEl:\"+\"\");
+    
+    addSymbol(myModuleName(), myPanelName(), \"objects/parameterArdEnv.pnl\", \"parameter_pnl_Ref\",
+              parameters, x1, y+8, 0, 1, 0.8);
+    
+  }
+   
+    if(purpose==\"humidity\")
+  {
+   
+ 
+    parameters = makeDynString(\"$dpe:\" +dpe+\"BME280.humidityMon\", \"$format:[2.2f]\",
+                                        \"$parameter:\",
+                                        \"$unit: %\",
+                                        \"$width:\",
+                                        \"$color:black\",
+                                        \"$bgcolor:_Transparent\",
+                                        \"$qualityEl:\"+\"\");
+    
+    addSymbol(myModuleName(), myPanelName(), \"objects/parameterArdEnv.pnl\", \"parameter_pnl_Ref\",
+              parameters, x1, y+8, 0, 1, 0.8);
+    
+  }
+   
+
+
+
+ 
+      
+      
+      
+  }
+ 
+ 
+ 
+ 
+    
+    
+
+
+  
+
+" 0
+ E E E E 1 -1 -1 0  60 40
+""0  1
+E "string dpe = $dpe;" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 1
+"RECTANGLE1"
+""
+1 80 30 E E E 1 E 1 E N {0,0,0} E N "STD_led_Off" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 68 38 160 67
+2 2
+"channelNameText]"
+""
+1 -16.35934279627272 -90.83870967741933 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+"main()
+{
+  
+  string alias = $alias;
+  this.text = alias;
+
+    
+}" 0
+ E 0 1 1 2 1 E U  0 E 70.17741935483872 40.51612903225805 160 66
+0 2 2 "0s" 0 0 0 65 0 0  70.17741935483872 40.51612903225805 2
+1
+LANG:1 27 Utopia,-1,21,5,75,0,0,0,0,0
+0 1
+LANG:1 14 Sensor Channel
+1
+LANG:1 27 Utopia,-1,21,5,75,0,0,0,0,0
+0 1
+LANG:1 0 
+6 3
+"RECTANGLE2"
+""
+1 80 30 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.8571428571428573 0 1 27.14285714285708 -10 1 E 190 51 400 75
+6 9
+"RECTANGLE3"
+""
+1 160 37 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.5458515283842797 0 1 72.66375545851528 0 1 E 160 38 389 67
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

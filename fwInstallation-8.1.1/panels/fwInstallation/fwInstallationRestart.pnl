@@ -1,0 +1,293 @@
+V 14
+1
+LANG:1 21 fwInstallationRestart
+PANEL,-1 -1 485 220 N "_3DFace" 0
+"main()
+{
+
+  const int timeout = 300;
+ 
+  for(int i = timeout; i > 0; i--)
+  {
+    txTimer.text = \"Project restarts automatically in \" + i + \" seconds.\";
+    delay(1);
+  }
+  fwInstallationDBAgent_releaseSynchronizationLock();		
+  fwInstallation_forceProjectRestart();
+
+}
+" 0
+ "main()
+{
+ int i;
+}" 0
+ E E E 1 -1 -1 0  30 20
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" "main()
+{
+  int i = 1;
+}" 0
+
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+13 0
+"btnOKtoInstall"
+""
+1 230.2834008097166 187 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  228 185 372 213
+
+T 
+1
+LANG:1 15 Restart project
+"main()
+{
+  fwInstallationDBAgent_releaseSynchronizationLock();
+  fwInstallation_forceProjectRestart();
+  delay(3);
+  PanelOff();
+}
+" 0
+ E E E
+13 1
+"btnCancel"
+""
+1 380 187 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  378 185 456 213
+
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+2 5
+"txTimer"
+""
+1 85 162 E E E 1 E 1 E N "red" E N "_3DFace" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 85 162 346 177
+0 2 2 "0s" 0 0 0 192 0 0  85 162 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 45 Project restarts automatically in xx seconds.
+6 6
+"backgroundRectangle"
+""
+1 110 10 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1.320754716981132 0 0 1 E 0 0 74 159
+6 7
+"imgInfo"
+""
+1 14 14 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+3
+LANG:1 0 
+LANG:10001 0 
+LANG:0 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1 0 1 7 50 2  0 3  "pictures/info2_en.gif" 13434828 E 14 14 45 45
+2 9
+"infoText2"
+""
+1 85 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 85 40 477 145
+0 2 2 "0s" 0 0 0 192 0 0  85 40 6
+1
+LANG:1 26 Arial,-1,13,5,50,1,0,0,0,0
+0 1
+LANG:1 56 Note: Without restart, the installed components may not 
+1
+LANG:1 26 Arial,-1,13,5,50,1,0,0,0,0
+0 1
+LANG:1 36 work properly and damage the system.
+1
+LANG:1 26 Arial,-1,13,5,50,1,0,0,0,0
+0 1
+LANG:1 0 
+1
+LANG:1 26 Arial,-1,13,5,50,1,0,0,0,0
+0 1
+LANG:1 69 "Run PostInstall scripts" will trigger the execution of all component
+1
+LANG:1 26 Arial,-1,13,5,50,1,0,0,0,0
+0 1
+LANG:1 72 post-installation scripts skipping the project restart (Use only if you 
+1
+LANG:1 26 Arial,-1,13,5,50,1,0,0,0,0
+0 1
+LANG:1 27 know what you are doing!!!)
+2 10
+"infoText1"
+""
+1 85 15 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 85 15 416 30
+0 2 2 "0s" 0 0 0 192 0 0  85 15 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 59 The installation of components requires a project restart. 
+13 11
+"btnPostInstalls"
+""
+1 80 187 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  78 185 222 213
+
+T 
+1
+LANG:1 23 Run PostInstall scripts
+"main()
+{
+  //To be on the safe side we release the sync lock before triggering
+  //the execution of the post-install scripts as these may crash in the 
+  //user code.
+  btnCancel.enabled = false;
+  btnOKtoInstall.enabled = false;
+  btnPostInstalls.enabled = false;
+  
+  fwInstallationDBAgent_releaseSynchronizationLock();
+  int retVal = fwInstallation_executePostInstallScripts();
+  openProgressBar(\"Post-installs\", \"copy.gif\", \"Starting execution of post-install scripts\", \"Please, wait...\", \"\", 1);
+  int cnt = 1;
+  dyn_string pendingPostInstalls = makeDynString(\"\");
+  while(retVal == 0 && dynlen(pendingPostInstalls) > 0 && cnt < 200)
+  {
+    delay(0,100);
+    dpGet(fwInstallation_getInstallationPendingActionsDp() + \".postInstallFiles\", pendingPostInstalls);
+  }
+  //delay(5);
+  closeProgressBar();
+  PanelOff();
+}
+
+
+
+
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

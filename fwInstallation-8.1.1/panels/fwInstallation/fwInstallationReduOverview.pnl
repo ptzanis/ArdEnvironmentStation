@@ -1,0 +1,401 @@
+V 13
+2
+LANG:1 6 txHost
+LANG:10001 6 txHost
+PANEL,-1 -1 410 88 N "_3DFace" 2
+"$host"
+"$project"
+"main()
+{
+ 
+  string host = $host;
+  string project = $project;
+  dyn_mixed projProperties;
+  int projId;
+  string peer1Host, peer2Host;
+  if (host != myReduHost() || project != PROJ)
+  {
+    fwInstallationDB_getProjectProperties(project, host, projProperties, projId);
+    if (projId > 0)
+    {
+      g_sSystemName = projProperties[FW_INSTALLATION_DB_PROJECT_SYSTEM_NAME];
+      peer1Host = projProperties[FW_INSTALLATION_DB_PROJECT_HOST];
+      peer2Host = projProperties[FW_INSTALLATION_DB_PROJECT_REDU_HOST];
+    }
+  }
+  else
+  {
+    g_sSystemName = getSystemName();
+    int localReduNum = fwInstallationRedu_myReduHostNum();
+    
+
+    if(localReduNum == 1)  
+    {
+      peer1Host = strtoupper(host);
+      peer2Host = fwInstallationRedu_getPair();
+    }
+    else
+    {
+      peer1Host = fwInstallationRedu_getPair();      
+      peer2Host = strtoupper(host);
+    }
+  }
+ 
+  g_sHost1 = \"Host #1: \" + peer1Host;
+  g_sHost2 = \"Host #2: \" + peer2Host;
+
+  
+  //check whether we have distributed connection to the system
+  dyn_int connectedSystems;
+  dpGet(fwInstallationRedu_getLocalDp(\"_DistManager\") + \".State.SystemNums\", connectedSystems);
+  int sysID = getSystemId(g_sSystemName);
+  if (g_sSystemName == getSystemName() || (sysID > 0 && dynContains(connectedSystems, sysID)))// if we have connection to this system
+  {
+    btnDetails.enabled = true;
+    dpConnect(\"setReduInfo\", 
+              g_sSystemName + \"_ReduManager.Status.Active\",
+              g_sSystemName + \"_ReduManager_2.Status.Active\",
+              g_sSystemName + \"_ReduManager.SplitMode\",
+              g_sSystemName + \"_ReduManager.SplitActive\",              
+              g_sSystemName + \"_ReduManager_2.SplitActive\",                            
+              g_sSystemName + \"_ReduManager.FileSync.State\",
+              g_sSystemName + \"_ReduManager.IsRecovering\",
+              g_sSystemName + \"_ReduManager_2.IsRecovering\"
+            );
+  }
+  else
+    animateNoConnection();
+}
+
+
+
+
+" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "string g_sSystemName;
+string g_sHost1;
+string g_sHost2;
+
+setReduInfo(string dpe1, bool active1,
+            string dpe2, bool active2,
+            string dpe3, int split,
+            string dpe4, bool splitActive1,
+            string dpe5, bool splitActive2,
+            string dpe6, int filesync,
+            string dpe7, int isRecovering1,
+            string dpe8, int isRecovering2
+            )
+{
+  //peer 1
+  if(isRecovering1)
+  {
+    txHost1.text = g_sHost1 + \" (recovering)\";
+    tfHost1.backCol = \"STD_valve_opening\";
+  }
+  else if(active1)
+  {
+    txHost1.text = g_sHost1 + \" (active)\";
+    tfHost1.backCol = \"STD_on\";
+  }
+  else
+  {
+    txHost1.text = g_sHost1 + \" (passive)\";
+    tfHost1.backCol = \"STD_led_Off\";
+  }
+  //peer 2
+  if(isRecovering2)
+  {
+    txHost2.text = g_sHost2 + \" (recovering)\";
+    tfHost2.backCol = \"STD_valve_opening\";
+  }
+  else if(active2)
+  {
+    txHost2.text = g_sHost2 + \" (active)\";
+    tfHost2.backCol = \"STD_on\";
+  }
+  else
+  {
+    txHost2.text = g_sHost2 + \" (passive)\";
+    tfHost2.backCol = \"STD_led_Off\";
+  }
+  
+  //FileSync:
+  if(filesync) 
+  {
+    txFileSync.text = \"File sync: Enabled\";
+    tfFileSync.backCol = \"STD_on\";
+  }
+  else
+  {
+    txFileSync.text = \"File sync: Disabled\";
+    tfFileSync.backCol = \"STD_led_Off\";
+  }
+
+  //State:
+  if(split)    
+  {
+    txReduMode.text = \"Split\";
+    if (splitActive1)
+      txHost2.text = txHost2.text + \" - test\"; // When host2 is active host 1 is in test
+    
+    if (splitActive2)
+      txHost1.text = txHost1.text + \" - test\"; // When host2 is active host 1 is in test
+
+  }
+  else         
+  {
+    txReduMode.text = \"Redundant\";
+  }
+
+  
+}
+
+animateNoConnection()
+{
+  txHost1.text = g_sHost1;
+  tfHost1.backCol = \"STD_dp_not_existing\";
+  txHost2.text = g_sHost2;  
+  tfHost2.backCol = \"STD_dp_not_existing\";
+  txFileSync.text = \"File sync: N/A\";
+  tfFileSync.backCol = \"STD_dp_not_existing\";
+  txReduMode.text = \"N/A\";
+  btnDetails.enabled = false;
+}
+
+
+
+
+
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+30 30
+"frRedundancy"
+""
+1 10 4 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+24 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 0 1 0 1 E 0.8891304347826087 0 0.9062500000000002 -8.89130434782609 -3.625 0 E 10 4 471 101
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 10 Redundancy
+LANG:10001 10 Redundancy
+2 31
+"txHost1"
+""
+1 30 22 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 30 22 78 36
+0 2 2 "0s" 0 0 0 192 0 0  30 22 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 8 Peer 1: 
+LANG:10001 8 Peer 1: 
+2 32
+"txHost2"
+""
+1 -111.9999999999999 4.000000000000054 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.9999999999999999 0 1 0 -7.999999999999996 0 E 30 50 74 64
+0 2 2 "0s" 0 0 0 192 0 0  30 50 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 7 Peer 2:
+LANG:10001 7 Peer 1:
+2 36
+"txFileSync"
+""
+1 30 62 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 30 62 89 76
+0 2 2 "0s" 0 0 0 192 0 0  30 62 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 10 File sync:
+LANG:10001 9 File Sync
+13 37
+"btnDetails"
+""
+1 309 53 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  307 51 400 79
+
+T 
+2
+LANG:1 11 Details ...
+LANG:10001 7 Details
+"main()
+{
+  ChildPanelOnCentral(\"vision/SystemOverviewRedundant.pnl\", \"WinCCOASysOverview\", makeDynString(\"$System:\" + g_sSystemName));
+}
+
+" 0
+ E E E
+14 42
+"txReduMode"
+""
+1 169 60 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+36 0 0 0 0 0
+E E E
+0
+2
+LANG:1 4 Mode
+LANG:10001 4 Mode
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  307 18 400 44
+2 "0s" 0 0 0 0 0 -1  E E E
+6 43
+"tfHost1"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+37 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -9 -268 1 E 20 290 35 305
+6 44
+"tfHost2"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+38 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -9 -248 1 E 20 290 35 305
+6 45
+"tfFileSync"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "white" E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -9 -228 1 E 20 290 35 305
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

@@ -1,0 +1,2348 @@
+V 14
+2
+LANG:1 9 MainPanel
+LANG:10001 9 MainPanel
+PANEL,-1 -1 850 800 N "_3DFace" 0
+"#uses \"fwInstallation.ctl\"
+#uses \"fwInstallationDBAgent.ctl\"
+
+bool installationDirectorySet; // this variable is true - when installation directory is set in the data point, 
+							                 // 				   false - other cases
+
+main()
+{
+  //Establish access control callback if AC is installed:
+  dyn_string exception;
+  string acVer, reduManagerDp, paramDp;
+  bool bRedundant = fwInstallationRedu_isRedundant();
+  int reduHostNum = fwInstallationRedu_myReduHostNum();
+  
+  showInstallationInfo(false);
+  showExtendedPanel(bRedundant);
+  
+  if(bRedundant)
+  {    
+    reduManagerDp = reduHostNum == 1? \"_ReduManager\":\"_ReduManager_2\";
+    paramDp = fwInstallation_getAgentDp();
+    dpConnect(\"splitModeCB\", reduManagerDp + \".SplitMode\", reduManagerDp + \".SplitActive\", paramDp + \".redundancy.installOnlyInSplit\");
+  }
+  
+  if(isFunctionDefined(\"fwAccessControl_setupPanel\"))
+  {
+    fwAccessControl_setupPanel(\"initPanel\", exception);
+    if(dynlen(exception))
+    {
+      ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:\"+exception));
+    }
+  }
+  else
+  {
+    //force update list of components at the end of the installation
+    gUpdateComponentList = true; 
+    initPanel(\"\", \"\");
+  }
+  
+  //setup callback on pending postInstallFiles dpe to know when installed components list should be refreshed (when user after installation choose \"Run Post-install scripts\" instead of project restart)
+  dpConnect(\"updateComponentsListWhenPostInstallsDoneCB\", fwInstallation_getInstallationPendingActionsDp() + \".postInstallFiles\");
+}
+
+
+
+
+
+
+
+" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "bool enableReduButtons = true;
+bool gUpdateComponentList = true;
+
+string checkInstallationDirectory()
+{
+  string destinationDir;
+  string dp = fwInstallation_getInstallationDp();
+  dpGet(dp + \".installationDirectoryPath\", destinationDir);
+  if(destinationDir == \"\")
+  {
+    // ask for the installation directory
+    ChildPanelOnCentral(\"fwInstallation/fwInstallationSelectDirectory.pnl\", \"fwInstallation_SelectDirectory\", \"\");
+    dpGet(dp + \".installationDirectoryPath\", destinationDir);
+  }
+  
+  return destinationDir;
+}
+    
+updateSysDB()
+{
+    //Update the System Configuration DB if required:
+  if(fwInstallationDB_getUseDB())
+  {
+    if(fwInstallationDB_connect()){fwInstallation_throw(\"Failed to connect to the System Configuration DB after component deletion\", \"WARNING\", 10); return;}
+    int restartProject = 0;
+    int projectId, autoregEnabled;
+    fwInstallationDB_isProjectRegistered(projectId);
+    fwInstallationDB_getProjectAutoregistration(autoregEnabled);
+    if (projectId > 0 || autoregEnabled == 1) //if the project is already registered or the autoregistration is enabled
+    {  
+      if(fwInstallationDBAgent_synchronize(restartProject)) {fwInstallation_throw(\"Failed to upate the System Configuration DB after component deletion\", \"WARNING\", 10); return;}
+      fwInstallationDB_storeInstallationLog();
+    }
+  }	
+
+}
+
+void updateComponentsListWhenPostInstallsDoneCB(string pendingPostInstallDpe, dyn_string pendingPostInstallList)
+{
+  if(gUpdateComponentList && dynlen(pendingPostInstallList) == 0)
+    fwInstallation_getInstalledComponentsUI();
+}
+
+void showAdvancedOptions()
+{
+  int mode;
+  dyn_string ds;
+  dyn_float df;
+  bool oldUseDB = fwInstallationDB_getUseDB();
+  
+  gUpdateComponentList = false;  
+  enablePanelControls(FALSE);
+  
+  ChildPanelOnCentralReturn(\"fwInstallation/fwInstallationAdvancedOptions.pnl\", \"Advanced Options ...\", \"\", df, ds);
+  dbVisibility(fwInstallationDB_getUseDB());
+  
+  if(!oldUseDB && fwInstallationDB_getUseDB()){
+    dpConnect(\"overallProjectStatusCB\", \"fwInstallation_agentParametrization.db.projectStatus\", \"fwInstallation_agentParametrization.db.projectStatus:_original.._stime\");
+  }
+
+  initPanel(\"\", \"\");
+  
+  //refresh agent panel
+  if(fwInstallationDB_getUseDB() && fwInstallationDB_connect() == 0)
+  {
+    mode = fwInstallationDB_getCentrallyManaged();
+    if(mode)
+    {
+      txManagement.text = \"Centrally managed.\";
+      txManagement.toolTipText(\"Database is master.\");
+    }
+    else
+    {
+      txManagement.text = \"Locally managed.\";
+      txManagement.toolTipText(\"Project is master.\");
+    }
+  }
+}
+
+void splitModeCB(string splitModeDpe, bool splitMode,
+                string splitModeActiveDp, bool splitActive,
+                string installInSplitDp, int installOnlyInSplit)
+{
+  int reduHostNum = fwInstallationRedu_myReduHostNum();
+  
+  // disable buttons if it is only allowed to install in split mode and we are not in split mode passive
+  if (installOnlyInSplit == 1)
+  {
+    enableReduButtons = false;
+    if (splitMode)
+    {
+      if (!splitActive)
+      {
+        // check whether the UI is opened with -event -data 
+        int connectedToLocalEvent = fwInstallatinRedu_isConnectedToEventManager(reduHostNum);
+        int connectedToPairEvent = fwInstallatinRedu_isConnectedToEventManager(fwInstallationRedu_myPairReduHostNum(reduHostNum));
+        if (connectedToLocalEvent && !connectedToPairEvent)
+        {
+          enableReduButtons = true;
+          string reduHost = myReduHost();
+          txRedundancy.text = \"Framework Installation Tool running on redundant host #\" + reduHostNum + \": \" + reduHost;
+        }
+        else
+        {
+          // show a message that the UI should be opened with options -event -data
+          txRedundancy.text = \"Please start the Installation Tool panel with options: -event currentHost -data currentHost\";
+        }
+      }
+      else 
+      {
+        // show a message that components can be installed only in the split passive pair
+        txRedundancy.text = \"Components can only be installed in the split passive pair.\";        
+      }
+    }
+    else
+    {
+      // show a message that in order to install components split moe should be enabled
+      txRedundancy.text = \"Components can only be installed when the project is in split mode.\";   
+    }
+    enableReduButtons(enableReduButtons);
+  }
+  else
+  {
+    if (splitMode)
+    {
+      enableReduButtons = false;
+      txRedundancy.text = \"Project is currently in split mode. Installation Tool installs only in active peer. Change configuration in options.\";
+    }
+    else
+    {
+      enableReduButtons = !fwInstallationRedu_isPassive();
+    }
+  }
+}
+
+void showInstallationInfo(bool visible)
+{
+  if(visible)
+    triggerEvent(refInstallationInfo.eventStartReporting);
+  else
+    triggerEvent(refInstallationInfo.eventStopReporting);
+  
+  const int hDiff = 33;
+  dyn_int listPos = list.positionAsDyn();
+  dyn_int listSize = list.sizeAsDyn();
+  listPos[2] += visible?(hDiff):(-hDiff);
+  listSize[2] += visible?(-hDiff):(hDiff);
+  list.positionAsDyn = listPos;
+  list.sizeAsDyn = listSize;
+}
+
+void showExtendedPanel(bool bExtended)
+{
+  int reduHostNum;
+  string reduHost;
+
+  if(bExtended)
+  {
+    reduHostNum = fwInstallationRedu_myReduHostNum();
+    reduHost = myReduHost();
+    
+    txRedundancy.visible = true;
+    redundancyInfoBg.visible = true;
+    txRedundancy.text = \"Framework Installation Tool running on redundant host #\" + reduHostNum + \": \" + reduHost;
+    frmDelete.text = \"View / delete components on \" + reduHost + \" (#\" + reduHostNum + \", LOCAL)\";
+  
+    addSymbol(myModuleName(), 
+              myPanelName(), 
+              \"fwInstallation/fwInstallationReduPeer.pnl\", 
+              \"ReduPeer\", 
+              makeDynString(), 
+              850, 35, 0, 1, 1);
+    
+    addSymbol(myModuleName(), 
+              myPanelName(), 
+              \"fwInstallation/fwInstallationReduOverview.pnl\", 
+              \"ReduOverview\", 
+              makeDynString(\"$host:\" + myReduHost(), \"$project:\" + PROJ), 
+              850, 462, 0, 1, 1);
+    
+   
+    btnAdvanced.position(10, 765);
+    viewLogfile.position(170, 765);
+    btnClose.position(1185, 765); 
+    versionInfo.position(1214, 6);
+    btnHelp.position(1234, 2);
+    list.size(1250, 162); 
+    
+    setPanelSize(myModuleName(), myPanelName(), FALSE, 1269, 800);
+  }
+  else
+  {
+    txRedundancy.visible = false;
+    redundancyInfoBg.visible = false;
+    
+    btnAdvanced.position(10, 732);
+    viewLogfile.position(170, 732);
+    btnClose.position(765, 732);
+    
+    setPanelSize(myModuleName(), myPanelName(), FALSE, 850, 767);
+  } 
+}
+
+enableReduButtons(bool enabled)
+{
+  btnApplyInstall.enabled = enabled;
+  btnSync.enabled = enabled;
+  btnApplyDelete.enabled = enabled;
+}
+
+initPanel(string dp, anytype val)
+{
+  string sPath;
+  string pathToConfigFile;
+  dyn_string commonComponentsInfo, pvssMissingComponentsInfo, dbMissingComponentsInfo;	
+  dyn_string ds;
+  dyn_float df;  
+  dyn_int projectStatus;
+  string schemaVersion;
+  int projectId;
+  int error;
+  int restartProject;
+  bool isCentrallyManaged = false;
+
+  dbVisibility(false);
+  dp = fwInstallation_getInstallationDp();
+  
+  enablePanelControls(FALSE);
+
+  //FVR: 30/03/2006: Check user access rights to the para module
+  if (!getUserPermission(4))
+  {
+    DebugN(\"ERROR: You do not have sufficient rights on this system to run the FW Installation Tool.\");
+	  ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:You do not have sufficient rights\\non this system to run the FW Installation Tool.\"));
+    btnClose.enabled = true; 
+    return;
+  }
+
+  if(fwInstallation_init())
+  {
+    enablePanelControls(FALSE);
+    btnClose.enabled = true;
+    ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"Initialization ERROR\", makeDynString(\"$1:Failed to initialize the FW Component Installation Tool.\\nSee log-viewer for details.\\nPlease, reinstall the tool.\"));
+    return;
+  }
+
+  // ask for the installation directory
+  if(dpExists(dp + \".installationDirectoryPath\"))
+    dpGet(dp + \".installationDirectoryPath\", sPath);
+  else
+  {
+    dpCreate(dp , \"_FwInstallationInformation\");
+    sPath = \"\";
+  }
+
+  if(sPath == \"\")
+  {    
+    ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallationSelectDirectory.pnl\", 
+                                   \"fwInstallation_SelectDirectory\", \"$msg:\", df, ds);
+  }
+  else if(access(sPath, F_OK) < 0)//the directory does not exist
+  {
+    ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallationSelectDirectory.pnl\", 
+                                   \"fwInstallation_SelectDirectory\", \"$msg:Former installation directory does not exist. Please change it or \\nclick OK to create it.\", df, ds);
+  }
+
+  //FVR: 30/03/2006: Add fwInstallation.ctl to the config file of the project
+  pathToConfigFile = getPath(CONFIG_REL_PATH) + \"/\"+ gFwInstallationConfigFile;
+  fwInstallation_AddComponentIntoConfig(pathToConfigFile, gFwInstallationComponentName);
+  
+  //Check if the db-connection parameters are initialized, otherwise offer the possibility to do it now.    
+  if(!fwInstallationDB_getInitialized()){
+    // FWINS-2026 - remove db configuration pop-up at first start of fwInstallation
+    /*ChildPanelOnCentralReturn(\"fwInstallation/fwInstallation_messageInfo.pnl\", 
+                              \"FW Installation DB\", 
+                              makeDynString(\"$text:Would you like to set up connection to the\\nFW System Configuration DB to be used by the\\nFW Installation Tool?\", \"$help:fwInstallation/fwInstallationDB.html\"), 
+                              df, ds);*/
+    fwInstallationDB_setInitialized(true);
+    /*if(dynlen(df) > 0 && df[1] == 1.){
+      ChildPanelOnCentralReturn(\"fwInstallation/fwInstallationDB_connectionSetup.pnl\", \"DB Connection Setup\",makeDynString(\"\"), df, ds);
+    }*/
+  }
+
+
+  //Has the user defined that (s)he wants to use the system configuration DB  
+  if(fwInstallationDB_getUseDB())
+  {
+    openProgressBar(\"DB Connection\", \"copy.gif\", \"Establishing connection to System Configuration DB\", \"This may take a few seconds\", \"Please, wait\", 1);
+    if(fwInstallationDB_connect())
+    {
+      ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"DB Connection Error\", makeDynString(\"$1:Connection error. DB connection has been disabled.\\nPlease, \\\"Advance Options\\\" to re-enable it.\\nCheck log-viewer for more details\"));
+      fwInstallationDB_setUseDB(FALSE);
+      closeProgressBar();
+      enablePanelControls(TRUE);      
+      return;
+    }
+    closeProgressBar();
+
+    fwInstallationDB_getSchemaVersion(schemaVersion);
+    
+    //do we have the right schema version? 
+    if(!fwInstallationDB_compareSchemaVersion()) 
+    {
+      ChildPanelOnCentral(\"vision/MessageInfo1\", \"DB ERROR\", makeDynString(\"$1:Invalid DB schema version: \" + schemaVersion + \". This tool requires version \" + FW_INSTALLATION_DB_REQUIRED_SCHEMA_VERSION + \". Contact your central DCS team.\")); 
+      fwInstallationDB_setUseDB(FALSE);
+    }
+    else
+    {
+      dbVisibility(true);
+      
+      txSchema.text = \"Schema version: \" + schemaVersion;
+   
+      dpConnect(\"overallProjectStatusCB\", \"fwInstallation_agentParametrization.db.projectStatus\", \"fwInstallation_agentParametrization.db.projectStatus:_original.._stime\");
+      //Check if project registered in DB
+      fwInstallationDB_isProjectRegistered(projectId);
+      if(projectId > 0)
+      {
+        openProgressBar(\"FW Component Installation\", \"copy.gif\", \"Checking DB-PVSS consistency. This may take a few seconds...\",\"\", \"Please wait...\", 1); 
+        isCentrallyManaged = fwInstallationDB_getCentrallyManaged();
+        if(fwInstallationDBAgent_checkIntegrity(projectStatus) != 0)
+        {
+          ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:DB contents consistency check failed. Please, check DB connection.\")); 
+        }
+        closeProgressBar();
+        }
+      else
+      {
+        //check whether the project registration is enabled in the DB
+        int regEnabled;
+        fwInstallationDB_getProjectAutoregistration(regEnabled);
+        if (regEnabled == 1)
+        {
+          ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallationDB_question\", \"INFO\", makeDynString(\"$txt:Project: \" + PROJ + \" in computer: \" + getHostname() + \" not yet registered in DB\\nWould you like to register it now?\"), df, ds);
+          if(dynlen(df) && df[1] >= 1.)
+          {
+            openProgressBar(\"FW Component Installation\", \"copy.gif\", \"Exporting project configuration to DB. This may take a few seconds...\",\"\", \"Please wait...\", 1); 
+            fwInstallationDBAgent_getSynchronizationLock();
+            error = fwInstallationDBAgent_synchronize(restartProject);
+            fwInstallationDBAgent_releaseSynchronizationLock();
+            if(error != 0)
+            {
+             ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Failed to export project configuration to DB\")); 
+            }else{
+              ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Project configuration successfully exported to DB\")); 
+            }
+            closeProgressBar();
+          } 
+        }
+      }
+    }       
+  }//end of use db
+
+  //Check if project is centrally managed:
+  if(isCentrallyManaged)
+  {
+    btnAdvanced.enabled = true;
+    setupDbButton.enabled = true;
+    btnClose.enabled = true;
+    btnRefresh.enabled = true;
+  }
+  else
+  {
+    enablePanelControls(TRUE);
+  }
+   
+  // get all installed components and display it in a table
+  if(gUpdateComponentList){ fwInstallation_getInstalledComponentsUI();}
+  
+  dpConnect(\"agentLockCB\", false, \"fwInstallation_agentParametrization.lock\");  
+}    
+ 
+void agentLockCB(string lockDpe, int value)
+{
+  bool allOk = false;
+  
+  if(value)
+  {
+    txAgent.visible = true;
+    infoTextArrow.visible = true;
+    btnApplyInstall.enabled = false;
+    btnApplyDelete.enabled = false;
+//    btnDB.enabled = false;
+  }
+  else
+  {
+    txAgent.visible = false;
+    infoTextArrow.visible = false;
+    if(fwInstallationDB_getUseDB() && fwInstallationDB_compareSchemaVersion() && fwInstallationDB_connect() == 0 && fwInstallationDB_getCentrallyManaged())
+    {
+      allOk = true;
+      btnApplyInstall.enabled = false;
+      btnApplyDelete.enabled = false;
+    }else{
+      allOk = false;
+      btnApplyInstall.enabled = enableReduButtons;
+      btnApplyDelete.enabled = enableReduButtons;
+    }
+    //btnDB.enabled = true;
+    
+/*
+    if(allOk && fwInstallationDB_getCentrallyManaged())
+      btnDB.text = \"Import config from DB\";
+    else
+      btnDB.text = \"Export config to DB\";
+*/
+  }
+  
+  return;
+}   
+    
+    
+enablePanelControls(bool bEnabled)
+{
+	txtSourceDir.enabled = bEnabled;
+	tblInstalledComponents.enabled = bEnabled;
+  tblAvailableComponents.enabled = bEnabled;
+  cbScanRecursively.enabled = bEnabled;
+  ShowSubComponents.enabled = bEnabled;
+  ShowHiddenComponents.enabled = bEnabled;
+  ShowInstalledSubComponents.enabled = bEnabled;
+
+	btnAdvanced.enabled = bEnabled;	
+  setupDbButton.enabled = bEnabled;
+	btnClose.enabled = bEnabled;
+	btnRefresh.enabled = bEnabled;
+	btnSelectSourceDir.enabled = bEnabled;
+	refreshAvailableButton.enabled = bEnabled;
+  
+  btnApplyInstall.enabled = enableReduButtons && bEnabled;
+	btnApplyDelete.enabled = enableReduButtons && bEnabled;
+ 
+  if(fwInstallationRedu_isRedundant())
+  {
+    btnSync.enabled = enableReduButtons && bEnabled;
+  }
+  else
+  {
+    btnSync.enabled = FALSE;
+  }
+  
+  if(shapeExists(\"btnDBDetails\"))
+  {
+    btnDBDetails.enabled = bEnabled;
+  }
+  
+  if(shapeExists(\"btnCheck\"))
+  {
+    btnCheck.enabled = bEnabled;
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+dbVisibility(bool bVisible)
+{  
+  int centrallyManaged;
+
+  enablePanelControls(FALSE);
+  showNoDbConnectionInfo(!bVisible); 
+ 
+  if(shapeExists(\"DB_INFO_PANEL\"))
+  {
+    removeSymbol(myModuleName(), myPanelName(), \"DB_INFO_PANEL\");
+  }
+  
+  if(bVisible)
+  {    
+    addSymbol(myModuleName(), myPanelName(), \"fwInstallation/fwInstallation_projectDbIntegrity.pnl\", \"DB_INFO_PANEL\", makeDynString(), 430, 462, 0, 1, 1);
+    
+    if(fwInstallationDB_connect() == 0)
+    {
+      fwInstallationDB_getProjectManagementMode(centrallyManaged);
+      if(centrallyManaged)
+      {
+        txManagement.text = \"Centrally managed.\";
+        txManagement.toolTipText(\"Database is master.\");
+      }
+      else
+      {
+        txManagement.text = \"Locally managed.\";
+        txManagement.toolTipText(\"Project is master.\");
+      }
+    }
+  }
+ 
+  enablePanelControls(TRUE);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+showNoDbConnectionInfo(bool bVisible)
+{
+  noDbConnectionBg.visible = bVisible;
+  noDbConnectionText.visible = bVisible;
+  setupDbButton.visible = bVisible;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void overallProjectStatusCB(string dpe, dyn_int val, string dpe2, time tTimestamp)
+{
+  string sColor;
+  string sMessage;
+
+  if(val[FW_INSTALLATION_DB_STATUS_PVSS_INFO] &&
+     val[FW_INSTALLATION_DB_STATUS_PVSS_PATCH_INFO] &&
+     val[FW_INSTALLATION_DB_STATUS_HOST_INFO] &&
+     val[FW_INSTALLATION_DB_STATUS_PROJECT_INFO] &&
+     val[FW_INSTALLATION_DB_STATUS_PATH_INFO] &&
+     val[FW_INSTALLATION_DB_STATUS_MANAGER_INFO] &&
+     val[FW_INSTALLATION_DB_STATUS_COMPONENT_INFO] &&
+     val[FW_INSTALLATION_DB_STATUS_DIST_PEERS_INFO])
+  {
+    sColor = \"green\";
+    sMessage = \"OK (\" + formatTime(\"%d/%m/%Y - %H:%M:%S\", tTimestamp) + \")\";
+  }
+  else
+  {
+    sColor = \"red\";
+    sMessage = \"NOT OK (\" + formatTime(\"%d/%m/%Y - %H:%M:%S\", tTimestamp) + \")\";  
+  }
+  
+  txOverallStatus.text = sMessage;
+  overallStatus.backCol = sColor;
+  //overallStatus.foreCol = sColor;
+
+  if(shapeExists(\"tblInstalledComponents\") && gUpdateComponentList)
+  {
+    fwInstallation_getInstalledComponentsUI();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" "main()
+{
+	// dummy to prevent panel from closing   
+}
+" 0
+
+"dpi" "96"
+0 0 0
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 117
+"redundancyInfoBg"
+""
+1 0 650 E E E 1 E 1 E N {255,102,102} E N {255,102,102} E E
+ E E
+51 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 732 1269 754
+6 104
+"bgRectangle"
+""
+1 20 530 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E -1 -1 1268 29
+30 15
+"frmDelete"
+""
+1 400 475 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1 0 0.9474726923474043 29.99999999999996 -2.89890769389617 0 E 400 40 810 480
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,75,0,0,0,0,0
+0 2
+LANG:1 24 View / delete components
+LANG:10001 24 View / Delete Components
+2 10
+"filePathLabel"
+""
+1 19 55 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 21 57 77 72
+0 2 0 "0s" 0 0 0 192 0 0  21 57 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 10 File path:
+LANG:10001 27 Look for new components in:
+30 18
+"frmInstall"
+""
+1 10 480 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1.10840108401084 0 1.170842824601371 -1.0840108401084 -11.83371298405481 0 E 10 40 380 480
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 18 Install components
+LANG:10001 18 Install Components
+2 23
+"availableComponentsLabel"
+""
+1 20 109 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 22 111 154 126
+0 2 0 "0s" 0 0 0 192 0 0  22 111 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 21 Available components:
+LANG:10001 21 Available Components:
+2 30
+"versionInfo"
+""
+1 795 6 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+"main()
+{
+  string version;
+  
+  fwInstallation_getToolVersion(version);
+  this.text = this.text + \" \" + version;
+}" 0
+ E 0 1 1 0 1 E U  0 E 751 6 795 21
+0 2 0 "0s" 0 0 0 194 0 0  795 6 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 7 Version
+LANG:10001 7 Version
+2 20
+"installedComponentsLabel"
+""
+1 439 55 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 441 57 570 72
+0 2 0 "0s" 0 0 0 192 0 0  441 57 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 21 Installed components:
+LANG:10001 21 Installed Components:
+25 14
+"tblAvailableComponents"
+""
+1 -119 -75.917955801105 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  fwInstallation_ui_componentsTableRightClickPopupMenu(getShape(\"\"), row, column);
+}" 0
+ "/**	if the user double clicks on the Status column 
+the panel with the component details is shown
+*/
+main()
+{	
+	
+	int xpos;
+	string columnName;
+	int columnNr;
+	string componentName;
+	string descFile;
+	string directoryInfo;
+	string typeOfDescription = \"xml\";
+	
+	// get the shape of the table
+	shape tab = getShape(\"tblAvailableComponents\");
+	
+	// get the coordinates of the current cell
+	getValue(tab, \"currentCell\", xpos, columnNr);
+	columnName = tab.currentColumn();
+
+	// check the column name
+	 if((columnName == \"componentName\") || (columnName == \"componentVersion\"))
+	 {
+		
+		// get the component name	 
+		componentName = tab.cellValueRC(xpos, \"componentName\");
+		
+		// get the description file name - it is stored in a hidden column
+		descFile = tab.cellValueRC(xpos, \"descFile\");	
+			
+			// open the panel with details of a component	 
+	 		ChildPanelOnCentral(\"fwInstallation/fwInstallationComponentDetails.pnl\", \"Details of \" + componentName,
+			 makeDynString(\"$componentName:\" + componentName, \"$descFile:\" + descFile , \"$typeOfDescription:\" + typeOfDescription));
+	}
+}	
+
+
+" 0
+
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  19 153 410 504.0000000000001
+E"/**	if the user  clicks on the Status column 
+the column value is changed ( Install -> \"\" , or \"\" -> Install
+*/
+main(int row, string column, string value)
+{
+		// if user clicked on colStatus column
+		if (column == \"colStatus\") 
+		{
+			// check the old value
+			if (value == \"Install\") 
+			{
+				// set new value to empty
+				setValue(\"\",\"cellValueRC\",row,\"colStatus\",\" \");
+			}
+			else if(value == \"Installed\")
+			{
+				// The component is already installed - do nothing
+				setValue(\"\",\"cellValueRC\",row,\"colStatus\",\"Re-Install\");
+			}
+			else if(value == \"Re-Install\")
+			{
+				// The component is already installed - do nothing
+				setValue(\"\",\"cellValueRC\",row,\"colStatus\",\"Installed\");
+			}
+			else 
+			{
+				// set new value to install
+				setValue(\"\",\"cellValueRC\",row,\"colStatus\",\"Install\");
+			}
+		}
+}
+" 0
+ 1 0 1 4 1 "componentName" 18 1 0 "s" 2
+LANG:1 4 Name
+LANG:10001 14 Component Name
+E
+2
+LANG:1 50 Subcomponents are shown with a leading underscore.
+LANG:10001 50 Subcomponents are shown with a leading underscore.
+
+210 "componentVersion" 6 1 0 "s" 2
+LANG:1 7 Version
+LANG:10001 7 Version
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+80 "colStatus" 6 1 0 "s" 2
+LANG:1 7 Install
+LANG:10001 9 Install ?
+E
+2
+LANG:1 19 Click to set action
+LANG:10001 0 
+
+80 "descFile" 5 1 0 "s" 2
+LANG:1 8 descFile
+LANG:10001 8 descFile
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+70 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 0 2 0 1 7
+1 0
+13 17
+"btnApplyInstall"
+""
+1 319 514 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  317 512 410 540
+
+T 
+2
+LANG:1 11 Install ...
+LANG:10001 7 Install
+"// Install the components
+main()
+{
+  dyn_string descFiles;
+  string componentsInfo;
+  string descFilesInfo;
+  dyn_float dreturnf;
+  dyn_string dreturns;
+  string dontRestartProject = \"no\";
+  
+  
+  //check destination directory:
+  string destinationDir = checkInstallationDirectory();  
+  if(destinationDir == \"\")
+  {
+    ChildPanelOnCentral(\"vision/MessageInfo1\", \"Invalid path\", makeDynString(\"Invalid installation path...\"));
+    return;
+  }
+  destinationDir += \"/\";
+  
+  enablePanelControls(FALSE);
+  
+  // log start of installations:	
+  // fwInstallation_writeToMainLog(formatTime(\"[%Y-%m-%d_%H:%M:%S] \",getCurrentTime()) + \"Starting installation\");
+
+  //read components to be installed
+  for(int i = 0 ; i < tblAvailableComponents.lineCount(); i++)
+  {
+    if((tblAvailableComponents.cellValueRC(i, \"colStatus\") == \"Install\") ||
+       (tblAvailableComponents.cellValueRC(i, \"colStatus\") == \"Re-Install\"))
+    {
+      componentsInfo += tblAvailableComponents.cellValueRC(i, \"componentName\") + \"=\" + tblAvailableComponents.cellValueRC(i, \"componentVersion\") + \"|\";
+      descFilesInfo += tblAvailableComponents.cellValueRC(i, \"descFile\") + \"|\";
+      dynAppend(descFiles, tblAvailableComponents.cellValueRC(i, \"descFile\"));
+    }
+  }
+  
+  if(dynlen(descFiles) <=0)
+  {
+    enablePanelControls(true);
+    return; //nothing to be done
+  }
+  
+  //force update list of components at the end of the installation
+  gUpdateComponentList = true; 
+
+  //show info to the user  
+  fwInstallation_showMessage(formatTime(\"[%Y-%m-%d_%H:%M:%S] \",getCurrentTime()) + \" Starting installation\");
+  string sourceDir = txtSourceDir.text;
+  ChildPanelOnCentralReturn(\"fwInstallation/fwInstallationToInstall.pnl\", \"fwInstallation_ToInstall\",
+                            makeDynString(\"$componentsInfo:\" + componentsInfo , \"$descFilesInfo:\" + descFilesInfo, \"$sourceDir:\" + sourceDir), dreturnf, dreturns);
+
+  //install components if choosen by the user:			
+  if(dreturns[1] == \"Install\")
+  {
+    showInstallationInfo(true);
+    
+    if(fwInstallation_installComponentSet(descFiles, dontRestartProject) == -1)
+    {
+      ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Detected cyclic dependencies in components, installation aborted.\"));
+      enablePanelControls(TRUE);
+      return;
+    }
+  
+    //Re-sync unicos ows files if needed:
+    if(isFunctionDefined(\"unConfigGenericFunctions_Create_Config_ows\"))
+    {
+      unConfigGenericFunctions_Create_Config_ows(\"config_ows\");
+    }
+  
+    //refresh the UI:
+    fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", getSystemName(), cbScanRecursively.state(0));
+    if(gUpdateComponentList){ fwInstallation_getInstalledComponentsUI();}
+  
+    //updateSysDB
+    updateSysDB();
+    
+    //restart-project or run post-installs
+    if(dontRestartProject == \"no\")
+    { 
+      // show the restart panel
+      ChildPanelOnCentral(\"fwInstallation/fwInstallationRestart.pnl\", \"fwInstallationRestart\", makeDynString(\"$action:\" + \"install\"));
+    }
+    else
+    {
+      //execute PostInstallation Scripts by restarting the fwScripts control manager:
+      if(fwInstallation_managerCommand(\"START\", fwInstallation_getWCCOAExecutable(\"ctrl\"), \"-f fwScripts.lst\") != 0)
+      {
+        ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Failed to launch the execution of post-installation scripts.\\nYou must restart your project.\"));
+        if(gUpdateComponentList){ fwInstallation_getInstalledComponentsUI();}
+      }
+    }
+    
+    string logFile = getPath(LOG_REL_PATH) + \"/fwInstallation.log\";
+  	fwInstallation_showMessage(formatTime(\"[%Y-%m-%d_%H:%M:%S] \",getCurrentTime()) + \"Finishing installation\");
+  	fwInstallation_showMessage(formatTime(\"[%Y-%m-%d_%H:%M:%S] \",getCurrentTime()) + \"Please find the log file for this installation operation in: \"+logFile);
+    
+    showInstallationInfo(false);
+  }
+  else
+  {
+  		fwInstallation_showMessage(makeDynString(\"Installation aborted by the user\"));
+  }
+
+  enablePanelControls(TRUE);
+}
+
+
+
+
+
+
+
+
+
+
+
+" 0
+ E E E
+25 1
+"tblInstalledComponents"
+""
+1 305.0000000000001 -46.4285714285714 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  fwInstallation_ui_componentsTableRightClickPopupMenu(getShape(\"\"), row, column);
+}" 0
+ "/**	if the user double clicks on the componentName column 
+the panel with the component details is shown
+if double click on overparameterized files, show list of overparameterized files
+*/
+main()
+{	
+	int xpos;
+	string columnName;
+	int columnNr;
+	string componentName;
+	string descFile = \"\";
+	string typeOfDescription = \"PVSSDB\";
+
+	// get shape of the table	
+	shape tab = getShape(\"tblInstalledComponents\");
+	
+	// get the coordinates of current cell	
+	getValue(tab, \"currentCell\", xpos, columnNr);
+	
+	// get the column name
+	columnName = tab.currentColumn();
+
+	 if((columnName == \"componentName\") || (columnName == \"componentVersion\"))
+	 {
+  		// get the name of a component  
+  		componentName += tab.cellValueRC(xpos, \"componentName\");
+    if(patternMatch(\"_*\", componentName))
+      componentName = strltrim(componentName, \"_\");	 
+  			// display the panel with component details 
+  	 		ChildPanelOnCentral(\"fwInstallation/fwInstallationComponentDetails.pnl\", \"Details of \" + componentName,
+  			 makeDynString(\"$componentName:\" + componentName, \"$descFile:\" + descFile , \"$typeOfDescription:\" + typeOfDescription, \"$reduHostNum:\"+fwInstallationRedu_myReduHostNum()));
+  }
+  else if(columnName == \"filesIssuesCount\")
+  {
+  	string filesIssues = tab.cellValueRC(xpos, \"filesIssues\");
+
+    if(filesIssues != \"\")
+    {
+  		  componentName = tab.cellValueRC(xpos, \"componentName\");
+  	 		ChildPanelOnCentral(\"fwInstallation/fwInstallation_filesIssues.pnl\", 
+                          \"fwInstallation_filesIssues:\" + componentName,
+                          makeDynString(\"$componentName:\" + componentName, 
+                                        \"$filesIssues:\" + filesIssues));
+
+    }
+    
+  }
+}
+
+
+
+" 0
+
+5 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  439 75 830 381
+E"/**	if the user  clicks on the Status column 
+the column value is changed ( Delete -> \"\" , or \"\" -> Delete
+*/
+main(int row, string column, string value)
+{
+	string helpComponent;
+        bool centrallyManaged;
+        
+        if(fwInstallationDB_getUseDB())
+        {
+          fwInstallationDB_getProjectManagementMode(centrallyManaged);
+          if(centrallyManaged)
+            return; //Don't allow users to select components to be installed.
+        }
+
+	// check the name of column where the user clicked
+	if (column == \"colStatus\") 
+	{
+	
+		// check the value of the cell
+		if (value == \"Delete\") 
+		{
+			// set the empty value
+			setValue(\"\",\"cellValueRC\",row,\"colStatus\",\" \");
+		}
+		else 
+		{
+			// set the Delete value
+			setValue(\"\",\"cellValueRC\",row,\"colStatus\",\"Delete\");
+		}
+	}
+	
+	if(column == \"helpFile\")
+	{
+		getValue(\"\", \"cellValueRC\", row, \"componentName\", helpComponent);
+   if(strpos(helpComponent, \"_\") == 0)
+     helpComponent = substr(helpComponent, 1, strlen(helpComponent));
+       
+		fwInstallation_showHelpFile(helpComponent);
+	}				
+}
+
+
+" 0
+ 1 0 1 6 1 "componentName" 12 1 0 "s" 2
+LANG:1 4 Name
+LANG:10001 14 Component Name
+E
+2
+LANG:1 50 Subcomponents are shown with a leading underscore.
+LANG:10001 50 Subcomponents are shown with a leading underscore.
+
+148 "componentVersion" 4 1 0 "s" 2
+LANG:1 7 Version
+LANG:10001 7 Version
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+56 "helpFile" 2 1 0 "s" 2
+LANG:1 4 Help
+LANG:10001 4 Help
+E
+2
+LANG:1 18 Click to show help
+LANG:10001 0 
+
+39 "filesIssuesCount" 6 1 0 "s" 2
+LANG:1 12 Files issues
+LANG:10001 12 Files Issues
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+78 "colStatus" 3 1 0 "s" 2
+LANG:1 6 Delete
+LANG:10001 12 Files Issues
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+49 "filesIssues" 0 0 0 "s" 2
+LANG:1 17 Files with issues
+LANG:10001 17 Files with issues
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+0 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 0 2 0 1 7
+1 0
+13 2
+"btnClose"
+""
+1 765 765 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  763 763 841 791
+
+T 
+2
+LANG:1 5 Close
+LANG:10001 5 Close
+"main()
+{
+  if(fwInstallationDB_getUseDB())
+  {
+    openProgressBar(\"Closing DB Connection\", \"delay.gif\", \"Closing connection to FW System Configuration DB\", \"Please wait...\", \"\", 1);
+    int err = fwInstallationDB_closeDBConnection();
+    closeProgressBar();  
+  }
+
+  ModuleOff(myModuleName());
+}" 0
+ E E E
+20 33
+"ShowInstalledSubComponents"
+""
+1 645 55 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  674 53 835 76
+1
+T 
+2
+LANG:1 19 Show sub-components
+LANG:10001 24 Show also Sub-Components
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, bool state)
+{
+	// get all installed components and display it in a table
+	fwInstallation_getInstalledComponentsUI();
+}" 0
+20 32
+"ShowSubComponents"
+""
+1 -50.99999999999999 176 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  109.1656050955414 129 247.1656050955414 152
+1
+T 
+2
+LANG:1 14 Sub-components
+LANG:10001 24 Show also Sub-Components
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, bool state)
+{
+  string systemName;
+   
+  if(shapeExists(\"cbSystem\"))
+     systemName = cbSystem.text;
+  else
+     systemName = \"\";
+       
+  if(txtSourceDir.text != \"\")
+  {
+    enablePanelControls(FALSE);
+    // refresh the graphic tables with components
+    fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", systemName, cbScanRecursively.state(0));
+  	enablePanelControls(TRUE);
+  }
+}" 0
+13 19
+"btnRefresh"
+""
+1 440 389 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  438 387 467 416
+
+P 
+4294967295
+"pictures/StandardIcons/refresh_20.png"
+2
+LANG:1 7 Refresh
+LANG:10001 7 Refresh
+"main()
+{
+	// refresh the  table widget
+
+	fwInstallation_getInstalledComponentsUI();
+}" 0
+ E E E
+17 22
+"list"
+""
+1 10 593.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  8 591 841 723
+0
+
+E
+E
+E
+
+0 0
+13 24
+"btnAdvanced"
+""
+1 10 765 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  8 763 161 791
+
+T 
+2
+LANG:1 20 Advanced options ...
+LANG:10001 16 Advanced Options
+"main()
+{
+  showAdvancedOptions();
+}
+
+
+" 0
+ E E E
+13 25
+"refreshAvailableButton"
+""
+1 21 513 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 12 Refresh list
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  19 511 48 540
+
+P 
+4294967295
+"pictures/StandardIcons/refresh_20.png"
+2
+LANG:1 7 Refresh
+LANG:10001 7 Refresh
+"main()
+{
+	// refresh the  table widget
+	fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\");
+}" 0
+ E E E
+13 31
+"viewLogfile"
+""
+1 170 765 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  168 763 261 791
+
+T 
+2
+LANG:1 12 View log ...
+LANG:10001 12 View Logfile
+"main()
+{
+	string fileName = getPath(LOG_REL_PATH) + \"/fwInstallation.log\";
+  
+  fileEditor(fileName);
+}" 0
+ E E E
+13 37
+"btnHelp"
+""
+1 815 2 E E E 1 E 1 E N "_ButtonText" E N "_Transparent" E E
+ E E
+27 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"hoverbclr" "N {255,255,255,110}"
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  813 0 841 28
+
+P 
+14215660
+"pictures/help_2.xpm"
+2
+LANG:1 0 
+LANG:10001 0 
+"main()
+{
+	std_help(\"fwInstallation/fwInstallation.html\");
+}" 0
+ E E E
+13 3
+"btnApplyDelete"
+""
+1 739 390 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  737 388 830 416
+
+T 
+2
+LANG:1 10 Delete ...
+LANG:10001 6 Delete
+"// Delete the components
+main()
+{
+  string strComponentsNames;
+  dyn_string dynComponentsNames;
+  dyn_float dreturnf;
+  dyn_string dreturns;
+  bool deleteFiles = false;
+
+  enablePanelControls(FALSE);
+  //force update list of components at the end of the installation
+  gUpdateComponentList = true; 
+
+
+  for(int i = 0 ; i < tblInstalledComponents.lineCount(); i++)
+  {
+    if(tblInstalledComponents.cellValueRC(i, \"colStatus\") == \"Delete\")
+    {
+      // store the component names in string		
+      string str = tblInstalledComponents.cellValueRC(i, \"componentName\");
+      if(patternMatch(\"_*\", str)) str = strltrim(str, \"_\");
+    
+      strComponentsNames += str  + \"|\";
+      dynAppend(dynComponentsNames, str);
+    }
+  }
+  
+  if(dynlen(dynComponentsNames) <=0)
+  {
+    enablePanelControls(true);
+    return; //nothing to be done
+  }
+
+  // show the panel that informs user about the components to be deleted
+  ChildPanelOnCentralReturn(\"fwInstallation/fwInstallationToDelete.pnl\", \"fwInstallation_ToDelete\",
+                            makeDynString(\"$componentsNames:\" + strComponentsNames) , dreturnf, dreturns);
+
+  // check the return value
+	if(	(dreturns[1] == \"Delete\") // if the return value of a panel is \"Delete\" - delete the components
+   || (dreturns[1] == \"DeleteNoFiles\")) // SMS new possibility to remove component but not the files
+  {
+    if (dreturns[1] == \"DeleteNoFiles\") 
+    {
+      deleteFiles = FALSE;
+    }
+    else 
+    {
+      deleteFiles = TRUE;
+    }
+     
+    fwInstallation_deleteComponentSet(dynComponentsNames, deleteFiles);		
+    
+    //Re-sync unicos ows files if needed:
+    if(isFunctionDefined(\"unConfigGenericFunctions_Create_Config_ows\"))
+    {
+      unConfigGenericFunctions_Create_Config_ows(\"config_ows\");
+    }
+
+    //update database
+    updateSysDB();
+ 
+    //Refresh the UI:
+    fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", getSystemName(), cbScanRecursively.state(0));
+    fwInstallation_getInstalledComponentsUI();
+
+    //run postdelete scripts:
+    //if(fwInstallation_managerCommand(\"START\", fwInstallation_getWCCOAExecutable(\"ctrl\"), \"-f fwScripts.lst\") != 0)
+    if(fwInstallationManager_command(\"START\", fwInstallation_getWCCOAExecutable(\"ctrl\"), \"-f fwScripts.lst\") != 0)
+    {
+      ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Failed to launch the execution of post-installation scripts.\\nPlease restart the project.\"));                                    
+    }
+    else
+    {
+      fwInstallation_showMessage(formatTime(\"[%Y-%m-%d_%H:%M:%S]\", getCurrentTime())+\" Component successfully deleted.\");
+    }
+  }
+  else
+  {
+  	fwInstallation_showMessage(formatTime(\"[%Y-%m-%d_%H:%M:%S]\", getCurrentTime())+\" Component deletion aborted by the user.\");
+  }
+ 
+  enablePanelControls(TRUE);
+}
+
+
+
+
+" 0
+ E E E
+14 38
+"txtSourceDir"
+""
+1 21 110.4545454545455 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  19 75 381 101
+3 "0s" 0 0 0 0 0 -1  E E "main()
+{
+  string systemName; 
+  bool scanRecursively = cbScanRecursively.state(0);
+  
+  if(shapeExists(\"cbSystem\"))
+    systemName = cbSystem.text;
+  else
+    systemName = \"\";
+      
+	fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", systemName, scanRecursively);
+}" 0
+
+13 39
+"btnSelectSourceDir"
+""
+1 383 75 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  381 73 410 102
+
+P 
+14215660
+"pictures/StandardIcons/Open_20.png"
+2
+LANG:1 0 
+LANG:10001 0 
+"main()
+{
+  string sPath;
+  string systemName;
+  int    iErr;
+  bool scanRecursively = cbScanRecursively.state(0);
+  string dp = fwInstallation_getInstallationDp();
+	
+  if(shapeExists(\"cbSystem\"))
+    systemName = cbSystem.text;
+  else
+    systemName = \"\";
+    
+  dpGet(dp + \".lastSourcePath\", sPath);
+
+  iErr = folderSelector( sPath );
+
+	enablePanelControls(FALSE);
+
+  if(( iErr >= 1 ) && ( strlen( sPath ) > 0 ))
+
+  {
+
+	sPath += \"/\";
+
+    if (_WIN32) strreplace( sPath, \"/\", \"//\" ); 
+
+	strreplace( sPath, \"//\", \"/\" );
+	
+	// update the widget with the directory path
+    txtSourceDir.text = sPath;  
+	  dpSet(\"fwInstallationInfo.lastSourcePath\", sPath);
+
+  }
+  
+  // refresh the graphic tables with components
+  fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", systemName, scanRecursively);
+
+	enablePanelControls(TRUE);
+}
+
+
+
+" 0
+ E E E
+20 40
+"cbScanRecursively"
+""
+1 79 82 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  255 53 379 76
+1
+T 
+2
+LANG:1 16 Scan recursively
+LANG:10001 16 Scan recursively
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, bool state)
+{
+  string systemName;
+   
+  if(shapeExists(\"cbSystem\"))
+     systemName = cbSystem.text;
+  else
+     systemName = \"\";
+       
+  if(txtSourceDir.text != \"\")
+  {
+    enablePanelControls(FALSE);
+    // refresh the graphic tables with components
+    fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", systemName, state);
+  	enablePanelControls(TRUE);
+  }
+}
+
+" 0
+2 49
+"txAgent"
+""
+1 282 731 E E E 1 E 0 E N {255,102,102} E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 282 769 749 784
+0 2 2 "0s" 0 0 0 192 0 0  282 769 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 79 Agent synchronization with System Configuration DB in progress. Please wait ...
+LANG:10001 79 Agent synchronization with System Configuration DB in progress. Please wait....
+2 71
+"txRedundancy"
+""
+1 10 735 E E E 1 E 1 E N "white" E N "_Window" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 10 735 377 750
+0 2 2 "0s" 0 0 0 192 0 0  10 735 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 63 Redundancy information is displayed here in case it is enabled.
+LANG:10001 12 txRedundancy
+13 82
+"btnSync"
+""
+1 470 390 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+2
+LANG:1 62 Synchronize locally installed components with redundant peer's
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  468 388 622 416
+
+T 
+2
+LANG:1 25 Import from redu peer ...
+LANG:10001 19 Import from Partner
+"main()
+{
+  dyn_string ds;
+  dyn_float df;
+  string componentsToBeInstalledStr;
+  string componentsToBeRemovedStr;
+  
+  bool isOk = false;
+  dyn_dyn_mixed componentsToBeInstalled, componentsToBeRemoved;
+  string dontRestartProject = \"no\";  
+  
+  //force update list of components at the end of the installation
+  gUpdateComponentList = true; 
+
+  fwInstallationRedu_checkComponents(isOk, componentsToBeInstalled, componentsToBeRemoved);
+  
+  if(isOk) return;
+  
+  enablePanelControls(FALSE);
+    
+  //Prepare componetns to be passed as $params:
+  for(int i = 1; i <= dynlen(componentsToBeInstalled); i++)    
+  {
+    componentsToBeInstalledStr += componentsToBeInstalled[i] + \"%\";
+  }
+    
+  for(int i = 1; i <= dynlen(componentsToBeRemoved); i++)    
+  {
+    componentsToBeRemovedStr += componentsToBeRemoved[i] + \"%\";
+  }
+    
+  ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallation_reduSynchronization.pnl\", 
+                                 \"Redundancy synchronization\", 
+                                 makeDynString(\"$componentsToBeInstalled:\" + componentsToBeInstalledStr, \"$componentsToBeRemoved:\" + componentsToBeRemovedStr),
+                                 df, ds);
+
+  //sync components if told to do so:
+  if(dynlen(df) && df[1] == 1.)
+  {
+    fwInstallation_throw(\"Forcing component synchronization with redundant partner now...\", \"INFO\", 10);
+    if(fwInstallationRedu_synchronize(df[2], dontRestartProject, ds))
+    {
+      fwInstallation_throw(\"Failed to synchronize list of installed components with redundant partner: \" + fwInstallationRedu_getPair());
+      enablePanelControls(TRUE);			
+      
+      return;
+    }
+  
+  
+    //updateDB()
+    updateSysDB();
+  
+    // refresh the Main Panel
+    fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", getSystemName(), cbScanRecursively.state(0));
+    fwInstallation_getInstalledComponentsUI();
+  
+    //restart-project or run post-installs
+    if(dontRestartProject == \"no\")
+    { 
+      // show the restart panel
+      ChildPanelOnCentral(\"fwInstallation/fwInstallationRestart.pnl\", \"fwInstallationRestart\", makeDynString(\"$action:\" + \"install\"));
+    }
+    else
+    {
+      //execute PostInstallation Scripts by restarting the fwScripts control manager:
+      if(fwInstallation_managerCommand(\"START\", fwInstallation_getWCCOAExecutable(\"ctrl\"), \"-f fwScripts.lst\") != 0)
+      {
+        ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Failed to launch the execution of post-installation scripts.\\nYou must restart your project.\"));                                    
+      }
+    }
+    fwInstallation_getInstalledComponentsUI();
+  }
+  else
+  {
+//  		fwInstallation_showMessage(makeDynString(\"Component synchronization with redu peer aborted by the user\"));
+  		fwInstallation_showMessage(formatTime(\"[%Y-%m-%d_%H:%M:%S] \", getCurrentTime()) + \" Component synchronization with redu peer aborted by the user\");
+  }
+
+  enablePanelControls(TRUE);
+}
+
+
+
+" 0
+ E E E
+2 105
+"title"
+""
+1 7.999999999999986 2 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 9.999999999999986 4 240 25
+0 2 0 "0s" 0 0 0 192 0 0  9.999999999999986 4 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,40,0,0,0,0,0
+0 2
+LANG:1 27 Framework Installation Tool
+LANG:10001 47 JCOP Framework Installation Description Creator
+14 106
+"logFileName"
+""
+1 660 0 E E E 1 E 0 E N "_WindowText" E N "red" E E
+ E E
+49 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,50,0,0,0,0,0
+0  658 -2 684 24
+3 "0s" 0 0 0 0 0 -1  E E E
+10 116
+"infoTextArrow"
+""
+1 10 770 E E E 1 E 0 E N {255,102,102} E N {255,102,102} E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.7259259259259259 0 0.6825000000000002 262.7407407407408 244.4749999999998 1 E 5 10 770
+10 790
+20 780
+10 770
+10 790
+ 1
+2 132
+"fileIssueFeedbackText"
+""
+1 451.9999999999999 387 E E E 1 E 0 E N "red" E N "_Transparent" E E
+ E E
+58 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 451.9999999999999 425 565 440
+0 2 2 "0s" 0 0 0 192 0 0  451.9999999999999 425 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 19 File issue feedback
+LANG:10001 79 Agent synchronization with System Configuration DB in progress. Please wait....
+10 133
+"fileIssueFeedbackArrow"
+""
+1 10 770 E E E 1 E 0 E N "red" E N "red" E E
+ E E
+59 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.7259259259259259 0 0.6825000000000002 432.7407407407408 -99.52500000000021 1 E 5 10 770
+10 790
+20 780
+10 770
+10 790
+ 1
+6 142
+"noDbConnectionBg"
+""
+1 8 48 E E E 0 E 1 E N {0,0,0} E N "lightgrey" E E
+ E E
+60 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 0.9885057471264368 0 30.02298850574712 1 E 430 437 839 524
+2 143
+"noDbConnectionText"
+""
+1 588 493 E E E 0 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+61 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 511 495 669 516
+0 2 0 "0s" 0 0 0 193 0 0  590 495 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,50,0,0,0,0,0
+0 2
+LANG:1 17 No DB connection.
+LANG:10001 56 Click "Add" to initialize faceplate trend for this type.
+13 144
+"setupDbButton"
+""
+1 683 494 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+62 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  681 492 759 520
+
+T 
+2
+LANG:1 9 Setup ...
+LANG:10001 7 Install
+"main()
+{
+  showAdvancedOptions();
+}" 0
+ E E E
+13 145
+"PUSH_BUTTON1"
+""
+1 630 390 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+63 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  628 388 721 416
+
+T 
+2
+LANG:1 11 Check Files
+LANG:10001 6 Delete
+"// Check component file issues
+main()
+{
+  dyn_dyn_mixed componentsInfo;
+  fwInstallation_getInstalledComponents(componentsInfo);
+  openProgressBar(\"Looking for file issues\", \"copy.gif\", \"Looking for file modified or multiple instances of component files\", \"This may take a while\", \"Please, be patient\", 2);
+  for(int i = 1; i <= dynlen(componentsInfo); i++)
+  {
+    showProgressBar(\"Analysing files for component: \" + componentsInfo[i][1], \"Looking for file modified or multiple instances of component files\", \"This may take a while\", \"Please, be patient\", i/dynlen(componentsInfo)*100.);
+    fwInstallation_showFileIssues(componentsInfo[i][1], componentsInfo[i][8]);
+  }
+  closeProgressBar();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+" 0
+ E E E
+1 154 0 "" 0
+0
+2 152
+"showAlsoLabel"
+""
+1 22 133 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+72 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+"transformable" "0"
+E E 0 1 3 2 1 E U  0 E 22 133 88 148
+0 2 2 "0s" 0 0 0 192 0 0  22 133 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 10 Show also:
+20 153
+"ShowHiddenComponents"
+""
+1 74.26114649681527 176 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+73 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  254.9999999999999 129 409.9999999999999 152
+1
+T 
+2
+LANG:1 17 Hidden components
+LANG:10001 24 Show also Sub-Components
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, bool state)
+{
+  string systemName;
+   
+  if(shapeExists(\"cbSystem\"))
+     systemName = cbSystem.text;
+  else
+     systemName = \"\";
+       
+  if(txtSourceDir.text != \"\")
+  {
+    enablePanelControls(FALSE);
+    // refresh the graphic tables with components
+    fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", systemName, cbScanRecursively.state(0));
+  	enablePanelControls(TRUE);
+  }
+}" 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "refInstallationInfo" -1
+"layoutAlignment" "AlignNone"
+"UDS eventStopReporting" "void eventStopReporting()
+{
+  this.visible(false);
+}
+"
+"UDS eventStartReporting" "void eventStartReporting()
+{
+  this.visible(true);
+}
+"
+"initCB" "main()
+{
+  this.visible(false);
+}"
+"" ""
+"fwInstallation/fwInstallation_installationInfo.pnl" 3.145156962647519 549.9208428246031 T 71 1 0 1 2 13
+0
+0

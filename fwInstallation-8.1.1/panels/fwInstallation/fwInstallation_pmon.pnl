@@ -1,0 +1,226 @@
+V 13
+1
+LANG:1 0 
+PANEL,-1 -1 400 160 N "_3DFace" 0
+E E E E E 1 -1 -1 0  30 40
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+14 2
+"txUser"
+""
+1 127 77 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  153 55 391 81
+3 "0s" 0 0 0 0 0 -1  E E E
+13 4
+"cancelButton"
+""
+1 315.3157894736842 125 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  313 123 391 151
+
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+  PanelOffReturn(makeDynFloat(0.),makeDynString(\"Cancel\"));
+}" 0
+ E E E
+13 5
+"okButton"
+""
+1 233 125 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  231 123 309 151
+
+T 
+1
+LANG:1 2 OK
+"main()
+{
+  PanelOffReturn(makeDynFloat(1.),makeDynString(txUser.text, txPwd.text));
+}" 0
+ E E E
+14 6
+"txPwd"
+""
+1 123.8205128205131 105.4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  153 85 391 111
+3 "0S" 0 0 0 0 0 -1  E E E
+2 8
+"infoLabel"
+""
+1 85 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 85 10 364 41
+0 2 2 "0s" 0 0 0 192 0 0  85 10 2
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 27 Project protected by PMON. 
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 50 Credentials required to execute Installation Tool.
+6 9
+"backgroundRectangle"
+""
+1 110 10 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 74 159
+6 10
+"imgInfo"
+""
+1 14 14 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+3
+LANG:1 0 
+LANG:10001 0 
+LANG:0 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1 0 1 7 50 2  0 3  "pictures/info2_en.gif" 13434828 E 14 14 45 45
+2 11
+"userLabel"
+""
+1 85 61 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 85 61 150 75
+0 2 2 "0s" 0 0 0 192 0 0  85 61 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 9 Username:
+2 12
+"passwordLabel"
+""
+1 85 91 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 85 91 148 105
+0 2 2 "0s" 0 0 0 192 0 0  85 91 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 9 Password:
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

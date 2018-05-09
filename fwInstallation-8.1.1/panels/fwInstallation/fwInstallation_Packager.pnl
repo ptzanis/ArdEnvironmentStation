@@ -1,0 +1,4625 @@
+V 13
+2
+LANG:1 36 JCOP Framework Installation Packager
+LANG:10001 36 JCOP Framework Installation Packager
+PANEL,-1 -1 900 680 N "_3DFace" 0
+"main()
+{
+  g_bInit = TRUE;
+  g_sSlash = (_WIN32) ? \"/\" : \"/\";
+
+  initGlobalVariables();
+  showInitialMenu();
+  initPanel();
+
+  showModalNameInput();  
+  
+  g_bInit = FALSE;
+}" 0
+ E E E E 1 -1 -1 0  130 50
+""0  1
+E "#uses \"fwInstallation.ctl\"
+
+// keys for component content mapping
+const string KEY_NAME = \"name\";
+const string KEY_VERSION = \"version\";
+const string KEY_DATE = \"date\";
+const string KEY_SUBCOMP = \"isSubComponent\";
+const string KEY_RESTART = \"noRestartRequired\";
+const string KEY_REQUIRED = \"requiredComponents\";
+const string KEY_PREINIT = \"preInitScriptsTable\";
+const string KEY_INIT = \"initScript\";
+const string KEY_DELETE = \"deleteScript\";
+const string KEY_POSTINSTALL = \"postInstallScript\";
+const string KEY_POSTDELETE = \"postDeleteScript\";
+const string KEY_CONFIG = \"configFiles\";
+const string KEY_DPLIST = \"asciiFiles\";
+const string KEY_PANEL = \"panelFiles\";
+const string KEY_SCRIPT = \"scriptFiles\";
+const string KEY_LIBRARY = \"libraryFiles\";
+const string KEY_OTHER = \"otherFiles\";
+const string KEY_BIN = \"binFiles\";
+const string KEY_HELP = \"helpFiles\";
+const string KEY_PICTURE = \"pictureFiles\";
+
+const string NAME_REQUEST_TEXT = \"Please provide a name ...\";
+  
+string g_sSlash;
+dyn_string g_dsXmlDescription;
+string g_sXmlFileContent;
+mapping g_mComponentContent;
+
+bool g_bEnforcePath = TRUE;
+bool g_bXmlLoaded = FALSE;
+bool g_bInit = TRUE;
+					
+// ------------------------------------------------------------------------------------------------
+
+applySelection(int row, string column, string value)
+{ 
+  bool bSelected = !this.cellValueRC(row, \"inSelection\");
+  
+  this.cellValueRC(row, \"inSelection\", bSelected);
+  
+  setRowBackgroundColor(this.name, row, bSelected);
+    
+  reloadButton.enabled(TRUE);
+}
+					
+// ------------------------------------------------------------------------------------------------
+
+setRowBackgroundColor(string tableName, int row, bool bSelected)
+{
+  string columnName;
+  shape table = getShape(tableName);
+
+  for(int i = 0; i < table.columnCount; i++)
+  {
+    columnName = table.columnName(i);
+    
+    if(bSelected)
+    {
+      table.cellBackColRC(row, columnName, \"FwInstallationTableSelection\");
+    }
+    else
+    {
+      table.cellBackColRC(row, columnName, \"_Window\");
+    }
+  }
+}
+				
+// ------------------------------------------------------------------------------------------------
+
+initPanel()
+{
+  dyn_string tempDynString, tempDynString2;
+  string tempString;
+  dyn_string projPaths;
+  string tempPath;
+  bool bEnabled = FALSE;
+  string sComponentName = componentName.text();
+
+  // wait for file system init
+  while(g_sSlash == \"\")
+    delay(0,100);
+
+  // init table behaviour
+  requiredComponents.tableMode(TABLE_SELECT_BROWSE);
+  requiredComponents.selectByClick(TABLE_SELECT_LINE);
+  asciiFiles.tableMode(TABLE_SELECT_BROWSE);
+  asciiFiles.selectByClick(TABLE_SELECT_LINE);
+  libraryFiles.tableMode(TABLE_SELECT_BROWSE);
+  libraryFiles.selectByClick(TABLE_SELECT_LINE);
+  panelFiles.tableMode(TABLE_SELECT_BROWSE);
+  panelFiles.selectByClick(TABLE_SELECT_LINE);
+  scriptFiles.tableMode(TABLE_SELECT_BROWSE);
+  scriptFiles.selectByClick(TABLE_SELECT_LINE);
+  preInitScriptsTable.tableMode(TABLE_SELECT_BROWSE);
+  preInitScriptsTable.selectByClick(TABLE_SELECT_LINE);
+  initScript.tableMode(TABLE_SELECT_BROWSE);
+  initScript.selectByClick(TABLE_SELECT_LINE);
+  postInstallScript.tableMode(TABLE_SELECT_BROWSE);
+  postInstallScript.selectByClick(TABLE_SELECT_LINE);
+  deleteScript.tableMode(TABLE_SELECT_BROWSE);
+  deleteScript.selectByClick(TABLE_SELECT_LINE);
+  postDeleteScript.tableMode(TABLE_SELECT_BROWSE);
+  postDeleteScript.selectByClick(TABLE_SELECT_LINE);
+  helpFiles.tableMode(TABLE_SELECT_BROWSE);
+  helpFiles.selectByClick(TABLE_SELECT_LINE);
+  pictureFiles.tableMode(TABLE_SELECT_BROWSE);
+  pictureFiles.selectByClick(TABLE_SELECT_LINE);
+  binFiles.tableMode(TABLE_SELECT_BROWSE);
+  binFiles.selectByClick(TABLE_SELECT_LINE);
+  otherFiles.tableMode(TABLE_SELECT_BROWSE);
+  otherFiles.selectByClick(TABLE_SELECT_LINE);
+  
+  // init sourcepath dropdown
+	fwInstallation_getProjPaths(projPaths);
+  
+  if(strpos(projPaths[1], \"fwComponents\") >= 0) // Switch to have project path selected by default instead of component path 
+  {
+    tempPath = projPaths[1];
+    projPaths[1] = projPaths[2];
+    projPaths[2] = tempPath;
+  }
+  
+	sourcePath.items = projPaths;
+  currentDirectoryLabel.text = \"Current directory: \" + sourcePath.selectedText();
+    
+	dynClear(tempDynString);
+  
+  // panels
+	if(g_bEnforcePath)
+	{
+		tempDynString = getFileNames(sourcePath.selectedText+g_sSlash + \"panels\", \"*.pnl\");
+	
+    // panels in component path
+		if(sComponentName != \"\")
+		{
+			tempDynString2 = getFileNames(sourcePath.selectedText+g_sSlash + \"panels\" + g_sSlash + sComponentName, \"*.pnl\");
+			if(dynlen(tempDynString2) > 0)
+				for(int i=1; i<=dynlen(tempDynString2); i++)
+					tempDynString2[i] = sComponentName + \"/\" + tempDynString2[i];
+			dynAppend(tempDynString, tempDynString2);
+		}
+	
+    // reference panels
+		tempDynString2 = getFileNames(sourcePath.selectedText+g_sSlash + \"panels\" + g_sSlash + \"objects\", \"*.pnl\");
+		if(dynlen(tempDynString2) > 0)
+			for(int i=1; i<=dynlen(tempDynString2); i++)
+				tempDynString2[i] = \"objects/\" + tempDynString2[i];
+		dynAppend(tempDynString, tempDynString2);
+	
+    // reference panels in component path
+		if(sComponentName != \"\")
+		{
+			tempDynString2 = getFileNames(sourcePath.selectedText+g_sSlash + \"panels\" + g_sSlash + \"objects\" + g_sSlash + sComponentName, \"*.pnl\");
+			if(dynlen(tempDynString2) > 0)
+				for(int i=1; i<=dynlen(tempDynString2); i++)
+					tempDynString2[i] = \"objects/\" + sComponentName + \"/\" + tempDynString2[i];
+			dynAppend(tempDynString, tempDynString2);
+		}
+	
+    // FSM panels
+		tempDynString2 = getFileNames(sourcePath.selectedText+g_sSlash + \"panels\" + g_sSlash + \"fwFSMUser\", \"*.pnl\");
+		if(dynlen(tempDynString2) > 0)
+			for(int i=1; i<=dynlen(tempDynString2); i++)
+				tempDynString2[i] = \"fwFSMUser/\" + tempDynString2[i];
+		dynAppend(tempDynString, tempDynString2);
+	
+    // FSM panels with component path
+		if(sComponentName != \"\")
+		{
+			tempDynString2 = getFileNames(sourcePath.selectedText+g_sSlash + \"panels\" + g_sSlash + \"fwFSMUser\" + g_sSlash + sComponentName, \"*.pnl\");
+			if(dynlen(tempDynString2) > 0)
+				for(int i=1; i<=dynlen(tempDynString2); i++)
+					tempDynString2[i] = \"fwFSMUser/\" + sComponentName + \"/\" + tempDynString2[i];
+			dynAppend(tempDynString, tempDynString2);
+		}
+	} 
+  else 
+  {		
+    tempDynString = getFiles(sourcePath.selectedText+g_sSlash + \"panels\", \"*.pnl\");
+	}
+	fillTable(KEY_PANEL, tempDynString);
+
+  
+  // config files	
+	tempDynString = getFileNames(sourcePath.selectedText+g_sSlash + \"config\", sComponentName + \".\" + \"config\");
+	dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"config\", sComponentName + \".\" + \"config.windows\"));
+	dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"config\", sComponentName + \".\" + \"config.linux\"));
+	fillTable(KEY_CONFIG, tempDynString);
+  bEnabled = configFiles.lineCount > 0;
+  newConfigButton.enabled(!bEnabled);
+  editConfigButton.enabled(bEnabled);
+  deleteConfigButton.enabled(bEnabled);
+	
+  // installation/deletion scripts
+	tempDynString = getFileNames(sourcePath.selectedText+g_sSlash + \"config\", \"*.preInit\");
+	dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts\", \"*.preInit\"));
+	dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts/\" + sComponentName, \"*.preInit\"));
+  fillTable(KEY_PREINIT, tempDynString);
+  bEnabled = preInitScriptsTable.lineCount > 0;
+  preInitScriptEditButton.enabled(bEnabled);
+  preInitScriptDeleteButton.enabled(bEnabled);
+
+	tempDynString = getFileNames(sourcePath.selectedText+g_sSlash + \"config\", \"*.init\");
+	dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts\", \"*.init\"));
+	dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts/\" + sComponentName, \"*.init\"));
+  fillTable(KEY_INIT, tempDynString);
+  bEnabled = initScript.lineCount > 0;
+  initScriptEditButton.enabled(bEnabled);
+  initScriptDeleteButton.enabled(bEnabled);
+  
+ 	tempDynString = getFileNames(sourcePath.selectedText+g_sSlash + \"config\", \"*.postInstall\");
+ 	dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts\", \"*.postInstall\"));
+ 	dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts/\" + sComponentName, \"*.postInstall\"));
+  fillTable(KEY_POSTINSTALL, tempDynString);
+  bEnabled = postInstallScript.lineCount > 0;
+  postInstallScriptEditButton.enabled(bEnabled);
+  postInstallScriptDeleteButton.enabled(bEnabled);
+  
+  tempDynString = getFileNames(sourcePath.selectedText+g_sSlash + \"config\", \"*.delete\");
+  dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts\", \"*.delete\"));
+  dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts/\" + sComponentName, \"*.delete\"));
+  fillTable(KEY_DELETE, tempDynString);
+  bEnabled = deleteScript.lineCount > 0;
+  deleteScriptEditButton.enabled(bEnabled);
+  deleteScriptDeleteButton.enabled(bEnabled);
+
+  tempDynString = getFileNames(sourcePath.selectedText+g_sSlash + \"config\", \"*.postDelete\");
+  dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts\", \"*.postDelete\"));
+  dynAppend(tempDynString, getFileNames(sourcePath.selectedText+g_sSlash + \"scripts/\" + sComponentName, \"*.postDelete\"));
+  fillTable(KEY_POSTDELETE, tempDynString);
+	bEnabled = postDeleteScript.lineCount > 0;
+  postDeleteScriptEditButton.enabled(bEnabled);
+  postDeleteScriptDeleteButton.enabled(bEnabled);
+	
+  
+  // required components
+	dynClear(tempDynString);
+	tempDynString2 = dpNames(\"fwInstallation_*\", \"_FwInstallationComponents\");
+		if(dynlen(tempDynString2) > 0)
+			for(int i=1; i<=dynlen(tempDynString2); i++)
+			{
+				dpGet(tempDynString2[i]+\".componentVersionString\", tempString);
+  			strreplace(tempDynString2[i], getSystemName(), \"\");
+				dynAppend(tempDynString, substr(tempDynString2[i], strpos(tempDynString2[i], \"_\")+1)+\"=\"+tempString);
+			}
+	fillTable(KEY_REQUIRED, tempDynString);
+	
+  
+  // ASCII files
+	tempDynString2 = getFileNames(sourcePath.selectedText+g_sSlash + \"dplist\", \"*.dpl\");
+	dyn_string tempDynString22 = getFileNames(sourcePath.selectedText+g_sSlash + \"dplist/\" + sComponentName, \"*.dpl\");
+			for(int i=1; i<=dynlen(tempDynString22); i++)
+				tempDynString22[i] = sComponentName + \"/\" + tempDynString22[i];
+                                                         
+  dynAppend(tempDynString2, tempDynString22);
+	fillTable(KEY_DPLIST, tempDynString2);
+	
+  
+  // scripts
+	if(g_bEnforcePath)
+	{
+		tempDynString2 = getFiles(sourcePath.selectedText+g_sSlash + \"scripts\" + g_sSlash + sComponentName);
+		if(dynlen(tempDynString2) > 0)
+    {
+      for(int i=1; i<=dynlen(tempDynString2); i++)
+      {
+	      tempDynString2[i] = /*\"scripts/libs/\"*/ +  sComponentName + g_sSlash + tempDynString2[i];
+      }
+    }
+	} 
+  else 
+  {		
+    tempDynString2 = getFiles(sourcePath.selectedText+g_sSlash + \"scripts\");
+		if(dynlen(tempDynString2) > 0)
+    {
+  		for(int i=1; i<=dynlen(tempDynString2); i++)
+      {
+			  tempDynString2[i] = /*\"scripts/libs/\" + */tempDynString2[i];                        
+      }
+    }
+	}
+  
+	if(dynlen(tempDynString2) > 0)
+		for(int i=dynlen(tempDynString2); i>=1; i--)
+			if(strpos(tempDynString2[i], \"/libs\") == 0)
+				dynRemove(tempDynString2, i);
+			else {
+				dynInsertAt(tempDynString2, strltrim(tempDynString2[i], \"/\"), i);
+				dynRemove(tempDynString2, i+1);
+			}
+
+         if(dynlen(tempDynString2) > 0){
+           for(int i=dynlen(tempDynString2); i>=1; i--){
+	     if(patternMatch(\"*.init\", tempDynString2[i]) || patternMatch(\"*.postInstall\", tempDynString2[i]))                                           
+               dynRemove(tempDynString2, i);
+           } 
+         }                   
+
+  fillTable(KEY_SCRIPT, tempDynString2);
+	
+  
+  // libraries
+	if(g_bEnforcePath)
+	{
+		tempDynString2 = getFiles(sourcePath.selectedText+g_sSlash + \"scripts\" + g_sSlash + \"libs\"+ g_sSlash + sComponentName);
+		if(dynlen(tempDynString2) > 0)
+    {
+			for(int i=1; i<=dynlen(tempDynString2); i++)
+      {
+				tempDynString2[i] = /*\"scripts/libs/\" + */ sComponentName + g_sSlash + tempDynString2[i];
+      }
+    }
+	} 
+  else 
+  {		
+    tempDynString2 = getFiles(sourcePath.selectedText+g_sSlash + \"scripts\" + g_sSlash + \"libs\");
+		if(dynlen(tempDynString2) > 0)
+    {
+			for(int i=1; i<=dynlen(tempDynString2); i++)
+      {
+			  tempDynString2[i] = /*\"scripts/libs/\" + */strltrim(tempDynString2[i], \"/\");
+      }
+    }
+	}
+  
+	if(dynlen(tempDynString2) > 0)
+		for(int i=dynlen(tempDynString2); i>=1; i--)
+		{
+			dynInsertAt(tempDynString2, strltrim(tempDynString2[i], \"/\"), i);
+			dynRemove(tempDynString2, i+1);
+		}
+	fillTable(KEY_LIBRARY, tempDynString2);
+
+  
+  // Other files for this component (from ./, ./bin, ./colorDB, ./images, ./pictures, ./source).
+	dynClear(tempDynString);
+	
+	tempDynString2 = getFileNames(sourcePath.selectedText);
+	if(dynlen(tempDynString2) > 0)
+		for(int i=1; i<=dynlen(tempDynString2); i++)
+			tempDynString2[i] = tempDynString2[i];
+	dynAppend(tempDynString, tempDynString2);
+ 
+	tempDynString2 = getFileNames(sourcePath.selectedText + g_sSlash + \"colorDB\");
+	if(dynlen(tempDynString2) > 0)
+		for(int i=1; i<=dynlen(tempDynString2); i++)
+			tempDynString2[i] = \"colorDB/\" + tempDynString2[i];
+	dynAppend(tempDynString, tempDynString2);
+
+	if(!g_bEnforcePath)
+	{
+		tempDynString2 = getFiles(sourcePath.selectedText + g_sSlash + \"images\");
+		if(dynlen(tempDynString2) > 0)
+			for(int i=1; i<=dynlen(tempDynString2); i++)
+				tempDynString2[i] = \"images/\" + tempDynString2[i];
+		dynAppend(tempDynString, tempDynString2);
+	}
+
+	tempDynString2 = getFiles(sourcePath.selectedText + g_sSlash + \"source\");
+	if(dynlen(tempDynString2) > 0)
+		for(int i=1; i<=dynlen(tempDynString2); i++)
+			tempDynString2[i] = \"source/\" + tempDynString2[i];
+	dynAppend(tempDynString, tempDynString2);
+	  
+	fillTable(KEY_OTHER, tempDynString);
+  
+	if(g_bEnforcePath)
+	{
+		tempDynString2 = getFiles(sourcePath.selectedText + g_sSlash + \"help\" + g_sSlash + sComponentName);
+		if(dynlen(tempDynString2) > 0)
+    {
+			for(int i=1; i<=dynlen(tempDynString2); i++)
+      {
+				tempDynString2[i] = \"help/\" + tempDynString2[i];
+      }
+    }		
+	} 
+  else 
+  {
+		tempDynString2 = getFiles(sourcePath.selectedText + g_sSlash + \"help\");
+		if(dynlen(tempDynString2) > 0)
+    {
+			for(int i=1; i<=dynlen(tempDynString2); i++)
+      {
+				tempDynString2[i] = \"help/\" + tempDynString2[i];
+      }
+    }
+	}
+  fillTable(KEY_HELP, tempDynString2);
+   
+	tempDynString2 = getFiles(sourcePath.selectedText + g_sSlash + \"bin\");
+	if(dynlen(tempDynString2) > 0)
+		for(int i=1; i<=dynlen(tempDynString2); i++)
+			tempDynString2[i] = \"bin/\" + tempDynString2[i];
+	fillTable(KEY_BIN, tempDynString2);
+  
+  tempDynString2 = getFileNames(sourcePath.selectedText + g_sSlash + \"pictures\");
+	if(dynlen(tempDynString2) > 0)
+		for(int i=1; i<=dynlen(tempDynString2); i++)
+			tempDynString2[i] = \"pictures/\" + tempDynString2[i];
+	fillTable(KEY_PICTURE, tempDynString2);
+  
+  applyXMLSelection();
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+setInitialComponentName(string sName)
+{
+  sName = strrtrim(sName, \" \");
+  sName = strltrim(sName, \" \");
+  
+  if(sName != \"\" && sName != NAME_REQUEST_TEXT)
+  {
+    showStartScreen(FALSE);
+    componentName.text = sName;
+  }
+  else
+  {
+    startNameInputField.backCol(\"{255,160,160}\");
+  }
+}
+						
+// ------------------------------------------------------------------------------------------------
+		
+showStartScreen(bool bState)
+{
+  showInitialMenu();
+  
+  busyBackground.visible(bState);
+  
+  startNameInputField.visible(bState);
+  startNameCommitButton.visible(bState);
+  startNameInputLabel.visible(bState);
+  
+  separator1.visible(bState);
+  separator2.visible(bState);
+  orLabel.visible(bState);
+  
+  xmlFileOpenLabel.visible(bState);
+  xmlFileOpenButton.visible(bState);
+}
+				
+// ------------------------------------------------------------------------------------------------
+
+bool openExistingXml()
+{
+  string xmlFileName = \"\";
+  
+	fileSelector(xmlFileName, PROJ_PATH, FALSE, \"*.xml\");
+	
+  if(xmlFileName != \"\")
+  {
+    loadXMLFromFile(xmlFileName);
+
+    // XML and UI store now the exact same information --> disable refresh
+    reloadButton.enabled(FALSE);
+  }
+  
+  return xmlFileName != \"\";
+}
+			
+// ------------------------------------------------------------------------------------------------
+
+reloadPanel()
+{  
+  g_bInit = TRUE;
+  componentName.text = g_mComponentContent[KEY_NAME];
+  g_bInit = FALSE;
+  
+	applyXMLSelection();
+  
+  reloadButton.enabled(FALSE);
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+resetPanel()
+{
+  dyn_string dsEmpty = makeDynString();
+  
+  // SETUP    
+  g_bInit = TRUE;
+  componentName.text = \"\";
+  g_bInit = FALSE;
+  componentVersion.text = \"1.0.0\";
+	componentDate.text = formatTime(\"%d/%m/%Y\", getCurrentTime());
+
+	loadSelection(KEY_CONFIG, dsEmpty);
+  newConfigButton.enabled(TRUE);
+
+	loadSelection(KEY_REQUIRED, dsEmpty);
+  
+  // DATAPOINTS  
+	loadSelection(KEY_DPLIST, dsEmpty);
+  
+  // SCRIPTS 
+  loadSelection(KEY_PREINIT, dsEmpty);
+	loadSelection(KEY_INIT, dsEmpty);
+  loadSelection(KEY_DELETE, dsEmpty);
+ 	loadSelection(KEY_POSTINSTALL, dsEmpty);
+  loadSelection(KEY_POSTDELETE, dsEmpty);
+  loadSelection(KEY_SCRIPT, dsEmpty);
+  
+  // PANELS    
+	loadSelection(KEY_PANEL, dsEmpty);
+  
+  // LIBRARIES  
+	loadSelection(KEY_LIBRARY, dsEmpty);
+  
+  // OTHER FILES
+	loadSelection(KEY_OTHER, dsEmpty);
+  loadSelection(KEY_BIN, dsEmpty);
+  loadSelection(KEY_HELP, dsEmpty);
+  loadSelection(KEY_PICTURE, dsEmpty);
+  
+  // PACKAGE GENERATION      
+  isSubComponent.state(0, FALSE);
+  cbRestart.state(0, FALSE);
+  
+  clearComponentContent();
+  showStartScreen(TRUE);
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+dyn_string writeXmlFile()
+{
+  dyn_string exceptionInfo;
+  dyn_string dsOtherFiles;
+
+  dynClear(g_dsXmlDescription);
+
+  dsOtherFiles = getSelectedLines(KEY_OTHER);
+  dynAppend(dsOtherFiles, getSelectedLines(KEY_BIN));
+  dynAppend(dsOtherFiles, getSelectedLines(KEY_HELP));
+  dynAppend(dsOtherFiles, getSelectedLines(KEY_PICTURE));
+
+  fwInstallationXml_create(PROJ_PATH, 
+  				  componentName.text, componentVersion.text, componentDate.text,
+  				  getSelectedLines(KEY_REQUIRED),
+  				  isSubComponent.state(0),
+            getSelectedLines(KEY_PREINIT),
+  				  getSelectedLines(KEY_INIT), 
+            getSelectedLines(KEY_DELETE),
+  				  getSelectedLines(KEY_POSTINSTALL), 
+            getSelectedLines(KEY_POSTDELETE),
+  				  getSelectedLines(KEY_CONFIG),
+  				  getSelectedLines(KEY_DPLIST),
+  				  getSelectedLines(KEY_PANEL),
+  				  getSelectedLines(KEY_SCRIPT),
+  				  getSelectedLines(KEY_LIBRARY),
+  				  dsOtherFiles,
+            cbRestart.state(0),
+  			    g_dsXmlDescription);
+
+  // Update global component data
+  g_mComponentContent[KEY_NAME] = componentName.text;
+  g_mComponentContent[KEY_VERSION] = componentVersion.text;
+  g_mComponentContent[KEY_DATE] = componentDate.text;
+  g_mComponentContent[KEY_SUBCOMP] = isSubComponent.state(0);
+  g_mComponentContent[KEY_RESTART] = cbRestart.state(0);
+  g_mComponentContent[KEY_REQUIRED] = getSelectedLines(KEY_REQUIRED);
+  g_mComponentContent[KEY_PREINIT] = getSelectedLines(KEY_PREINIT);
+  g_mComponentContent[KEY_INIT] = getSelectedLines(KEY_INIT);
+  g_mComponentContent[KEY_DELETE] = getSelectedLines(KEY_DELETE);
+  g_mComponentContent[KEY_POSTINSTALL] = getSelectedLines(KEY_POSTINSTALL);
+  g_mComponentContent[KEY_POSTDELETE] = getSelectedLines(KEY_POSTDELETE);
+  g_mComponentContent[KEY_CONFIG] = getSelectedLines(KEY_CONFIG);
+  g_mComponentContent[KEY_DPLIST] = getSelectedLines(KEY_DPLIST);
+  g_mComponentContent[KEY_PANEL] = getSelectedLines(KEY_PANEL);
+  g_mComponentContent[KEY_SCRIPT] = getSelectedLines(KEY_SCRIPT);
+  g_mComponentContent[KEY_LIBRARY] = getSelectedLines(KEY_LIBRARY);
+  g_mComponentContent[KEY_OTHER] = getSelectedLines(KEY_OTHER);
+  g_mComponentContent[KEY_BIN] = getSelectedLines(KEY_BIN);
+  g_mComponentContent[KEY_HELP] = getSelectedLines(KEY_HELP);
+  g_mComponentContent[KEY_PICTURE] = getSelectedLines(KEY_PICTURE);
+
+	g_bXmlLoaded = TRUE;
+	newXmlButton.enabled = TRUE;
+
+  return exceptionInfo;
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+fillTable(string shapeName, dyn_string dsItems)
+{
+	shape table = getShape(shapeName);
+
+	table.deleteAllLines();
+
+	if(dynlen(dsItems) > 0)
+  {
+		for(int i=1; i<=dynlen(dsItems); i++)
+		{
+			table.appendLine(\"items\", dsItems[i], \"inSelection\", FALSE);
+		}
+  }
+
+	table.sort(\"items\");	
+	table.lineVisible(0);
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+applyXMLSelection()
+{
+  componentVersion.text = g_mComponentContent[KEY_VERSION];
+	componentDate.text = g_mComponentContent[KEY_DATE];    
+  isSubComponent.state(0, g_mComponentContent[KEY_SUBCOMP]);
+  cbRestart.state(0, g_mComponentContent[KEY_RESTART]);
+  
+	loadSelection(KEY_REQUIRED, g_mComponentContent[KEY_REQUIRED]);
+	loadSelection(KEY_CONFIG, g_mComponentContent[KEY_CONFIG]);
+	loadSelection(KEY_DPLIST, g_mComponentContent[KEY_DPLIST]);
+	loadSelection(KEY_PREINIT, g_mComponentContent[KEY_PREINIT]);
+  loadSelection(KEY_INIT, g_mComponentContent[KEY_INIT]);
+	loadSelection(KEY_DELETE, g_mComponentContent[KEY_DELETE]);
+	loadSelection(KEY_POSTINSTALL, g_mComponentContent[KEY_POSTINSTALL]);
+	loadSelection(KEY_POSTDELETE, g_mComponentContent[KEY_POSTDELETE]);
+	loadSelection(KEY_PANEL, g_mComponentContent[KEY_PANEL]);
+	loadSelection(KEY_SCRIPT, g_mComponentContent[KEY_SCRIPT]);
+	loadSelection(KEY_LIBRARY, g_mComponentContent[KEY_LIBRARY]);
+	loadSelection(KEY_OTHER, g_mComponentContent[KEY_OTHER]);
+  loadSelection(KEY_BIN, g_mComponentContent[KEY_BIN]);
+  loadSelection(KEY_HELP, g_mComponentContent[KEY_HELP]);
+  loadSelection(KEY_PICTURE, g_mComponentContent[KEY_PICTURE]);
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+loadSelection(string shapeName, dyn_string xmlItems)
+{
+  string sItem;
+  bool bSelected;
+	shape table = getShape(shapeName);
+  
+  if(table.lineCount > 0)
+  {
+		for(int row = 0; row < table.lineCount; row++)
+		{
+			sItem = table.cellValueRC(row, \"items\");
+      bSelected = dynContains(xmlItems, sItem);
+      
+      table.cellValueRC(row, \"inSelection\", bSelected);
+      setRowBackgroundColor(shapeName, row, bSelected);
+		}
+  }
+		
+	table.lineVisible(0);
+}
+							
+// ------------------------------------------------------------------------------------------------
+
+dyn_string getSelectedLines(string shapeName)
+{
+	shape table = getShape(shapeName);
+	dyn_string dsItems;
+  string sItem;
+
+	if(table.lineCount > 0)
+  {
+		for(int i = 0; i < table.lineCount; i++)
+		{
+			sItem = table.cellValueRC(i, \"inSelection\");
+			if(sItem == TRUE)
+			{
+				dynAppend(dsItems, table.cellValueRC(i, \"items\"));
+			}  			
+		}
+  }
+		
+	return dsItems;
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+loadXMLFromFile(string xmlFileName)
+{
+  dyn_string  dsConfigFilesGeneral, 
+              dsConfigFilesWindows, 
+              dsConfigFilesLinux, 
+              dsSubComponents, 
+              dsScriptsToBeAdded, 
+              dsFiles,
+              dsOtherFiles;
+	bool result = FALSE;
+  
+  clearComponentContent();
+
+	if(xmlFileName != \"\")
+		result = fileToString(xmlFileName, g_sXmlFileContent);
+		
+	if(result)
+	{
+		g_bXmlLoaded = TRUE;
+		newXmlButton.enabled = TRUE;
+
+		fwInstallationXml_decode(g_sXmlFileContent,
+															g_mComponentContent[KEY_NAME], 
+                              g_mComponentContent[KEY_VERSION], 
+                              g_mComponentContent[KEY_DATE],
+															g_mComponentContent[KEY_REQUIRED], 
+															g_mComponentContent[KEY_SUBCOMP],
+                              g_mComponentContent[KEY_PREINIT],
+															g_mComponentContent[KEY_INIT], 
+                              g_mComponentContent[KEY_DELETE], 
+															g_mComponentContent[KEY_POSTINSTALL], 
+                              g_mComponentContent[KEY_POSTDELETE],
+															dsConfigFilesGeneral,
+															dsConfigFilesWindows,
+															dsConfigFilesLinux,
+															g_mComponentContent[KEY_DPLIST], 
+                              g_mComponentContent[KEY_PANEL],
+															g_mComponentContent[KEY_SCRIPT], 
+                              g_mComponentContent[KEY_LIBRARY],
+															dsOtherFiles, 
+                              dsSubComponents,
+															dsScriptsToBeAdded, 
+                              dsFiles,
+                              g_mComponentContent[KEY_RESTART]);
+
+    for(int i = 1; i <= dynlen(dsOtherFiles); i++)
+    {
+      if(strpos(dsOtherFiles[i], \"bin/\") >= 0)
+      {
+        dynAppend(g_mComponentContent[KEY_BIN], dsOtherFiles[i]);
+      }
+      else if(strpos(dsOtherFiles[i], \"help/\") >= 0)
+      {
+        dynAppend(g_mComponentContent[KEY_HELP], dsOtherFiles[i]);
+      }
+      else if(strpos(dsOtherFiles[i], \"pictures/\") >= 0)
+      {
+        dynAppend(g_mComponentContent[KEY_PICTURE], dsOtherFiles[i]);
+      }
+      else
+      {
+        dynAppend(g_mComponentContent[KEY_OTHER], dsOtherFiles[i]);
+      }
+    }
+
+    dynAppend(g_mComponentContent[KEY_CONFIG], dsConfigFilesGeneral);
+    dynAppend(g_mComponentContent[KEY_CONFIG], dsConfigFilesWindows);
+	  dynAppend(g_mComponentContent[KEY_CONFIG], dsConfigFilesLinux);
+
+		componentName.text = g_mComponentContent[KEY_NAME];
+
+    applyXMLSelection();
+
+		g_dsXmlDescription = strsplit(g_sXmlFileContent, \"\\n\");	
+	}
+
+  reloadButton.enabled(FALSE);
+}
+			
+// ------------------------------------------------------------------------------------------------
+	
+clearComponentContent()
+{
+  mappingClear(g_mComponentContent);
+  
+  g_mComponentContent[KEY_NAME] = \"\";
+  g_mComponentContent[KEY_VERSION] = \"1.0.0\";
+  g_mComponentContent[KEY_DATE] = formatTime(\"%d/%m/%Y\", getCurrentTime());
+  g_mComponentContent[KEY_SUBCOMP] = FALSE;
+  g_mComponentContent[KEY_RESTART] = FALSE;
+  g_mComponentContent[KEY_REQUIRED] = makeDynString();
+  g_mComponentContent[KEY_PREINIT] = makeDynString();
+  g_mComponentContent[KEY_INIT] = makeDynString();
+  g_mComponentContent[KEY_DELETE] = makeDynString();
+  g_mComponentContent[KEY_POSTINSTALL] = makeDynString();
+  g_mComponentContent[KEY_POSTDELETE] = makeDynString();
+  g_mComponentContent[KEY_CONFIG] = makeDynString();
+  g_mComponentContent[KEY_DPLIST] = makeDynString();
+  g_mComponentContent[KEY_PANEL] = makeDynString();
+  g_mComponentContent[KEY_SCRIPT] = makeDynString();
+  g_mComponentContent[KEY_LIBRARY] = makeDynString();
+  g_mComponentContent[KEY_OTHER] = makeDynString();
+  g_mComponentContent[KEY_BIN] = makeDynString();
+  g_mComponentContent[KEY_HELP] = makeDynString();
+  g_mComponentContent[KEY_PICTURE] = makeDynString();
+}
+			
+// ------------------------------------------------------------------------------------------------
+
+editScript(string sTableName)
+{
+	shape tableShape = getShape(sTableName);
+	string sFileName;
+	string script;
+	file editedFile;
+	string path;
+  int selectedRow = tableShape.getSelectedLines()[1];
+
+	sFileName = tableShape.cellValueRC(selectedRow, \"items\");
+
+	if(sFileName != \"\")
+	{
+    if(access(sourcePath.text +\"/config/\" + sFileName, W_OK) == 0)
+    {
+      path = sourcePath.text +\"/config/\";
+    }
+    else if(access(sourcePath.text +\"/scripts/\" + sFileName, W_OK) == 0)
+    {
+      path = sourcePath.text +\"/scripts/\";
+    }
+    else if(access(sourcePath.text +\"/scripts/\" + componentName.text + \"/\" + sFileName, W_OK) == 0)
+    {
+      path = sourcePath.text +\"/scripts/\" + componentName.text + \"/\";
+    }                
+
+    editedFile = fopen(path + sFileName, \"r\");
+
+    if(ferror(editedFile) == 0)
+		{
+      fileEditor(path + sFileName);
+		}
+    else
+    {
+      showUserFeedback(\"No file created. Error reading file.\", 3);
+    }
+    
+		fclose(editedFile);
+    showUserFeedback(\"File edited.\", 3);
+	}
+  else
+  {
+    componentName.backCol = \"FwBackgroundUserAttention\";
+    showUserFeedback(\"Please provide a component name.\", 3);
+    componentName.backCol = \"_Window\";
+  }
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+dyn_string getFiles(string dir = \".\", string pattern = \"*\")
+{
+  dyn_string tempDynString;
+  dyn_string allFileNames;
+  string newDir = \"/*\";
+  
+  getFileNamesRecursive(dir, \"*\", allFileNames);
+
+  if(dynlen(allFileNames) > 0)
+    for(int i=1; i<=dynlen(allFileNames); i++)
+		  {
+			   strreplace(allFileNames[i], dir + \"/\", \"\");
+			   strreplace(allFileNames[i], \"//\", \"/\");
+		  }
+
+  for(int i=1; i<=dynlen(allFileNames); i++)
+    if(patternMatch(pattern, allFileNames[i]))
+      dynAppend(tempDynString, allFileNames[i]);
+	
+  return tempDynString;
+}
+						
+// ------------------------------------------------------------------------------------------------
+
+getFileNamesRecursive(string dir, string pattern, dyn_string & fileNames)
+{
+  dyn_string tempDynString = getFileNames(dir + \"/*\", pattern);
+  dyn_string tempDynString2 = getFileNames(dir, pattern);
+	
+  for(int i=1; i<=dynlen(tempDynString2); i++)
+  {
+    tempDynString2[i] = dir +\"/\"+ tempDynString2[i];
+    if(!patternMatch(\"*.svn\", tempDynString2[i]))
+      dynAppend(fileNames, tempDynString2[i]);
+    else
+      DebugN(\"Packager: Skipping SVN folder: \" + tempDynString2[i]);
+  }
+  
+  dynRemove(tempDynString, 1);
+	
+		for(int i=1; i<=dynlen(tempDynString); i++)
+  {
+    if(!patternMatch(\"*.svn\", tempDynString[i]))		  
+      getFileNamesRecursive(dir + \"/\" + tempDynString[i] + \"/\", pattern, fileNames);
+    else
+      DebugN(\"Packager: Skipping SVN folder: \" + dir + \"/\" + tempDynString[i]);
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+showUserFeedback(string sFeedback, int iDelay)
+{
+  resultTextArrow.visible(TRUE);
+  resultText.visible(TRUE);
+  resultText.text(sFeedback);
+  
+  delay(iDelay);
+  
+  resultTextArrow.visible(FALSE);
+  resultText.visible(FALSE);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+createNewFile(string sFilePath, string sFileName)
+{
+  file newFile;
+  int ferr;
+  
+  if(componentName.text != \"\")
+  {
+    ferr = access(sFilePath, F_OK);
+   
+    // if folder does not exist, create it and try opening again
+    if(ferr != 0)
+    {
+      mkdir(sFilePath);
+    }
+    
+    newFile = fopen(sFilePath + sFileName, \"a\");
+  	ferr = ferror(newFile);	
+    	
+    fclose(newFile);
+    
+  	if(ferr == 0)
+  	{
+      fileEditor(sFilePath + sFileName);
+      
+      initPanel();
+      showUserFeedback(\"New file created.\", 3);
+  	}
+    else
+    {
+      showUserFeedback(\"No file created. Error reading file.\", 3);
+    }
+  }
+  else
+  {
+    componentName.backCol = \"FwBackgroundUserAttention\";
+    showUserFeedback(\"Please provide a component name.\", 3);
+    componentName.backCol = \"_Window\";
+  } 
+}
+
+// ------------------------------------------------------------------------------------------------
+
+removeFile(string sFilePath)
+{
+  int iRes;
+  
+  iRes = remove(sFilePath);
+  
+  if(iRes == 0)
+  {
+    initPanel();
+    showUserFeedback(\"File deleted.\", 3);
+  }
+  else
+  {
+    showUserFeedback(\"File not deleted. Error during removal.\", 3);
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+selectAllLines(string shapeName, bool bAll)
+{
+  shape table = getShape(shapeName);
+  int length = table.lineCount();
+  
+  for(int rowIndex = 0; rowIndex < length; rowIndex++)
+  {
+    table.cellValueRC(rowIndex, \"inSelection\", bAll);
+    setRowBackgroundColor(shapeName, rowIndex, bAll);
+  }
+  
+  reloadButton.enabled(TRUE);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+showInitialMenu()
+{
+  contentTab.activeRegister(0);
+  
+  LayerOn(2);
+  LayerOff(3);
+  LayerOff(4);
+  LayerOff(5);
+  LayerOff(6);
+  LayerOff(7);
+  LayerOff(8);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+showModalNameInput()
+{
+  dyn_int di_panelSize; 
+   
+  busyBackground.position(0,0);
+  di_panelSize = getPanelSize(panelFileName(myModuleName(), myPanelName()));
+  busyBackground.size(di_panelSize[1], di_panelSize[2]);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+initGlobalVariables()
+{
+  g_mComponentContent[KEY_NAME] = \"\";
+  g_mComponentContent[KEY_VERSION] = \"1.0.0\";
+  g_mComponentContent[KEY_DATE] = formatTime(\"%d/%m/%Y\", getCurrentTime());
+  g_mComponentContent[KEY_SUBCOMP] = FALSE;
+  g_mComponentContent[KEY_RESTART] = FALSE;
+  g_mComponentContent[KEY_REQUIRED] = getSelectedLines(\"requiredComponents\");
+  g_mComponentContent[KEY_PREINIT] = getSelectedLines(\"preInitScriptsTable\");
+  g_mComponentContent[KEY_INIT] = getSelectedLines(\"initScript\");
+  g_mComponentContent[KEY_DELETE] = getSelectedLines(\"deleteScript\");
+  g_mComponentContent[KEY_POSTINSTALL] = getSelectedLines(\"postInstallScript\");
+  g_mComponentContent[KEY_POSTDELETE] = getSelectedLines(\"postDeleteScript\");
+  g_mComponentContent[KEY_CONFIG] = getSelectedLines(\"configFiles\");
+  g_mComponentContent[KEY_DPLIST] = getSelectedLines(\"asciiFiles\");
+  g_mComponentContent[KEY_PANEL] = getSelectedLines(\"panelFiles\");
+  g_mComponentContent[KEY_SCRIPT] = getSelectedLines(\"scriptFiles\");
+  g_mComponentContent[KEY_LIBRARY] = getSelectedLines(\"libraryFiles\");
+  g_mComponentContent[KEY_OTHER] = getSelectedLines(\"otherFiles\");
+  g_mComponentContent[KEY_BIN] = getSelectedLines(\"binFiles\");
+  g_mComponentContent[KEY_HELP] = getSelectedLines(\"helpFiles\");
+  g_mComponentContent[KEY_PICTURE] = getSelectedLines(\"pictureFiles\");
+}
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.3266"
+0 0 0
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+28 138
+"contentTab"
+""
+1 20.68646474872743 172.6952789699571 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+140 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"selchangedcb" "main()
+{
+  setLayerVisible(this.activeRegister()+2);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+setLayerVisible(int layerId)
+{
+  switch(layerId)
+  {
+    case 2:
+      LayerOn(2);
+      LayerOff(3);
+      LayerOff(4);
+      LayerOff(5);
+      LayerOff(6);
+      LayerOff(7);
+      LayerOff(8);
+      nextButton.enabled(TRUE);
+      backButton.enabled(FALSE);
+      break;
+    case 3:
+      LayerOff(2);
+      LayerOn(3);
+      LayerOff(4);
+      LayerOff(5);
+      LayerOff(6);
+      LayerOff(7);
+      LayerOff(8);
+      nextButton.enabled(TRUE);
+      backButton.enabled(TRUE);
+      break;
+    case 4:
+      LayerOff(2);
+      LayerOff(3);
+      LayerOn(4);
+      LayerOff(5);
+      LayerOff(6);
+      LayerOff(7);
+      LayerOff(8);
+      nextButton.enabled(TRUE);
+      backButton.enabled(TRUE);
+      break;
+    case 5:
+      LayerOff(2);
+      LayerOff(3);
+      LayerOff(4);
+      LayerOn(5);
+      LayerOff(6);
+      LayerOff(7);
+      LayerOff(8);
+      nextButton.enabled(TRUE);
+      backButton.enabled(TRUE);
+      break;
+    case 6:
+      LayerOff(2);
+      LayerOff(3);
+      LayerOff(4);
+      LayerOff(5);
+      LayerOn(6);
+      LayerOff(7);
+      LayerOff(8);
+      nextButton.enabled(TRUE);
+      backButton.enabled(TRUE);
+      break;
+    case 7:
+      LayerOff(2);
+      LayerOff(3);
+      LayerOff(4);
+      LayerOff(5);
+      LayerOff(6);
+      LayerOn(7);
+      LayerOff(8);
+      nextButton.enabled(TRUE);
+      backButton.enabled(TRUE);
+      break;
+    case 8:
+      LayerOff(2);
+      LayerOff(3);
+      LayerOff(4);
+      LayerOff(5);
+      LayerOff(6);
+      LayerOff(7);
+      LayerOn(8);
+      backButton.enabled(TRUE);
+      nextButton.enabled(FALSE);
+      break;
+    default:
+      LayerOff(2);
+      LayerOff(3);
+      LayerOff(4);
+      LayerOff(5);
+      LayerOff(6);
+      LayerOff(7);
+      LayerOff(8);
+      break;
+  }
+}"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  8 73 891 636
+E7 "setup" 2
+LANG:1 5 Setup
+LANG:10001 6 Define
+0
+"datapoints" 2
+LANG:1 10 Datapoints
+LANG:10001 3 Map
+0
+"libraries" 2
+LANG:1 9 Libraries
+LANG:10001 6 Create
+0
+"panels" 2
+LANG:1 6 Panels
+LANG:10001 6 Create
+0
+"scripts" 2
+LANG:1 7 Scripts
+LANG:10001 6 Create
+0
+"other" 2
+LANG:1 11 Other files
+LANG:10001 6 Create
+0
+"creation" 2
+LANG:1 16 Package creation
+LANG:10001 6 Create
+0
+
+6 98
+"bgRectangle"
+""
+1 20 530 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+98 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 3.026578073089701 0 1 -61.53156146179402 -531 1 E 20 530 321 560
+2 0
+"title"
+""
+1 8 2 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 4 253 24
+0 2 0 "0s" 0 0 0 192 0 0  10 4 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,40,0,0,0,0,0
+0 2
+LANG:1 23 JCOP Component Packager
+LANG:10001 47 JCOP Framework Installation Description Creator
+13 15
+"saveButton"
+""
+1 640 105 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+2
+LANG:1 13 Save XML file
+LANG:10001 49 Edit the xml file (needs to be created first ;-))
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  73 38 102 67
+
+P 
+4294967295
+"pictures/StandardIcons/Save_20.png"
+2
+LANG:1 15 Save + Edit XML
+LANG:10001 8 Edit XML
+"main()
+{
+// wait for file system init
+	while(g_sSlash == \"\")
+		delay(0,100);
+	
+	if((componentName.text != \"\"))
+	{
+    writeXmlFile();
+    showUserFeedback(\"XML file saved.\", 3);
+	}
+  else
+  {
+    showUserFeedback(\"XML file not saved. Name missing.\", 3);
+  }
+}
+" 0
+ E E E
+13 82
+"btnClose"
+""
+1 966 585 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+85 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 49 Edit the xml file (needs to be created first ;-))
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  813 643 891 671
+
+T 
+2
+LANG:1 5 Close
+LANG:10001 5 Close
+"main()
+{
+	PanelOff();
+}" 0
+ E E E
+13 90
+"reloadButton"
+""
+1 404 1274 E E E 0 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+99 0 0 0 0 0
+E E E
+0
+2
+LANG:1 46 Reload XML file. Current changes will be lost.
+LANG:10001 76 Refreshes the file lists. Selections will be lost if XML is not yet created.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  8 642 37 671
+
+P 
+4294967295
+"pictures/StandardIcons/refresh_20.png"
+2
+LANG:1 7 Refresh
+LANG:10001 7 Refresh
+"main()
+{
+  reloadPanel();
+}" 0
+ E E E
+13 102
+"backButton"
+""
+1 722 597 E E E 0 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+105 0 0 0 37 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  720 595 798 623
+
+T 
+1
+LANG:1 4 Back
+"main()
+{
+  switch(contentTab.activeRegister())
+  {
+    case 1:
+      contentTab.activeRegister(0);
+      break;
+    case 2:
+      contentTab.activeRegister(1);
+      break;
+    case 3:
+      contentTab.activeRegister(2);
+      break;
+    case 4:
+      contentTab.activeRegister(3);
+      break;
+    case 5:
+      contentTab.activeRegister(4);
+      break;
+    case 6:
+      contentTab.activeRegister(5);
+      break;
+    case 7:
+      contentTab.activeRegister(6);
+      break;
+    default:
+      break;
+  }
+}" 0
+ E E E
+13 103
+"nextButton"
+""
+1 804 597 E E E 0 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+106 0 0 0 39 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  802 595 880 623
+
+T 
+1
+LANG:1 4 Next
+"main()
+{
+  switch(contentTab.activeRegister())
+  {
+    case 0:
+      contentTab.activeRegister(1);
+      break;
+    case 1:
+      contentTab.activeRegister(2);
+      break;
+    case 2:
+      contentTab.activeRegister(3);
+      break;
+    case 3:
+      contentTab.activeRegister(4);
+      break;
+    case 4:
+      contentTab.activeRegister(5);
+      break;
+    case 5:
+      contentTab.activeRegister(6);
+      break;
+    case 6:
+      contentTab.activeRegister(7);
+      break;
+    default:
+      break;
+  }
+}" 0
+ E E E
+13 117
+"editButton"
+""
+1 666 679 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+121 0 0 0 0 0
+E E E
+0
+2
+LANG:1 34 Edit the XML file (saves it first)
+LANG:10001 49 Edit the xml file (needs to be created first ;-))
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  102 38 131 67
+
+P 
+4294967295
+"pictures/StandardIcons/open_script_editor_20.png"
+2
+LANG:1 15 Save + Edit XML
+LANG:10001 8 Edit XML
+"main()
+{
+// wait for file system init
+	while(g_sSlash == \"\")
+		delay(0,100);
+	
+	if((componentName.text != \"\"))
+	{
+    writeXmlFile();
+    
+		file xmlText = fopen(PROJ_PATH + g_sSlash +componentName.text+ \".xml\", \"r\");
+		int ferr = ferror(xmlText);
+		fclose(xmlText);
+		if(ferr == 0)
+		{
+      fileEditor(PROJ_PATH+ g_sSlash +componentName.text+ \".xml\");
+
+			loadXMLFromFile(PROJ_PATH+ g_sSlash +componentName.text+ \".xml\");     
+      showUserFeedback(\"XML file edited.\", 3);
+		}
+    else
+    {
+      showUserFeedback(\"XML file not edited. Error reading file.\", 3);
+    }
+	}
+  else
+  {
+    showUserFeedback(\"XML file could not be opened. Name missing.\", 3);
+  }
+}  
+
+" 0
+ E E E
+2 118
+"resultText"
+""
+1 166 647 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 2 1 0 1 E U  0 E 168 649 228 663
+0 2 0 "0s" 0 0 0 192 0 0  168 649 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 8 Feedback
+LANG:10001 11 Result Text
+10 119
+"resultTextArrow"
+""
+1 10 770 E E E 1 E 0 E N "_Transparent" E N "_3DText" E E
+ E E
+119 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.7259259259259259 0 0.6825000000000002 148.7407407407407 124.4749999999998 1 E 5 10 770
+10 790
+20 780
+10 770
+10 790
+ 1
+13 68
+"newXmlButton"
+""
+1 -212 650 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+74 0 0 0 0 0
+E E E
+0
+2
+LANG:1 29 Clear panel for new component
+LANG:10001 34 Clear all selections in the panel.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  8 38 37 67
+
+P 
+4294967295
+"pictures/StandardIcons/new_20.png"
+2
+LANG:1 3 New
+LANG:10001 7 New XML
+"main()
+{
+  dyn_string dsReturn;
+  dyn_float dfReturn;
+  
+	g_bXmlLoaded = FALSE;	
+	g_sXmlFileContent = \"\";
+	
+  ChildPanelOnCentralModalReturn(\"vision/MessageInfo\", \"Confirm\", 
+          makeDynString(\"$1:Clear panel for new component?\",
+          \"$2:OK\", \"$3:Cancel\"),
+          dfReturn, dsReturn);
+  
+  if (dynlen(dfReturn) >= 1 && dfReturn[1] == 1)
+  {							
+	  resetPanel();
+  }
+ 
+  // XML and UI store now the exact same information --> disable refresh
+  reloadButton.enabled(FALSE);
+}
+
+
+" 0
+ E E E
+13 137
+"openXmlButton"
+""
+1 -183 650 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+139 0 0 0 0 0
+E E E
+0
+2
+LANG:1 22 Open existing XML file
+LANG:10001 34 Clear all selections in the panel.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  37 38 66 67
+
+P 
+4294967295
+"pictures/StandardIcons/Open_20.png"
+2
+LANG:1 3 New
+LANG:10001 7 New XML
+"main()
+{
+	openExistingXml();
+}" 0
+ E E E
+14 161
+"currentDirectoryLabel"
+""
+1 -604 -190 E E E 1 E 1 E N "grey" E N "lightgrey" E E
+ E E
+163 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  188 40 891 66
+2 "0s" 0 0 0 2 0 -1  E "main()
+{
+  this.text = \"Current directory:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+13 83
+"exportFsmTree"
+""
+1 -450 539 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+86 0 0 0 0 0
+E E E
+0
+2
+LANG:1 42 Creates files to be selectable in packager
+LANG:10001 49 Export the FSM tree starting with the node above.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  44 643 147 671
+
+T 
+2
+LANG:1 11 Add FSM ...
+LANG:10001 15 Export FSM Tree
+"main()
+{
+  dyn_float dfReturn;
+  dyn_string dsSelectedNode;
+   
+  ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallation_Packager_AddFsm.pnl\", \"Add FSM node ...\", 
+          makeDynString(\"$sComponentName:\"+componentName.text, \"$sSourcePath:\"+sourcePath.text),
+          dfReturn, dsSelectedNode);
+  
+  if(dynlen(dfReturn) > 0 && dfReturn[1] == 0)
+  {
+    initPanel();
+    showUserFeedback(\"FSM node \" + dsSelectedNode[1] + \" successfully added.\", 3);
+  }
+  else
+  {
+    showUserFeedback(\"No FSM node added.\", 3);
+  } 
+}
+
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+14 4
+"componentName"
+""
+1 -150 125 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 89 Component name. Also sub-directories of the source path with this name will be displayed.
+LANG:10001 106 Name of the component. REQUIRED. Also sub-directories of the source path with this name will be displayed.
+
+1
+"textChangedCB" "main(string newText)
+{
+  if(!g_bInit)
+  {  
+    initPanel();
+    nextButton.enabled(newText != \"\");
+    contentTab.enabled(newText != \"\");
+    showUserFeedback(\"Data reloaded.\", 3);    
+  }
+  
+  reloadButton.enabled(TRUE);
+}
+
+"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 221 426 247
+3 "0s" 0 0 0 0 0 -1  E E E
+25 58
+"configFiles"
+""
+1 -2150 34.40000000000001 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 421 339 447
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 3 1 "items" 25 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+285 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 "fromFile" 2 0 0 "s" 2
+LANG:1 3 XML
+LANG:10001 3 XML
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+40 
+21 21 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 0 0 0 7
+1 0
+25 57
+"requiredComponents"
+""
+1 -812 -189 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+30 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  473 134 880 570
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+14 17
+"componentVersion"
+""
+1 -411 179 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+2
+LANG:1 36 Component version. REQUIRED. (#.#.#)
+LANG:10001 49 Version of the component. REQUIRED! Format: #.#.#
+
+1
+"textChangedCB" "main(string newText)
+{
+  if(!g_bInit)
+  {
+    reloadButton.enabled(TRUE);
+  }
+}"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 278 426 304
+3 "0s" 0 0 0 0 0 -1  E E E
+14 19
+"componentDate"
+""
+1 -411 233 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+2
+LANG:1 43 Version date of the component. (dd/mm/yyyy)
+LANG:10001 52 Date of this version of the component. Format: Y/M/D
+
+1
+"textChangedCB" "main(string newText)
+{
+  if(!g_bInit)
+  {
+    reloadButton.enabled(TRUE);
+  }
+}"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 335 426 361
+3 "0s" 0 0 0 0 0 -1  E E E
+13 111
+"editConfigButton"
+""
+1 987 2342 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+117 0 0 0 0 0
+E E E
+0
+2
+LANG:1 16 Edit config file
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  368 420 397 449
+
+P 
+4294967295
+"pictures/StandardIcons/open_script_editor_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+	editScript(\"configFiles\");
+}" 0
+ E E E
+13 112
+"newConfigButton"
+""
+1 341 422 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+120 0 0 0 0 0
+E E E
+0
+1
+LANG:1 22 Create new config file
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  339 420 368 449
+
+P 
+4294967295
+"pictures/StandardIcons/new_20.png"
+1
+LANG:1 12 PUSH_BUTTON3
+"main()
+{  
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"config\" + g_sSlash;
+  string sFileName = componentName.text + \".config\";
+
+  createNewFile(sFilePath, sFileName);
+}" 0
+ E E E
+13 120
+"deleteConfigButton"
+""
+1 1016 2342 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+122 0 0 0 0 0
+E E E
+0
+2
+LANG:1 18 Delete config file
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  397 420 426 449
+
+P 
+4294967295
+"pictures/StandardIcons/delete_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"config\" + g_sSlash;
+  string sFileName = componentName.text + \".config\";
+  
+	removeFile(sFilePath + sFileName);
+}" 0
+ E E E
+13 125
+"allButton1"
+""
+1 777 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+127 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  775 106 828 134
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"requiredComponents\", TRUE);
+}" 0
+ E E E
+13 126
+"noneButton1"
+""
+1 830 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+128 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  828 106 881 134
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"requiredComponents\", FALSE);
+}" 0
+ E E E
+14 139
+"componentNameLabel"
+""
+1 -115 48 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+141 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 197 169 223
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Name:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 140
+"componentVersionLabel"
+""
+1 -115 72 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+142 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 254 169 280
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Version:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 141
+"componentDateLabel"
+""
+1 -115 96 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+143 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 311 169 337
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Date:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 142
+"configLabel"
+""
+1 -115 129 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+145 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 397 169 423
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Config file:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 143
+"dependencyLabel"
+""
+1 339 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+146 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  470 110 673 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Required components:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 159
+"pathLabel"
+""
+1 -115 -39 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+162 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 110 169 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Source path:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+22 1
+"sourcePath"
+""
+1 -177.7473903966597 205 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+2
+LANG:1 49 Project path, the component should be built from.
+LANG:10001 49 Project path, the component should be built from.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 134 426 160
+0
+
+E
+"main()
+{
+  currentDirectoryLabel.text = \"Current directory: \" + this.selectedText();
+	initPanel();
+  showUserFeedback(\"Data reloaded.\", 3);
+}
+" 0
+
+E
+ 0 0
+20 91
+"enforcePaths"
+""
+1 16 111 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+101 0 0 0 0 0
+E E E
+0
+2
+LANG:1 99 Creates the directory structure as specified in the guidelines wherever the source files are stored
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 488 222 511
+1
+T 
+2
+LANG:1 28 Enforce packaging guidelines
+LANG:10001 23 Enforce framework paths
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, bool state)
+{
+	g_bEnforcePath = state;
+	initPanel();
+  showUserFeedback(\"Data reloaded.\", 3);
+}
+
+
+" 0
+20 37
+"isSubComponent"
+""
+1 -226 580 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+2
+LANG:1 65 Sub-components will not be shown in standard list of installation
+LANG:10001 111 Check if this component should ONLY be a sub-component, ie. not be shown in the standard list for installation.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 518 322 541
+1
+T 
+2
+LANG:1 13 Sub-component
+LANG:10001 33 This component is a sub-component
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, int state)
+{
+  reloadButton.enabled(TRUE);
+}" 0
+20 97
+"cbRestart"
+""
+1 -226 610 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+102 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 111 Check if this component should ONLY be a sub-component, ie. not be shown in the standard list for installation.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 548 322 571
+1
+T 
+2
+LANG:1 27 No project restart required
+LANG:10001 47 This component does NOT require project restart
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, int state)
+{
+  reloadButton.enabled(TRUE);
+}" 0
+13 176
+"busyBackground"
+""
+1 0 0 E E E 0 E 1 E N "_Transparent" E N {0,0,0,200} E E
+ E E
+178 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  -2 -2 16 16
+
+T 
+2
+LANG:1 0 
+LANG:10001 30 Button used as background pane
+E E E E
+14 177
+"startNameInputField"
+""
+1 360 274 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E "main()
+{
+  // dummy
+}" 0
+ E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  348 272 525 299
+3 "0s" 0 0 0 0 0 -1  E E "main()
+{
+  setInitialComponentName(startNameInputField.text);
+}" 0
+
+13 178
+"startNameCommitButton"
+""
+1 546 284 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+3 0 0 0 0 0
+E E E
+1
+1
+LANG:1 11 Submit name
+
+1
+"hoverbclr" "N {220,220,220}"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  524 272 551 299
+
+P 
+4294967295
+"pictures/arrow_single_right_16.png"
+1
+LANG:1 12 PUSH_BUTTON2
+"main()
+{
+  setInitialComponentName(startNameInputField.text);
+}" 0
+ E E E
+14 179
+"startNameInputLabel"
+""
+1 -115 -46 E E E 1 E 1 E N "white" E N "lightgrey" E E
+ E E
+179 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  344 247 547 273
+2 "0s" 0 0 0 1 0 -1  E "main()
+{
+  this.text = \"Choose a name:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 187
+"xmlFileOpenLabel"
+""
+1 -115 78 E E E 1 E 1 E N "white" E N "lightgrey" E E
+ E E
+187 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  344 371 547 397
+2 "0s" 0 0 0 1 0 -1  E "main()
+{
+  this.text = \"Open XML file:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+13 188
+"xmlFileOpenButton"
+""
+1 453 408 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+188 0 0 0 0 0
+E E E
+1
+1
+LANG:1 13 Open XML file
+
+1
+"hoverbclr" "N {220,220,220}"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  431 396 458 423
+
+P 
+4294967295
+"pictures/open_22.png"
+1
+LANG:1 12 PUSH_BUTTON2
+"main()
+{
+  bool bValid;
+  
+  bValid = openExistingXml();
+  
+  if(bValid)
+  {
+    showStartScreen(FALSE);
+  }
+}" 0
+ E E E
+13 192
+"separator1"
+""
+1 252 322 E E E 1 E 1 E N "_ButtonText" E N "white" E E
+ E E
+192 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  125 338 428 342
+
+T 
+1
+LANG:1 0 
+E E E E
+13 193
+"separator2"
+""
+1 243 330 E E E 1 E 1 E N "_ButtonText" E N "white" E E
+ E E
+193 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  461 338 764 342
+
+T 
+1
+LANG:1 0 
+E E E E
+14 194
+"orLabel"
+""
+1 -115 -30 E E E 1 E 1 E N "white" E N "lightgrey" E E
+ E E
+194 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  423 325 466 351
+2 "0s" 0 0 0 1 0 -1  E "main()
+{
+  this.text = \"or\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+25 59
+"asciiFiles"
+""
+1 -1959 -952 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+32 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 134 426 570
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+13 71
+"cmdAscii"
+""
+1 107 194 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+81 0 0 0 0 0
+E E E
+0
+3
+LANG:1 20 Launch ASCII Manager
+LANG:10001 20 Launch ASCII Manager
+LANG:0 0 
+
+0
+3
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0  473 134 529 190
+
+P 
+14215660
+"pictures/SysMgm/40x40/AsciiManager.png"
+2
+LANG:1 0 
+LANG:10001 0 
+"main() 
+{ 
+	dyn_float tempDynFloat;
+	dyn_string tempDynString;
+	
+	if(access(\"vision/AsciiMan_fw.pnl\", F_OK) == 0)
+  	ChildPanelOnCentralModalReturn(\"vision/AsciiMan_fw.pnl\", \"PVSS ASCII Manager for Component Packaging\", makeDynString(), tempDynFloat, tempDynString);
+  else
+  	ChildPanelOnCentralModalReturn(\"vision/AsciiMan.pnl\", \"PVSS ASCII Manager for Component Packaging\", makeDynString(), tempDynFloat, tempDynString);
+  	
+	initPanel();
+} 
+
+" 0
+ E E E
+13 128
+"noneButton2"
+""
+1 375 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+130 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  373 106 426 134
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"asciiFiles\", FALSE);
+}" 0
+ E E E
+13 127
+"allButton2"
+""
+1 322 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+129 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  320 106 373 134
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"asciiFiles\", TRUE);
+}" 0
+ E E E
+14 146
+"asciiFilesLabel"
+""
+1 -115 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+148 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 110 219 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"ASCII files:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 147
+"asciiManagerLabel"
+""
+1 339 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+149 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  470 110 673 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"ASCII manager:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+25 66
+"libraryFiles"
+""
+1 -3953 -2483 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+69 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 134 426 570
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+13 130
+"allButton3"
+""
+1 322 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+132 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  320 106 373 134
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"libraryFiles\", TRUE);
+}" 0
+ E E E
+13 129
+"noneButton3"
+""
+1 375 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+131 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  373 106 426 134
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"libraryFiles\", FALSE);
+}" 0
+ E E E
+14 150
+"librariesLabel"
+""
+1 -115 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+152 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 110 219 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Libraries:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+25 64
+"panelFiles"
+""
+1 -3089 -5299 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+37 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 134 426 570
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+13 131
+"allButton4"
+""
+1 322 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+133 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  320 106 373 134
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"panelFiles\", TRUE);
+}" 0
+ E E E
+13 132
+"noneButton4"
+""
+1 375 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+134 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  373 106 426 134
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"panelFiles\", FALSE);
+}" 0
+ E E E
+14 151
+"panelsLabel"
+""
+1 -115 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+153 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 110 219 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Panels:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+13 106
+"newPostDeleteScriptButton"
+""
+1 853 483 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+112 0 0 0 0 0
+E E E
+0
+1
+LANG:1 24 Create postDelete script
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  851 481 880 510
+
+P 
+4294967295
+"pictures/StandardIcons/new_20.png"
+1
+LANG:1 12 PUSH_BUTTON3
+"main()
+{
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"scripts\" + g_sSlash + componentName.text + g_sSlash;
+  string sFileName = componentName.text + \".postDelete\";
+
+  createNewFile(sFilePath, sFileName);
+}" 0
+ E E E
+13 105
+"newDeleteScriptButton"
+""
+1 853 367 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+111 0 0 0 0 0
+E E E
+0
+1
+LANG:1 20 Create delete script
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  851 365 880 394
+
+P 
+4294967295
+"pictures/StandardIcons/new_20.png"
+1
+LANG:1 12 PUSH_BUTTON3
+"main()
+{
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"scripts\" + g_sSlash + componentName.text + g_sSlash;
+  string sFileName = componentName.text + \".delete\";
+
+  createNewFile(sFilePath, sFileName);
+}" 0
+ E E E
+25 60
+"initScript"
+""
+1 -1882 -212.4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  473 134 851 222
+E"main(int row, string column, string value)
+{  
+  applySelection(row, column, value);
+}
+" 0
+ 0 0 1 3 1 "items" 28 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+326 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Add
+LANG:10001 3 Sel
+E
+2
+LANG:1 22 Tick to add to package
+LANG:10001 0 
+
+30 "fromFile" 2 0 0 "s" 2
+LANG:1 3 XML
+LANG:10001 3 XML
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+40 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+25 61
+"postInstallScript"
+""
+1 -2022 -400 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  473 250 851 338
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 3 1 "items" 28 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+326 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 "fromFile" 2 0 0 "s" 2
+LANG:1 3 XML
+LANG:10001 3 XML
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+40 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+25 62
+"deleteScript"
+""
+1 -2022 -179.6 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  473 367 851 455
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 3 1 "items" 28 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+326 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 "fromFile" 2 0 0 "s" 2
+LANG:1 3 XML
+LANG:10001 3 XML
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+40 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+25 63
+"postDeleteScript"
+""
+1 -2162 -493.6 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+36 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  473 483 851 571
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 3 1 "items" 28 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+326 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 "fromFile" 2 0 0 "s" 2
+LANG:1 3 XML
+LANG:10001 3 XML
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+40 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+25 65
+"scriptFiles"
+""
+1 -4224 -2778 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+68 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 134 426 455
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+13 74
+"initScriptNewButton"
+""
+1 193 544.173913043478 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+82 0 0 0 0 0
+E E E
+0
+2
+LANG:1 18 Create init script
+LANG:10001 21 Create an init script
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 132 880 161
+
+P 
+4294967295
+"pictures/wizard.png"
+2
+LANG:1 6 Wizard
+LANG:10001 6 Wizard
+"main()
+{
+	dyn_float df;
+	dyn_string ds;
+	
+	if(componentName.text != \"\")
+	{
+	  ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallation_packagerAppendManagerWizard.pnl\",
+      \"Manager Wizard: Init Script\",
+      makeDynString(\"$componentName:\" + componentName.text, \"$scriptFunction:init\"), df, ds);
+    initPanel();
+  }
+  else
+  {
+    showUserFeedback(\"Please provide a component name.\", 3);
+  }
+}
+
+" 0
+ E E E
+13 75
+"postInstallScriptNewButton"
+""
+1 203 1140 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+84 0 0 0 0 0
+E E E
+0
+2
+LANG:1 25 Create postInstall script
+LANG:10001 27 Create a postInstall script
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 248 880 277
+
+P 
+4294967295
+"pictures/wizard.png"
+2
+LANG:1 6 Wizard
+LANG:10001 6 Wizard
+"main()
+{
+	dyn_float df;
+	dyn_string ds;
+	
+	if(componentName.text != \"\")
+	{
+	  ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallation_packagerAppendManagerWizard.pnl\",
+      \"Manager Wizard: PostInstall Script\",
+      makeDynString(\"$componentName:\" + componentName.text, \"$scriptFunction:postInstall\"), df, ds);
+    initPanel();
+  }
+  else
+  {
+    showUserFeedback(\"Please provide a component name.\", 3);
+  }
+}
+
+" 0
+ E E E
+13 86
+"initScriptEditButton"
+""
+1 503 563 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+88 0 0 0 0 0
+E E E
+0
+2
+LANG:1 11 Edit script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 161 880 190
+
+P 
+4294967295
+"pictures/StandardIcons/open_script_editor_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+	editScript(\"initScript\");
+}" 0
+ E E E
+13 87
+"postInstallScriptEditButton"
+""
+1 825 1129 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+89 0 0 0 0 0
+E E E
+0
+2
+LANG:1 11 Edit script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 277 880 306
+
+P 
+4294967295
+"pictures/StandardIcons/open_script_editor_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+	editScript(\"postInstallScript\");
+}" 0
+ E E E
+13 88
+"deleteScriptEditButton"
+""
+1 1147 1746 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+90 0 0 0 0 0
+E E E
+0
+2
+LANG:1 11 Edit script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 394 880 423
+
+P 
+4294967295
+"pictures/StandardIcons/open_script_editor_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+	editScript(\"deleteScript\");
+}" 0
+ E E E
+13 89
+"postDeleteScriptEditButton"
+""
+1 1470 2432 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+97 0 0 0 0 0
+E E E
+0
+2
+LANG:1 11 Edit script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 510 880 539
+
+P 
+4294967295
+"pictures/StandardIcons/open_script_editor_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+	editScript(\"postDeleteScript\");
+}" 0
+ E E E
+13 121
+"postDeleteScriptDeleteButton"
+""
+1 1470 2461 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+123 0 0 0 0 0
+E E E
+0
+2
+LANG:1 13 Delete script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 539 880 568
+
+P 
+4294967295
+"pictures/StandardIcons/delete_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"scripts\" + g_sSlash + componentName.text + g_sSlash;
+  string sFileName = componentName.text + \".postDelete\";
+  
+	removeFile(sFilePath + sFileName);
+}" 0
+ E E E
+13 122
+"deleteScriptDeleteButton"
+""
+1 1470 2345 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+124 0 0 0 0 0
+E E E
+0
+2
+LANG:1 13 Delete script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 423 880 452
+
+P 
+4294967295
+"pictures/StandardIcons/delete_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"scripts\" + g_sSlash + componentName.text + g_sSlash;
+  string sFileName = componentName.text + \".delete\";
+  
+	removeFile(sFilePath + sFileName);
+}" 0
+ E E E
+13 123
+"postInstallScriptDeleteButton"
+""
+1 1470 2228 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+125 0 0 0 0 0
+E E E
+0
+2
+LANG:1 13 Delete script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 306 880 335
+
+P 
+4294967295
+"pictures/StandardIcons/delete_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"scripts\" + g_sSlash + componentName.text + g_sSlash;
+  string sFileName = componentName.text + \".postInstall\";
+  
+	removeFile(sFilePath + sFileName);
+}" 0
+ E E E
+13 124
+"initScriptDeleteButton"
+""
+1 1470 2112 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+126 0 0 0 0 0
+E E E
+0
+2
+LANG:1 13 Delete script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 190 880 219
+
+P 
+4294967295
+"pictures/StandardIcons/delete_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{ 
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"scripts\" + g_sSlash + componentName.text + g_sSlash;
+  string sFileName = componentName.text + \".init\";
+  
+	removeFile(sFilePath + sFileName);
+}" 0
+ E E E
+13 133
+"allButton5"
+""
+1 322 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+135 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  320 106 373 134
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"scriptFiles\", TRUE);
+}" 0
+ E E E
+13 134
+"noneButton5"
+""
+1 375 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+136 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  373 106 426 134
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"scriptFiles\", FALSE);
+}" 0
+ E E E
+14 152
+"scriptsLabel"
+""
+1 -115 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+154 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 110 219 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Scripts:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 153
+"initLabel"
+""
+1 339 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+155 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  470 110 673 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Initialisation scripts:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 154
+"postInstallLabel"
+""
+1 339 -93 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+156 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  470 226 673 252
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"PostInstall scripts:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 155
+"deleteLabel"
+""
+1 339 24 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+157 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  470 343 673 369
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Delete scripts:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+14 156
+"postDeleteLabel"
+""
+1 339 140 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+158 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  470 459 673 485
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"PostDelete scripts:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+25 182
+"preInitScriptsTable"
+""
+1 -2476 -63.59999999999999 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+182 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 483 397 571
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 3 1 "items" 28 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+326 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 "fromFile" 2 0 0 "s" 2
+LANG:1 3 XML
+LANG:10001 3 XML
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+40 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+14 185
+"preInitLabel"
+""
+1 -115 140 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+185 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 459 219 485
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"PreInit scripts:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+13 181
+"newPreInitScriptButton"
+""
+1 399 483 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+181 0 0 0 0 0
+E E E
+0
+1
+LANG:1 20 Create delete script
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  397 481 426 510
+
+P 
+4294967295
+"pictures/StandardIcons/new_20.png"
+1
+LANG:1 12 PUSH_BUTTON3
+"main()
+{
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"scripts\" + g_sSlash + componentName.text + g_sSlash;
+  string sFileName = componentName.text + \".preInit\";
+
+  createNewFile(sFilePath, sFileName);
+}" 0
+ E E E
+13 183
+"preInitScriptEditButton"
+""
+1 693 1862 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+183 0 0 0 0 0
+E E E
+0
+2
+LANG:1 11 Edit script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  397 510 426 539
+
+P 
+4294967295
+"pictures/StandardIcons/open_script_editor_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+	editScript(\"preInitScriptsTable\");
+}" 0
+ E E E
+13 184
+"preInitScriptDeleteButton"
+""
+1 1016 2461 E E E 0 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+184 0 0 0 0 0
+E E E
+0
+2
+LANG:1 13 Delete script
+LANG:10001 90 Select a script in the column to the left. Clicking this button will open an editor to it.
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  397 539 426 568
+
+P 
+4294967295
+"pictures/StandardIcons/delete_20.png"
+2
+LANG:1 4 Edit
+LANG:10001 4 Edit
+"main()
+{
+  string sFilePath = sourcePath.selectedText + g_sSlash + \"scripts\" + g_sSlash + componentName.text + g_sSlash;
+  string sFileName = componentName.text + \".preInit\";
+  
+	removeFile(sFilePath + sFileName);
+}" 0
+ E E E
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+25 67
+"helpFiles"
+""
+1 -3953 -4374 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+73 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 134 426 335
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+13 136
+"noneButton6"
+""
+1 375 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+138 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  373 106 426 134
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"helpFiles\", FALSE);
+}" 0
+ E E E
+13 135
+"allButton6"
+""
+1 322 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+137 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  320 106 373 134
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"helpFiles\", TRUE);
+}" 0
+ E E E
+14 157
+"helpFilesLabel"
+""
+1 -115 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+159 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 110 219 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Help files:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+25 166
+"otherFiles"
+""
+1 -3499 -4344 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+168 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  473 370 880 571
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+13 167
+"noneButton9"
+""
+1 829 344 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+169 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  827 342 880 370
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"otherFiles\", FALSE);
+}" 0
+ E E E
+13 168
+"allButton9"
+""
+1 776 344 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+170 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  774 342 827 370
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"otherFiles\", TRUE);
+}" 0
+ E E E
+14 169
+"otherFilesLabel"
+""
+1 339 27 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+171 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  470 346 673 372
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Other files:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+25 170
+"binFiles"
+""
+1 -3499 -4373 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+172 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  473 134 880 335
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+13 171
+"noneButton8"
+""
+1 829 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+173 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  827 106 880 134
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"binFiles\", FALSE);
+}" 0
+ E E E
+13 172
+"allButton8"
+""
+1 776 108 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+176 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  774 106 827 134
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"binFiles\", TRUE);
+}" 0
+ E E E
+14 173
+"binFilesLabel"
+""
+1 339 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+177 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  470 110 673 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Bin files:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+13 163
+"noneButton7"
+""
+1 375 344 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+165 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  373 342 426 370
+
+T 
+1
+LANG:1 4 None
+"main()
+{
+  selectAllLines(\"pictureFiles\", FALSE);
+}" 0
+ E E E
+13 164
+"allButton7"
+""
+1 322 344 E E E 1 E 1 E N "_ButtonText" E N "_3DFace" E E
+ E E
+166 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  320 342 373 370
+
+T 
+1
+LANG:1 3 All
+"main()
+{
+  selectAllLines(\"pictureFiles\", TRUE);
+}" 0
+ E E E
+25 162
+"pictureFiles"
+""
+1 -3953 -4118 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+164 0 0 0 0 0
+E "main()
+{
+  this.deleteSelection();
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 370 426 571
+E"main(int row, string column, string value)
+{
+  applySelection(row, column, value);
+}" 0
+ 0 0 1 2 1 "items" 31 1 0 "s" 2
+LANG:1 4 Item
+LANG:10001 4 Item
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+355 "inSelection" 2 1 0 "s" 2
+LANG:1 3 Sel
+LANG:10001 3 Sel
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+30 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+14 165
+"pictureFilesLabel"
+""
+1 -115 27 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+167 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  16 346 219 372
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Pictures:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+29 101
+"generationLog"
+""
+1 396 84 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+103 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+13
+"inputMethodHints" "enum 0"
+"verticalScrollBarPolicy" "enum 0"
+"contextMenuPolicy" "enum 1"
+"textInteractionFlags" "enum 19"
+"horizontalScrollBarPolicy" "enum 0"
+"alignment" "enum 1"
+"frameShadow" "enum 48"
+"layoutDirection" "enum 0"
+"wordWrap" "enum 1"
+"autoFormatting" "enum 0"
+"wrapPolicy" "enum 0"
+"frameShape" "enum 6"
+"textFormat" "enum 2"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  147 136 850 568
+15 PVSS.TextEdit.1
+0
+"main()
+{
+  generationLog.readOnly(TRUE);
+}" 0
+13 44
+"XMLPackAndGoButton"
+""
+1 72 746 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+2
+LANG:1 50 Create a folder with the component's configuration
+LANG:10001 88 Create a folder with the component (Folder and XML need to be created first) CAUTION!!! 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  19 134 128 190
+
+T 
+2
+LANG:1 12 Generate ...
+LANG:10001 10 Pack && Go
+"main()
+{
+	dyn_string tempDynString;
+	string destinationFolder = PROJ_PATH;
+
+  generationLog.text(\"\");
+  btnClose.enabled	= false;
+  
+  if(componentName.text != \"\")
+	{
+    writeXmlFile();
+    
+    generationLog.append(\"XML file created.\");
+    generationLog.append(\"--------------------------------------------------------------------------------------------------\");
+    
+  	if(dynlen(g_dsXmlDescription) > 0)
+  	{
+  		folderSelector(destinationFolder);
+           
+  		if(destinationFolder != \"\")
+  		{
+        generationLog.append(\"Destination folder selected:\");
+        generationLog.append(destinationFolder);
+  			generationLog.append(\"--------------------------------------------------------------------------------------------------\");
+        generationLog.append(\"Copying files started.\");
+
+  			destinationFolder += g_sSlash + componentName.text;      
+        fwInstallationPackager_packNgo(destinationFolder, sourcePath.text, g_dsXmlDescription);
+
+  			//closeProgressBar();
+        generationLog.append(\"Copying files ended.\");
+        generationLog.append(\"--------------------------------------------------------------------------------------------------\");
+        generationLog.append(\"Component folder successfully generated.\");
+        
+        showUserFeedback(\"Component folder successfully generated.\", 3);
+  		}
+      else
+      {
+        generationLog.append(\"Component folder not generated. No path provided.\");
+        showUserFeedback(\"Component folder not generated. No path provided.\", 3);
+      }
+  	}
+    else
+    {
+      generationLog.append(\"Component folder not generated. No information provided.\");
+      showUserFeedback(\"Component folder not generated. No information provided.\", 3);
+    }
+  }
+  else
+  {
+    generationLog.append(\"Component folder not generated. Name missing.\");
+    showUserFeedback(\"Component folder not generated. Name missing.\", 3);
+  }
+
+  btnClose.enabled	= true;	 
+}	
+
+
+
+
+
+" 0
+ E E E
+14 158
+"generationLogLabel"
+""
+1 14 -209 E E E 1 E 1 E N "_WindowText" E N "lightgrey" E E
+ E E
+161 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,50,0,0,0,0,0
+0  145 110 348 136
+2 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Log:\";
+  this.backCol = \"_Transparent\";
+}" 0
+ E
+13 186
+"clearLogButton"
+""
+1 1415 774 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+186 0 0 0 0 0
+E E E
+0
+2
+LANG:1 9 Clear log
+LANG:10001 49 Edit the xml file (needs to be created first ;-))
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  851 133 880 162
+
+P 
+4294967295
+"pictures/StandardIcons/delete_20.png"
+2
+LANG:1 15 Save + Edit XML
+LANG:10001 8 Edit XML
+"main()
+{
+  generationLog.text(\"\");
+}  
+
+" 0
+ E E E
+0
+0

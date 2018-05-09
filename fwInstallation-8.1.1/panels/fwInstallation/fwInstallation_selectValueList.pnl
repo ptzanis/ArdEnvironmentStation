@@ -1,0 +1,259 @@
+V 13
+1
+LANG:1 0 
+PANEL,-1 -1 400 160 N "_3DFace" 4
+"$listContent"
+"$text"
+"$textList"
+"$type"
+"main()
+{
+	dyn_string listValues;
+		
+  messageLabel.text = $text;
+  
+	switch ($type)
+	{
+		case \"info\":
+			list.visible = false;
+			comboboxLabel.visible = false;
+      messageLabel.position(85, 37);
+      closingInfoLabel.position(85, 85);
+			break;
+		case \"select\":
+			comboboxLabel.visible = true;
+			list.visible = true;
+			comboboxLabel.text = $textList;
+			fwGeneral_stringToDynString ( $listContent, listValues);
+			list.items = listValues;  
+			list.selectedPos = 1;
+			break;
+	}
+	for(int i=60; i>0; i--)
+	{
+		closingInfoLabel.text = \"Window automatically closes in \"+i+\" seconds.\";
+		delay(1);
+	}		
+	PanelOffReturn(makeDynFloat(-1), makeDynString(\"timeout\"));
+}
+
+
+" 0
+ "main()
+{
+	int i;
+}" 0
+ E E E 1 -1 -1 0  10 40
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" "main()
+{
+	PanelOffReturn(makeDynFloat(1), makeDynString(\"cancel\"));
+}
+" 0
+
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 0
+"messageLabel"
+""
+1 85 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 85 10 263 24
+0 2 0 "0s" 0 0 0 192 0 0  85 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 29 Placeholder for user message.
+2 9
+"comboboxLabel"
+""
+1 83 38 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 85 40 272 54
+0 2 0 "0s" 0 0 0 192 0 0  85 40 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 31 Placeholder for combobox label:
+13 3
+"okButton"
+""
+1 233 125 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  231 123 309 151
+
+T 
+1
+LANG:1 2 OK
+"main()
+{
+	PanelOffReturn(makeDynFloat(0), makeDynString(\"ok\",list.selectedText));
+
+}" 0
+ E E E
+22 8
+"list"
+""
+1 220 64 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  83 58 391 84
+0
+
+E
+E
+E
+ 0 0
+13 10
+"cancelButton"
+""
+1 315 125 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  313 123 391 151
+
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+	PanelOffReturn(makeDynFloat(1), makeDynString(\"cancel\"));
+}
+" 0
+ E E E
+2 11
+"closingInfoLabel"
+""
+1 85 97 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 85 97 366 111
+0 2 0 "0s" 0 0 0 192 0 0  85 97 1
+1
+LANG:1 26 Arial,-1,13,5,75,0,0,0,0,0
+0 1
+LANG:1 42 Window automatically closes in xx seconds.
+6 12
+"backgroundRectangle"
+""
+1 110 10 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 74 159
+6 13
+"imgInfo"
+""
+1 14 14 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+3
+LANG:1 0 
+LANG:10001 0 
+LANG:0 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1 0 1 7 50 2  0 3  "pictures/info2_en.gif" 13434828 E 14 14 45 45
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

@@ -1,0 +1,1702 @@
+V 14
+2
+LANG:1 0 
+LANG:0 8 (NoName)
+PANEL,-1 -1 550 742 N "_3DFace" 0
+"/**
+
+fwInstallationAdvandedOptions.pnl
+
+This panel is used for creating the new installation directory. 
+If the directory does not exist - it is created and added to the project config file. 
+The user can also change the installation directory to one of the directories contained in the proj_path of a config file. 
+The panel also displays the information about the current installation directory.
+
+Required $-parameters:
+
+none
+
+Panels called from this panel:
+
+none
+
+*/
+main()
+{
+	
+  dyn_string proj_paths;
+  int i;
+  string destinationDir;
+  int dpGetResult;
+  string dp = fwInstallation_getInstallationDp();
+    
+  if(dpExists(dp + \".installationDirectoryPath\"))
+  {
+    dpGetResult = dpGet(dp + \".installationDirectoryPath:_original.._value\", destinationDir);
+    fwInstallation_getProjPaths(proj_paths);
+    sliProjPaths.items = proj_paths;
+    fwInstallation_normalizePath(destinationDir);
+    sliProjPaths.selectedText(destinationDir);
+    
+    dpConnect(\"fwInstallation_changeTxtDestinationDir\", dp + \".installationDirectoryPath:_original.._value\");
+  }
+  
+  string dpa = fwInstallation_getAgentDp();
+  dpGet(dpa + \".db.useDB\", g_previousUseDB);
+  dpConnect(\"setUseDBCB\", dpa + \".db.useDB\");
+    
+  initDbDisplay();
+
+  initReduncancyDisplay();
+  
+  //show symbol for OWS synchronization if UNICOS is installed:
+  if(isFunctionDefined(\"unConfigGenericFunctions_Create_Config_ows\"))
+  {
+    addSymbol(myModuleName(), myPanelName(), \"fwInstallation/fwInstallation_unicosOWS.pnl\", \"UNICOS OWS\", makeDynString(), 10, 630, 0, 1, 1);
+  }
+}
+
+ 
+fwInstallation_changeTxtDestinationDir(string dp1, string destinationDir)
+{
+  fwInstallation_normalizePath(destinationDir);
+  sliProjPaths.selectedText(destinationDir);
+}
+
+
+
+
+
+
+" 0
+ E E E E 1 -1 -1 0  28 56
+""0  1
+E "#uses \"fwInstallation.ctl\"
+#uses \"fwInstallationDB.ctl\"
+
+bool g_previousUseDB;
+
+void initReduncancyDisplay()
+{
+  bool enabled = false;
+  bool isReduncantProject = fwInstallationRedu_isRedundant();
+  if(isReduncantProject)
+  {
+    // we shouldn't use DB or we should use it but the project is not centrally managed
+    enabled = (!fwInstallationDB_getUseDB() || !fwInstallationDB_getCentrallyManaged());
+  } 
+  
+  showRedundancySettings(enabled);
+  
+  rbReduProjInst.number = fwInstallation_getInstallOnlyInSplit();
+}
+
+void showRedundancySettings(bool bState)
+{
+  rbReduProjInst.visible(bState);
+  installComponentsLabel.visible(bState);
+  reduFrame.visible(bState);
+  noReduBg.visible(!bState);
+  noReduText.visible(!bState);
+}
+
+void initDbDisplay()
+{
+  int projectId;
+  int projectRegistered = true; 
+  dyn_string ds;
+  dyn_float df;   
+  int restartProject = 0;
+  
+  if(!fwInstallationDB_getUseDB())
+  {
+    btnUseDB.enabled = true;
+    btnUseDB.text = \"Connect\";
+    dbConnectedRectangle.backCol(\"red\");
+    dbConnectedLabel.text = \"Disconnected\";
+    enableConfigurationDbOptions(false);
+    return;
+  } 
+
+  if(fwInstallationDB_connect() != 0)
+  {
+    ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"DB ERROR\",makeDynString(\"$1:Could not connect to DB. Check log-viewer for error details.\"));
+    fwInstallationDB_setUseDB(FALSE);
+    btnUseDB.enabled = false;
+    enableConfigurationDbOptions(false);
+    return;
+  }
+  
+  //check version of the schema
+  string version = \"\";
+  int getSchemaRetVal = fwInstallationDB_getSchemaVersion(version);
+  bool compareSchemaRetVal = (getSchemaRetVal == 0)?fwInstallationDB_compareSchemaVersion():false;
+  if(!compareSchemaRetVal)//disconnect DB as DB schema is wrong or has wrong version
+  {
+    fwInstallationDB_closeDBConnection();
+    fwInstallationDB_setUseDB(false);
+      
+    string errMessage;
+    if(getSchemaRetVal != 0)//schema not found
+      errMessage = \"Failed to retrieve version of the DB schema. Please check if Configuration DB System Information schema is present in the DB\";
+    else//wrong schema version
+      errMessage = \"Current DB schema version: \" + version + \" is lower than required: \" + FW_INSTALLATION_DB_REQUIRED_SCHEMA_VERSION + \". Please upgrade the DB schema\";
+    
+    ChildPanelOnCentral(\"vision/MessageInfo1\", \"DB ERROR\", makeDynString(\"$1:\" + errMessage)); 
+    btnUseDB.enabled = false;
+    enableConfigurationDbOptions(false);
+    return;
+  }
+ 
+  if(fwInstallationDB_getUseDB())
+  {
+    //Check if the project is properly registered in the DB:
+    if(fwInstallationDB_isProjectRegistered(projectId) != 0)
+    {
+      ChildPanelOnCentral(\"vision/MessageInfo1\", \"DB ERROR\", makeDynString(\"$1:Could not connect to DB.\\nCheck connection parameters.\"));
+    }
+   
+    if(projectId <= 0)
+    {
+      //check whether the project registration is enabled in the DB
+      int regEnabled;
+      fwInstallationDB_getProjectAutoregistration(regEnabled);
+      if (regEnabled == 1)
+      {
+        ChildPanelOnCentralReturn(\"fwInstallation/fwInstallation_messageInfo.pnl\", 
+                                  \"Project Registration ...\", 
+                                  makeDynString(\"$text:Project \" + PROJ + \" not registered in DB.\\nDo you want to register it now?\"), 
+                                  df, ds);
+        if(dynlen(df) && df[1] >= 1.)
+        {
+          openProgressBar(\"FW Component Installation\", \"copy.gif\", \"Exporting project configuration to DB. This may take a few seconds...\",\"\", \"Please wait\", 1); 
+          if(fwInstallationDBAgent_synchronize(restartProject) != 0)
+          {
+            ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Could not export project configuration to DB.\\nCheck DB connection.\"));
+            projectRegistered = false;
+          }
+          else
+          {
+            ChildPanelOnCentral(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Project configuration successfully exported to DB.\"));
+            projectRegistered = true; 
+          }
+          closeProgressBar();         
+        }
+        else
+        {
+          projectRegistered = false; 
+        }
+      }
+    }
+    
+    enableConfigurationDbOptions(projectRegistered);
+    if(projectRegistered)
+    {
+      rbManagement.number(fwInstallationDB_getCentrallyManaged());
+      showSyncInterval();
+    }
+ 
+    
+    btnUseDB.toggleState = true;
+    btnUseDB.text = \"Disconnect\";
+    dbConnectedRectangle.backCol(\"green\");
+    dbConnectedLabel.text = \"Connected\";
+  } 
+
+  if(restartProject)
+    ChildPanelOnCentralModal(\"fwInstallation/fwInstallation_projectRestart.pnl\", \"Project restart required\", makeDynString(\"\"));
+  
+}
+
+const dyn_char FW_INSTALLATION_SYNC_INTERVAL_UNITS = makeDynChar('s','m','h','d','w');
+
+int getConversionToSecondFactor(char unit)
+{
+  int elemToMultiply = dynContains(FW_INSTALLATION_SYNC_INTERVAL_UNITS, unit) - 1;
+  const dyn_int timeConversionTable = makeDynInt(60, 60, 24, 7);
+  if(dynlen(timeConversionTable) < elemToMultiply || elemToMultiply < 0)
+  {
+    fwInstallation_throw(\"Conversion to given time unit: \" + unit + \" not possible - this unit is not handled. Fallback to seconds\", \"WARNING\");
+    elemToMultiply = 0;
+  }
+  int factor = 1;
+  for(int i=1;i<=elemToMultiply;i++)
+    factor *= timeConversionTable[i];
+  return factor;
+}
+
+int convertToSeconds(int value, char unit)
+{
+  return value * getConversionToSecondFactor(unit);
+}
+
+int convertFromSeconds(int value, char &unit)
+{
+  for(int i=dynlen(FW_INSTALLATION_SYNC_INTERVAL_UNITS);i>=2;i--)
+  {
+    char currUnit = FW_INSTALLATION_SYNC_INTERVAL_UNITS[i];
+    int conversionFactor = getConversionToSecondFactor(FW_INSTALLATION_SYNC_INTERVAL_UNITS[i]);
+    if(conversionFactor > 1 && value % conversionFactor == 0)
+    {
+      unit = currUnit;
+      return value/conversionFactor;
+    }
+  }
+  unit = FW_INSTALLATION_SYNC_INTERVAL_UNITS[1];//seconds
+  return value;
+}
+
+void showSyncInterval()
+{
+  cbUnitSel.items = FW_INSTALLATION_SYNC_INTERVAL_UNITS;
+  int syncInterval = fwInstallationDBAgent_getSyncInterval();
+  char unit;
+  sbSyncPeriod.text = convertFromSeconds(syncInterval, unit);
+  cbUnitSel.selectedPos(dynContains(FW_INSTALLATION_SYNC_INTERVAL_UNITS, unit));
+}
+
+void saveSyncInterval()
+{
+  int newInterval = convertToSeconds(sbSyncPeriod.text, cbUnitSel.selectedText());
+  if(newInterval < 30)
+    newInterval = 30;
+  
+  fwInstallationDBAgent_setSyncInterval(newInterval);
+  showSyncInterval();
+}
+
+void enableConfigurationDbOptions(bool enable = true)
+{
+  rbManagement.enabled = enable;
+  managementModeLabel.enabled = enable;
+  cbUnitSel.enabled = enable;
+  sbSyncPeriod.enabled = enable;
+  syncPeriodLabel.enabled = enable;
+}
+
+
+void setUseDBCB(string dpe, bool useDB)
+{
+  if(useDB)
+  {   
+    btnUseDB.text	= \"Disconnect\";
+    dbConnectedRectangle.backCol(\"green\");
+    dbConnectedLabel.text = \"Connected\";
+  }
+  else
+  {    
+    btnUseDB.text	= \"Connect\";
+    dbConnectedRectangle.backCol(\"red\");
+    dbConnectedLabel.text = \"Disconnected\";
+  }
+  
+  enableConfigurationDbOptions(useDB);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96"
+0 0 0
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+19 48
+"rbReduProjInst"
+""
+1 28 567 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  26 565 272 618
+2
+T 
+1
+LANG:1 19 Only in active peer
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 26 Only in split passive peer
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+2 3
+"newPathLabel"
+""
+1 19 208.9999999999999 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 21 184.9999999999999 149 200
+0 2 0 "0s" 0 0 0 192 0 0  21 184.9999999999999 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 2
+LANG:1 21 Add new project path:
+LANG:0 60 Select the new installation directory ( it will be created )
+2 11
+"txtWarning"
+""
+1 31 259.9999999999999 E E E 1 E 0 E N {255,0,51} E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 33 236.9999999999999 140 252
+0 2 0 "0s" 0 0 0 192 0 0  33 236.9999999999999 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 2
+LANG:1 15 Warning message
+LANG:0 15 Warning message
+30 15
+"installDirectoryFrame"
+""
+1 10 411 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+E E E
+1
+2
+LANG:1 0 
+LANG:0 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1.233100233100235 0 1.349397590361446 -2.331002331002338 -289.2530120481928 0 E 10 244 440 411
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 2
+LANG:1 22 Installation directory
+LANG:0 29 Choose Installation directory
+30 30
+"configDBFrame"
+""
+1 10 521 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 0.4195804195804196 0 1.131313131313133 5.804195804195786 -201.2828282828292 0 E 10 421 440 521
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 23 System Configuration DB
+13 22
+"btnCancelAll"
+""
+1 463.9999999999999 707 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  462 705 540 733
+
+T 
+2
+LANG:1 6 Cancel
+LANG:0 6 Cancel
+"main()
+{
+  	PanelOffReturn(makeDynFloat(0.), makeDynString(\"Cancel\"));	
+
+}" 0
+ E E E
+13 21
+"btnOKAll"
+""
+1 382 707 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  380 705 458 733
+
+T 
+2
+LANG:1 5 Apply
+LANG:0 2 OK
+"main()
+{
+ 	dyn_string ds;
+ 	dyn_float df;
+  string dp = fwInstallation_getInstallationDp();
+  string fileIssueDisabledDp = fwInstallation_getAgentDp() + \".\" + fwInstallation_getFileIssuesSyncDpElem();
+	
+  // save installation directory
+  string destinationDir = sliProjPaths.selectedText();
+  string dp = fwInstallation_getInstallationDp();
+  
+ 	dpSet(dp + \".installationDirectoryPath:_original.._value\", destinationDir);
+  
+ 	fwInstallation_changeProjPaths(sliProjPaths.items);	
+ 	dpSetWait(dp + \".addManagersDisabled\", !addManagerEnabled.state(0),
+            dp + \".activateManagersDisabled\", !activateManagerEnabled.state(0),
+            fileIssueDisabledDp, !findFileIssues.state(0));
+
+  if(rbReduProjInst.visible)
+  {
+    int installOnlyInSplit = fwInstallation_getInstallOnlyInSplit();
+    int newInstallOnlyInSplit = rbReduProjInst.number;
+    if (installOnlyInSplit != newInstallOnlyInSplit)
+    {
+      fwInstallation_setInstallOnlyInSplit(newInstallOnlyInSplit);
+    }
+  }
+  
+  //save synchronization interval period
+  saveSyncInterval();
+}
+
+
+
+
+
+
+
+
+
+" 0
+ E E E
+14 10
+"txtDestinationDir"
+""
+1 21 204.9999999999999 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  19 203 419 229
+3 "0s" 0 0 0 0 0 -1  E E E
+13 9
+"btnSelectSourceDir"
+""
+1 421 130.9999999999999 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 20 Select the directory
+LANG:0 20 Select the directory
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  419 201 448 230
+
+P 
+14215660
+"pictures/StandardIcons/Open_20.png"
+1
+LANG:1 0 
+"main()
+{
+
+string sPath;
+
+int iErr;
+
+	txtWarning.visible = false;
+  warningArrow.visible = false;
+		
+	sPath = txtDestinationDir.text;   // Content of textfield
+
+	iErr = folderSelector( sPath );
+
+	if(( iErr >= 1 ) && ( strlen( sPath ) > 0 ))
+	{
+
+	    if (_WIN32) 
+	    	strreplace( sPath, \"/\", \"//\" ); 
+		// if NT -> replace 
+	
+		strreplace( sPath, \"//\", \"/\" );
+	
+	    txtDestinationDir.text = sPath;  
+
+  }
+  
+}
+" 0
+ E E E
+13 5
+"btnOK"
+""
+1 454 131.9999999999999 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+2
+LANG:1 48 Adds path and creates new directory if necessary
+LANG:0 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  452 202 530 230
+
+T 
+2
+LANG:1 3 Add
+LANG:0 5 Apply
+"main()
+{
+  string path = txtDestinationDir.text;
+  
+  if(path == \"\")
+    return;
+
+	if(fwInstallation_createPath(path))
+  {
+     txtWarning.text = \"Failed to register the new project path. Check log-viewer for details.\";
+     txtWarning.visible = true;
+     warningArrow.visible = true;
+     return;
+  }
+  
+  txtWarning.visible = false;
+  warningArrow.visible = false;
+  dyn_string projPaths = sliProjPaths.items;
+  dynInsertAt(projPaths, path,1);
+  sliProjPaths.items = projPaths;
+  sliProjPaths.selectedPos = 1;
+}
+
+
+
+
+
+
+
+" 0
+ E E E
+20 27
+"addManagerEnabled"
+""
+1 272 533.9999999999993 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 168 WARNING! If you disable the automatic addition of managers, component might not work correctly. This function is intended for NON-STANDARD JCOP Framework projects only!
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  280 438 434 461
+1
+T 
+1
+LANG:1 12 Add managers
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+"main()
+{
+	bool disabled;
+        string dp = fwInstallation_getInstallationDp();
+        
+	dpGet(dp + \".addManagersDisabled\", disabled);
+
+	this.state(0) = !disabled;
+}
+" 0
+"main(int button, bool state)
+{
+	if(!state)
+		activateManagerEnabled.state(0) = FALSE;
+}" 0
+17 23
+"sliProjPaths"
+""
+1 20.99999999999999 81.99999999999994 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+2
+LANG:1 39 Define order of different project paths
+LANG:0 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  19 80 501 181
+0
+
+E
+E
+E
+
+0 0
+13 24
+"upButton"
+""
+1 503 80.99999999999994 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+2
+LANG:1 21 Move selected path up
+LANG:0 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  501 79 530 108
+
+P 
+10862530
+"pictures/StandardIcons/arrow_top_20.png"
+1
+LANG:1 0 
+"main()
+{
+ 	dyn_string listStrings = sliProjPaths.items;
+ 	string selectedString = sliProjPaths.selectedText;
+ 	int selectedPosition = sliProjPaths.selectedPos;
+  string strPath = selectedString;
+  string strProjPath = PROJ_PATH;
+        
+  strreplace(strPath, \"\\\\\", \"\");
+  strreplace(strPath, \"/\", \"\");
+        
+  strreplace(strProjPath, \"\\\\\", \"\");
+  strreplace(strProjPath, \"/\", \"\");
+        
+  strPath = strtolower(strPath);
+  strProjPath = strtolower(strProjPath);
+        
+  if(strPath == strProjPath)
+  {
+    ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"Action not permitted\", makeDynString(\"This project path cannot be moved.\"));
+    return;
+  }
+	
+	 if(selectedPosition != 1)
+	 {
+	  	dynRemove(listStrings, selectedPosition);
+	  	dynInsertAt(listStrings, selectedString, selectedPosition - 1);
+ 	}	
+
+	 sliProjPaths.items = listStrings;
+	 sliProjPaths.selectedText = selectedString;
+}
+" 0
+ E E E
+13 26
+"downButton"
+""
+1 503 154.9999999999999 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+2
+LANG:1 23 Move selected path down
+LANG:0 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  501 153 530 182
+
+P 
+10862530
+"pictures/StandardIcons/arrow_bottom_20.png"
+1
+LANG:1 0 
+"main()
+{
+	 dyn_string listStrings = sliProjPaths.items;
+	 string selectedString = sliProjPaths.selectedText;
+	 int selectedPosition = sliProjPaths.selectedPos;
+	 string strPath = selectedString;
+  string strProjPath = PROJ_PATH;
+        
+  strreplace(strPath, \"\\\\\", \"\");
+  strreplace(strPath, \"/\", \"\");
+        
+  strreplace(strProjPath, \"\\\\\", \"\");
+  strreplace(strProjPath, \"/\", \"\");
+        
+  strPath = strtolower(strPath);
+  strProjPath = strtolower(strProjPath);
+        
+  if(strPath == strProjPath)
+  {
+    ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"Action not permitted\", makeDynString(\"This project path cannot be moved.\"));
+    return;
+  }
+
+	 if(selectedPosition != dynlen(listStrings))
+	 {
+	  	dynRemove(listStrings, selectedPosition);
+	  	dynInsertAt(listStrings, selectedString, selectedPosition + 1);
+ 	}
+
+	 sliProjPaths.items = listStrings;
+ 	sliProjPaths.selectedText = selectedString;
+}
+" 0
+ E E E
+20 29
+"activateManagerEnabled"
+""
+1 275.333333333333 992.9999999999993 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 168 WARNING! If you disable the automatic addition of managers, component might not work correctly. This function is intended for NON-STANDARD JCOP Framework projects only!
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  280 461 434 484
+1
+T 
+1
+LANG:1 17 Activate managers
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+"main()
+{
+  bool disabled;
+  string dp = fwInstallation_getInstallationDp();
+        
+  dpGet(dp + \".activateManagersDisabled\", disabled);
+
+	 this.state(0) = !disabled;
+}
+
+" 0
+E13 34
+"btnUseDB"
+""
+1 50.49999999999998 386.5 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  38.49999999999999 294.5000000000008 161.5 322.5000000000008
+
+T 
+1
+LANG:1 10 Disconnect
+"main()
+{
+  bool useDB = fwInstallationDB_getUseDB();
+  bool newUseDB = !useDB;
+  dyn_string ds;
+  dyn_float df;
+
+  fwInstallationDB_setUseDB(newUseDB);
+  
+  if(newUseDB){
+    fwInstallationDB_connect();     
+    initDbDisplay();
+  }
+}
+" 0
+ E E E
+19 38
+"rbManagement"
+""
+1 253.6896551724138 390 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 425 Choose DB agent synchronization mode. 
+Local - project data stored in DB is synchronized by DB Agent with the current WinCC OA project state (e.g list of installed components, dist connections, etc.).
+Central - project data stored in DB is propagated to the WinCC OA project (e.g. components can be remotely installed or removed from project)
+Note: This change is immediate - does not require acceptance with OK/Apply buttons
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  299.0000000000001 329.0000000000008 499 381.0000000000008
+2
+T 
+1
+LANG:1 26 Local (WinCC OA is master)
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 22 Central (DB is master)
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E "main(int button)
+{
+  dyn_float df;
+  dyn_string ds;
+  string msg;
+  dyn_int status;
+  
+  if(button == 0)
+    msg = \"Changing management mode to \\\"Local\\\" overwrites \\nDB content. Proceed?\"; 
+  else
+    msg = \"Changing management mode to \\\"Central\\\" overwrites \\nproject content. Proceed?\";
+
+  ChildPanelOnCentralReturn(\"fwInstallation/fwInstallation_messageInfo.pnl\", \"Change Mode ...\", makeDynString(\"$text:\" + msg), df, ds);
+  if(dynlen(df) && df[1] > 0.){
+    fwInstallationDB_setCentrallyManaged(button);  
+    fwInstallationDBAgent_checkIntegrity(status);  
+  }
+  else
+    if(button == 0)
+      this.number(1);
+    else
+      this.number = 0;
+  
+}
+
+" 0
+
+13 40
+"connectDbButton"
+""
+1 40.49999999999999 412.4999999999994 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  38.49999999999999 350.5000000000002 161.5 378.5000000000002
+
+T 
+1
+LANG:1 12 Setup DB ...
+"main()
+{
+  dyn_float df;
+  dyn_string ds;
+  
+  ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallationDB_connectionSetup.pnl\", \"DB Connection Setup\",makeDynString(\"\"), df, ds);
+
+  
+  if(dynlen(df) && df[1] >= 1.)
+  {
+    initDbDisplay(); 
+  }
+  
+}" 0
+ E E E
+20 41
+"cbDist"
+""
+1 36.99999999999999 536.9999999999993 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+1
+LANG:1 168 WARNING! If you disable the automatic addition of managers, component might not work correctly. This function is intended for NON-STANDARD JCOP Framework projects only!
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  26 438 90 461
+1
+T 
+1
+LANG:1 4 Dist
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+"main()
+{
+	int state;
+        string dp = fwInstallation_getAgentDp();
+	dpGet(dp + \".managers.stopDist\", state);
+	
+	this.state(0) = state;
+}" 0
+"main(int button, bool state)
+{
+    string dp = fwInstallation_getAgentDp();
+    dpSet(dp + \".managers.stopDist\", state);
+
+}" 0
+20 42
+"uiManagerCheckbox"
+""
+1 36.99999999999999 559.9999999999993 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 168 WARNING! If you disable the automatic addition of managers, component might not work correctly. This function is intended for NON-STANDARD JCOP Framework projects only!
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  26 461 70 484
+1
+T 
+1
+LANG:1 3 UIs
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+"main()
+{
+ 	int state;
+  string dp = fwInstallation_getAgentDp();
+ 
+  dpGet(dp + \".managers.stopUIs\", state);
+	
+  this.state(0) = state;
+}
+" 0
+"main(int button, bool state)
+{
+  string dp = fwInstallation_getAgentDp();
+
+  dpSet(dp + \".managers.stopUIs\", state);
+}
+" 0
+20 43
+"ctrlManagerCheckbox"
+""
+1 36.99999999999999 582.9999999999993 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+1
+LANG:1 168 WARNING! If you disable the automatic addition of managers, component might not work correctly. This function is intended for NON-STANDARD JCOP Framework projects only!
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  26 484 80 507
+1
+T 
+1
+LANG:1 4 Ctrl
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+"main()
+{
+	 int state;
+  string dp = fwInstallation_getAgentDp();
+	 
+  dpGet(dp + \".managers.stopCtrl\", state);
+	
+ 	this.state(0) = state;
+}
+" 0
+"main(int button, bool state)
+{
+  string dp = fwInstallation_getAgentDp();
+
+  dpSet(dp + \".managers.stopCtrl\", state);
+}
+" 0
+30 44
+"managersFrame"
+""
+1 10 521 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1.233100233100235 0 1.171717171717171 -2.331002331002341 -95.2929292929289 0 E 10 421 440 521
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 8 Managers
+30 46
+"reduFrame"
+""
+1 10 564 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+37 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 0 1 0 1 E 1.037254901960784 0 1.714285714285718 -0.3725490196078404 -441.8571428571453 0 E 10 564 521 621
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 10 Redundancy
+2 49
+"directoryLabel"
+""
+1 21 61.99999999999994 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+40 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 21 61.99999999999994 260 77
+0 2 2 "0s" 0 0 0 192 0 0  21 61.99999999999994 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 42 Select directory to install components in:
+10 50
+"warningArrow"
+""
+1 10 770 E E E 1 E 0 E N "red" E N "red" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.7259259259259259 0 0.6825000000000002 13.74074074074074 -287.5250000000003 1 E 5 10 770
+10 790
+20 780
+10 770
+10 790
+ 1
+6 51
+"dbConnectedRectangle"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "red" E E
+ E E
+42 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.9891304347826087 0 1 26.38043478260869 39 1 E 20 290 35 305
+2 52
+"dbConnectedLabel"
+""
+1 68.99999999999999 329 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 68.99999999999999 329 132 344
+0 2 2 "0s" 0 0 0 192 0 0  68.99999999999999 329 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 9 Connected
+LANG:10001 64 Component Instalaltion will be skipped as XML file is not found.
+2 53
+"managementModeLabel"
+""
+1 234.0000000000001 335.0000000000006 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+44 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 234.0000000000001 335.0000000000006 272 350
+0 2 2 "0s" 0 0 0 192 0 0  234.0000000000001 335.0000000000006 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 5 Mode:
+2 54
+"stopManagerLabel"
+""
+1 21 420.0000000000002 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 21 420.0000000000002 159 435
+0 2 2 "0s" 0 0 0 192 0 0  21 420.0000000000002 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 25 Stop during installation:
+2 55
+"automaticLabel"
+""
+1 275 420.0000000000002 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 275 420.0000000000002 360 435
+0 2 2 "0s" 0 0 0 192 0 0  275 420.0000000000002 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 14 Automatically:
+2 56
+"installComponentsLabel"
+""
+1 21 547 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 21 547 136 562
+0 2 2 "0s" 0 0 0 192 0 0  21 547 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 19 Install components:
+6 58
+"noReduBg"
+""
+1 8 48 E E E 0 E 0 E N {0,0,0} E N "lightgrey" E E
+ E E
+49 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 0 41.99999999999994 1 E 10 483 539 579
+2 59
+"noReduText"
+""
+1 273 561 E E E 0 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 167 563 383 584
+0 2 0 "0s" 0 0 0 193 0 0  275 563 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,14,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 24 No redundant connection.
+LANG:10001 56 Click "Add" to initialize faceplate trend for this type.
+6 60
+"bgRectangle"
+""
+1 20 530 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+51 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E -1 -1 1268 29
+2 61
+"title"
+""
+1 7.999999999999986 2 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 9.999999999999986 4 167 25
+0 2 0 "0s" 0 0 0 192 0 0  9.999999999999986 4 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,40,0,0,0,0,0
+0 2
+LANG:1 16 Advanced Options
+LANG:10001 47 JCOP Framework Installation Description Creator
+13 62
+"PUSH_BUTTON1"
+""
+1 300 707 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+53 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  298 705 376 733
+
+T 
+2
+LANG:1 2 OK
+LANG:0 2 OK
+"main()
+{
+ 	dyn_string ds;
+ 	dyn_float df;
+  string dp = fwInstallation_getInstallationDp();
+  string fileIssueDisabledDp = fwInstallation_getAgentDp() + \".\" + fwInstallation_getFileIssuesSyncDpElem();
+	
+  // save installation directory
+  string destinationDir = sliProjPaths.selectedText();
+
+  string dp = fwInstallation_getInstallationDp();
+  
+	dpSet(dp + \".installationDirectoryPath:_original.._value\", destinationDir);
+
+	fwInstallation_changeProjPaths(sliProjPaths.items);	
+	dpSetWait(dp + \".addManagersDisabled\", !addManagerEnabled.state(0),
+            dp + \".activateManagersDisabled\", !activateManagerEnabled.state(0),
+            fileIssueDisabledDp, !findFileIssues.state(0));
+
+
+  if(rbReduProjInst.visible)
+  {
+    int installOnlyInSplit = fwInstallation_getInstallOnlyInSplit();
+    int newInstallOnlyInSplit = rbReduProjInst.number;
+    if (installOnlyInSplit != newInstallOnlyInSplit)
+    {
+      fwInstallation_setInstallOnlyInSplit(newInstallOnlyInSplit);
+    }
+  }
+   
+	//save synchronization interval period
+  saveSyncInterval();
+  
+  PanelOffReturn(makeDynFloat(), makeDynString(\"OK\"));	
+}
+
+
+
+
+
+
+
+
+
+
+
+" 0
+ E E E
+20 63
+"findFileIssues"
+""
+1 275.333333333333 1015.999999999999 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+54 0 0 0 0 0
+E E E
+0
+1
+LANG:1 67 Enable/disable file issues scanning and synchronizing with database
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  280 484 434 507
+1
+T 
+1
+LANG:1 16 Find file issues
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+"main()
+{
+ 	bool disabled;
+  string fileIssueDisabledDp = fwInstallation_getAgentDp() + \".\" + fwInstallation_getFileIssuesSyncDpElem();
+
+ 	dpGet(fileIssueDisabledDp, disabled);
+
+ 	this.state(0) = !disabled;
+}
+
+" 0
+E2 64
+"syncPeriodLabel"
+""
+1 30.99999999999999 384.9999999999992 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+55 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+"transformable" "0"
+E E 0 1 3 2 1 E 1.221117851851044 0 1 196.1453465926177 -83.99999999999841 0 E 30.99999999999999 384.9999999999992 150 399.9999999999992
+0 2 2 "0s" 0 0 0 64 0 0  30.99999999999999 384.9999999999992 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 23 Synchronization period:
+22 65
+"cbUnitSel"
+""
+1 471 302.5000000000008 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+56 0 0 0 0 0
+E E E
+0
+1
+LANG:1 104 Select time unit. The following are available:
+s - seconds, m - minutes, h - hours, d - days, w - weeks.
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  469 294.5000000000008 510 322.5000000000008
+5
+1
+LANG:1 1 s
+
+0
+1
+LANG:1 1 m
+
+0
+1
+LANG:1 1 h
+
+0
+1
+LANG:1 1 d
+
+0
+1
+LANG:1 1 w
+
+0
+
+E
+E
+E
+ 0 0
+21 66
+"sbSyncPeriod"
+""
+1 405.0000000000001 301.9545454545461 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+57 0 0 0 0 0
+E E E
+0
+1
+LANG:1 171 Choose delay between two agent runs. The default value is 5 minutes. Minimum delay is 30 seconds, if shorter delay is specified, it will be set to 30 seconds when applied.
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  403.0000000000001 294.5000000000003 468.0000000000001 322.5000000000013
+0
+
+E
+E
+E
+
+N 0 99999 1 0 1 1
+30 67
+"agentOptions"
+""
+1 10 521 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+58 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 0.773892773892774 0 1.131313131313133 199.2610722610723 -201.2828282828294 0 E 10 421 440 521
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 16 DB Agent options
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

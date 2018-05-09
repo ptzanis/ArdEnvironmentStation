@@ -1,0 +1,335 @@
+V 14
+2
+LANG:1 21 Delete components ...
+LANG:10001 8 ToDelete
+PANEL,-1 -1 350 440 N "_3DFace" 1
+"$componentsNames"
+"/**
+
+fwInstallationToDelete.pnl
+
+This panel displays the list of components to be deleted.
+The user can confirm the component deletion by pressing the OK button - in this case the return value is set to Delete. 
+If the user clicks on the Cancel button then the return value is DoNotDelete. 
+The Main panel checks the return value and does the appropriate action.
+
+Required $-parameters:
+
+$componentsNames - string - components names separated by |
+
+Panels called from this panel:
+
+none
+
+*/
+
+main()
+{
+
+}" 0
+ E E E E 1 -1 -1 0  60 30
+""0  1
+E "fwInstallation_showMessage(dyn_string message)
+{
+	int i, length;
+	
+	length = dynlen(message);
+	for (i = 1; i <= length; i++)
+		list.appendItem(message[i]);	
+		
+	length = list.itemCount();
+	list.bottomPos(length);
+	list.selectedPos(length);
+}" 0
+ 3
+"CBRef" "1"
+"EClose" "main()
+{
+	int i;
+}" 0
+
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+25 0
+"tblComponentsToDelete"
+""
+1 -173 -111 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  fwInstallation_ui_componentsTableRightClickPopupMenu(getShape(\"\"), row, column);
+}" 0
+ "main()
+{
+	
+	int xpos;
+	string columnName;
+	int columnNr;
+	string componentName;
+	string descFile = \"\";
+	string typeOfDescription = \"PVSSDB\";
+
+	
+	shape tab = getShape(\"tblComponentsToDelete\");
+		
+	getValue(tab, \"currentCell\", xpos, columnNr);
+	columnName = tab.currentColumn();
+
+	 if(columnName == \"componentName\")
+	 {
+	 
+		componentName += tab.cellValueRC(xpos, \"componentName\");
+			 
+	 		ChildPanelOnCentral(\"fwInstallation/fwInstallationComponentDetails.pnl\", \"fwInstallation_ComponentDetails\",
+			 makeDynString(\"$componentName:\" + componentName,  \"$descFile:\" + descFile , \"$typeOfDescription:\" + typeOfDescription));
+	}
+}" 0
+
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,12,5,40,0,0,0,0,0
+0  8 28 341 386
+"main()
+{
+	dyn_string dynComponentsNames;
+	
+	string componentsNames = $componentsNames; // it contains the names of components to be deleted
+	
+	string componentName;
+	string componentVersionString;
+	string descFile;
+	
+	shape shape_componentsToDelete = getShape(\"tblComponentsToDelete\");
+	int i;
+	
+//	Debug(\"\\nReceived $componentsInfo: \" + componentsNames);
+	
+	shape_componentsToDelete.deleteAllLines();
+	
+	dynComponentsNames = strsplit(componentsNames, \"|\");
+	
+	for(i =1; i <= dynlen(dynComponentsNames); i++)
+	{
+		
+		componentName = dynComponentsNames[i];
+		dpGet(fwInstallation_getComponentDp(componentName) + \".componentVersionString:_original.._value\", componentVersionString);
+		dpGet(fwInstallation_getComponentDp(componentName) + \".descFile:_original.._value\", descFile);
+		
+		
+		shape_componentsToDelete.appendLine(\"componentName\", componentName, \"componentVersion\" , componentVersionString );
+	}
+	
+	
+}
+" 0
+E 1 0 1 2 1 "componentName" 21 1 0 "s" 2
+LANG:1 4 Name
+LANG:10001 14 Component Name
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+240 "componentVersion" 5 1 0 "s" 2
+LANG:1 7 Version
+LANG:10001 7 Version
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+70 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,12,5,40,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+20 4
+"deleteFiles"
+""
+1 10 407 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  8 405 182 428
+1
+T 
+2
+LANG:1 12 Delete files
+LANG:10001 12 Delete Files
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE13 2
+"btnCancel"
+""
+1 265 405 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  263 403 341 431
+
+T 
+2
+LANG:1 6 Cancel
+LANG:10001 6 Cancel
+"main()
+{
+	dyn_float value1;
+	dyn_string value2;
+ 
+ // begin setting the return values for the parent panel
+
+	value1 = makeDynFloat(1);
+	value2 = makeDynString(\"DoNotDelete\");
+	 
+ // return values to the parent panel
+  PanelOffReturn(value1, value2);
+}
+
+" 0
+ E E E
+13 3
+"btnOKtoDelete"
+""
+1 183 405 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  181 403 259 431
+
+T 
+2
+LANG:1 2 OK
+LANG:10001 2 OK
+"main()
+{
+	dyn_float value1;
+	dyn_string value2;
+ 
+ // begin  setting the return values for the parent panel
+
+	value1 = makeDynFloat(1);
+	
+//SMS introduce switch to delete or not files
+	if(deleteFiles.state(0))	
+		value2 = makeDynString(\"Delete\");
+	else
+		value2 = makeDynString(\"DeleteNoFiles\");		
+	 
+//	dpSet(\"_Ui_\"+myManNum()+ \".ReturnValue.Float:_original.._value\", value1);
+//	dpSet(\"_Ui_\"+myManNum()+ \".ReturnValue.Text:_original.._value\", value2);
+
+	btnOKtoDelete.enabled = false;
+	btnCancel.enabled = false;
+	
+// end setting the return values for the parent panel
+
+  PanelOffReturn(value1, value2);
+
+}" 0
+ E E E
+2 5
+"deleteCompLabel"
+""
+1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 10 10 168 25
+0 2 2 "0s" 0 0 0 192 0 0  10 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 25 Components to be deleted:
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

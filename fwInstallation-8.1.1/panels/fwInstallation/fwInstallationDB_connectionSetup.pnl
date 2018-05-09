@@ -1,0 +1,520 @@
+V 13
+2
+LANG:1 25 Database Connection Setup
+LANG:10001 0 
+PANEL,-1 -1 300 275 N "_3DFace" 0
+"main()
+{
+  
+ EnableAll(FALSE);
+ PopulatePanel();
+}
+
+void PopulatePanel()
+{
+
+  
+  string server, username, password, owner;
+  
+  if(dpExists(\"fwInstallation_agentParametrization\"))
+  {
+   dpGet(\"fwInstallation_agentParametrization.db.connection.server\", server,
+         \"fwInstallation_agentParametrization.db.connection.username\", username,
+         \"fwInstallation_agentParametrization.db.connection.password\", password,
+         \"fwInstallation_agentParametrization.db.connection.schemaOwner\", owner);
+  
+  UserName.text=username;
+  Password.text=password;
+  Server.text=server;
+  tfOwner.text = owner;
+  
+  oldPwd = password;
+  
+  EnableAll(TRUE);
+ }
+}
+
+void EnableAll(bool enabled)
+{
+	OKButton.enabled=enabled;
+        
+        Server.enabled = enabled;
+	UserName.enabled=enabled;
+	Password.enabled=enabled;
+	tfOwner.enabled=enabled;
+	Connect.enabled=enabled;
+}" 0
+ E E E E 1 -1 -1 0  40 4
+""0  1
+E "string oldPwd;" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 39
+"userLabel"
+""
+1 10 -29 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  1 E 10 47 79 61
+0 2 2 "0s" 0 0 0 192 0 0  10 47 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 10 User name:
+LANG:10001 10 User Name:
+2 42
+"passwordLabel"
+""
+1 10 -26 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  1 E 10 80 73 94
+0 2 2 "0s" 0 0 0 192 0 0  10 80 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 9 Password:
+LANG:10001 9 Password:
+2 45
+"dbTypeLabel"
+""
+1 10 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  1 E 10 146 100 160
+0 2 2 "0s" 0 0 0 192 0 0  10 146 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 14 Database type:
+LANG:10001 14 Database Type:
+2 46
+"dbNameLabel"
+""
+1 10 -32 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  1 E 10 14 107 28
+0 2 2 "0s" 0 0 0 192 0 0  10 14 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 14 Database name:
+LANG:10001 14 Database Name:
+2 54
+"platformLabel"
+""
+1 8 79 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  1 E 10 199 64 213
+0 2 2 "0s" 0 0 0 192 0 0  10 199 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 9 Platform:
+LANG:10001 9 Platform:
+22 50
+"DBType"
+""
+1 117.948717948718 180 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  110 140 291 166
+1
+2
+LANG:1 6 ORACLE
+LANG:10001 6 ORACLE
+
+1
+
+E
+E
+E
+ 0 0
+14 47
+"Server"
+""
+1 118 48 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  110 8 291 34
+3 "0s" 0 0 0 0 0 -1  E E E
+14 40
+"UserName"
+""
+1 118 81 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"textChangedCB" "main(string newText)
+{
+  tfOwner.text = this.text;
+}"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  110 41 291 67
+3 "0s" 0 0 0 0 0 -1  E E E
+14 43
+"Password"
+""
+1 118 114 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  110 74 291 100
+3 "0S" 0 0 0 0 0 -1  E E E
+13 57
+"Connect"
+""
+1 176 270 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  168 193 291 221
+
+T 
+2
+LANG:1 15 Test connection
+LANG:10001 14 Try to connect
+"main()
+{
+  //The Password widget may contain an ecrypted or crypted password depending on what the user has done:
+  //a) if he has not modified the content it contains an encrypted pass and in this case oldPwd == Password.text
+  //b) the user has modified the text, it will contain a clear password
+  
+  string encPwd = oldPwd; //By default we assume a) => we have an encrypted password in the widget 
+
+  if(oldPwd != Password.text) //We have a clear text password
+  {                            //Re-write password in encrypted form only if it has changed
+    encPwd = rdbEncryptPassword(Password.text);
+  }
+  
+  //close the old connection before trying to open the new one
+  fwInstallationDB_closeDBConnection(); 
+  
+  if(fwInstallationDB_openDBConnection(Server.text, UserName.text, encPwd, tfOwner.text) != 0)
+  {
+      ChildPanelOnCentral(\"vision/MessageInfo1\",\"Connection Failed\", 
+	                   makeDynString(\"$1:Database connection failed.\\nCheck connection parameters.\"));
+    
+  }
+  else
+      ChildPanelOnCentral(\"vision/MessageInfo1\",\"Connection OK\", 
+                      makeDynString(\"$1:Database connection successful.\"));
+
+}" 0
+ E E E
+13 33
+"OKButton"
+""
+1 131 238 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  131 238 209 266
+
+T 
+2
+LANG:1 2 OK
+LANG:10001 2 OK
+"main()
+{
+  dyn_float df;
+  dyn_string ds;
+    
+  if(dpExists(\"fwInstallation_agentParametrization.db.connection\"))
+  {
+    fwInstallationDB_closeDBConnection();
+    
+    dpSet(\"fwInstallation_agentParametrization.db.connection.server\", Server.text,
+          \"fwInstallation_agentParametrization.db.connection.username\", UserName.text,
+          \"fwInstallation_agentParametrization.db.connection.schemaOwner\", tfOwner.text);
+   
+    if(oldPwd != Password.text) //Save new password in encrypted form only if it has changed
+    {
+      string encPwd = rdbEncryptPassword(Password.text);
+      dpSetWait(\"fwInstallation_agentParametrization.db.connection.password\", encPwd);
+    }
+    
+    fwInstallationDB_setInitialized(true);
+    fwInstallationDB_setUseDB(true);
+    
+    string message = \"DB connection parameters have changed. \\nThe DB agent needs to be restarted. Proceed?\";
+    
+    ChildPanelOnCentralReturn(\"fwInstallation/fwInstallation_messageInfo.pnl\", 
+                              \"Changed parameters ...\", 
+                              makeDynString(\"$text:\" + message, \"$help:fwInstallation/fwInstallation_systemStaticInfoDB.html\"), 
+                              df, ds);
+    
+    if(dynlen(df) > 0 && df[1] >= 1)
+    {
+      openProgressBar(\"Sending restart command to manager.\", \"\",\"Sending restart command to manager.\", \"Please wait...\", \"\", \"\", 0);    
+        
+        
+      string host, username, password;    
+      dyn_string hosts = eventHost();
+      if (!isRedundant())
+        host = hosts[1];
+      else
+      {
+        host = hosts[myReduHostNum()];
+      }
+      fwInstallation_getPmonInfo(username, password);
+      int err = fwInstallationManager_command(\"RESTART\", \"WCCOActrl\", \"-f fwInstallationAgent.lst\",
+                                    host, pmonPort(), username, password);
+      closeProgressBar();
+      if (err)
+      {
+        ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"ERROR\", makeDynString(\"$1:Error when restarting the manager.\"));
+      }
+      else
+        ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"INFO\", makeDynString(\"$1:Restart command sent to the manager.\"));
+    }
+  }
+  PanelOffReturn(makeDynFloat(1.0), makeDynString(\"OK\"));  
+}
+
+
+
+
+" 0
+ E E E
+13 1
+"CancelButton"
+""
+1 213 238 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  213 238 291 266
+
+T 
+2
+LANG:1 6 Cancel
+LANG:10001 6 Cancel
+"main()
+{
+  PanelOffReturn(makeDynFloat(0.0),makeDynString());
+}" 0
+ E E E
+1 65 4 "" 0
+0
+2 60
+"schemaOwnerLabel"
+""
+1 10 37 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  1 E 10 113 102 127
+0 2 2 "0s" 0 0 0 192 0 0  10 113 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 13 Schema owner:
+LANG:10001 13 Schema Owner:
+14 61
+"tfOwner"
+""
+1 118 147 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  110 107 291 133
+3 "0s" 0 0 0 0 0 -1  E E E
+4 64
+"separator1"
+""
+1 10 -43 E E E 1 E 1 E N "grey" E N {255,255,255} E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E  10 180 289 180
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 4 "PANEL_REF5" -1
+"" ""
+"fwInstallation/fwInstallationDB_PlatformIndicator.pnl" 92 212 T 22 1 0 1 -23 -17
+0
+0

@@ -1,0 +1,584 @@
+V 13
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 350 375 N "_3DFace" 3
+"$hierarchy"
+"$system"
+"$topDevice"
+E E E E E 1 0 0 0  211 224
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+30 0
+"SqlDebugLevelFrame"
+""
+1 211 224 E E E 1 E 1 E N "black" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1 0 0.8920863309352518 -31 -4.827338129496404 0 E 211 224 371 364
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 15 SQL Debug Level
+30 1
+"DebugLevelFrame"
+""
+1 211 74 E E E 1 E 1 E N "black" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E 1 0 0.8920863309352519 -31 -6.014388489208634 0 E 211 74 371 214
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 11 Debug Level
+13 3
+"CloseButton"
+""
+1 263 338 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  263 338 341 366
+
+T 
+1
+LANG:1 5 Close
+"main()
+{
+PanelOffReturn(makeDynFloat(0.0),makeDynString());
+}" 0
+ E E E
+13 4
+"HierarchyList"
+""
+1 31 339 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 258 161 286
+
+T 
+1
+LANG:1 15 Hierarchies ...
+"main()
+{
+EnableAll(FALSE);
+	ChildPanelOnCentral(\"fwConfigurationDB/fwConfigurationDB_HierarchyList.pnl\",
+				\"Hierarchies in the database\",
+				makeDynString()	);
+EnableAll(TRUE);
+}" 0
+ E E E
+13 5
+"RecipeVersions"
+""
+1 31 299 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 223 161 251
+
+T 
+1
+LANG:1 19 Recipe versions ...
+"main()
+{
+EnableAll(FALSE);
+	string system=getSystemName();
+if (isDollarDefined(\"$system\")) system=$system;
+	ChildPanelOnCentral(\"fwConfigurationDB/fwConfigurationDB_DBRecipeVersions.pnl\",
+				\"Recipe versions in the database\",
+				makeDynString(\"$topDevice:\"+$topDevice,
+						\"$system:\"+system,
+				      	      \"$hierarchy:\"+$hierarchy)
+			);
+
+EnableAll(TRUE);
+}" 0
+ E E E
+13 6
+"DropSchema"
+""
+1 8 58 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 58 161 86
+
+T 
+1
+LANG:1 11 Drop schema
+"main()
+{
+EnableAll(FALSE);
+
+dyn_string exceptionInfo;
+fwInstallation_dropDBSchema(g_fwConfigurationDB_DBConnection,exceptionInfo);
+
+if (dynlen(exceptionInfo)) {
+	fwExceptionHandling_display(exceptionInfo);
+	return;
+}
+
+ChildPanelOnCentral(\"fwGeneral/fwMessageInfo1.pnl\",\"DB Schema dropped\", 
+	makeDynString(\"$1: Database schema dropped succesfuly\"));
+EnableAll(TRUE);
+}" 0
+ E E E
+13 7
+"CreateSchema"
+""
+1 8 93 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 93 161 121
+
+T 
+1
+LANG:1 13 Create schema
+"main()
+{
+EnableAll(FALSE);
+dyn_string exceptionInfo;
+
+fwInstallation_createDBSchema(g_fwConfigurationDB_DBConnection,exceptionInfo);
+
+if (dynlen(exceptionInfo)) {
+	fwExceptionHandling_display(exceptionInfo);
+	return;
+}
+
+ChildPanelOnCentral(\"fwGeneral/fwMessageInfo1.pnl\",\"DB Schema created\", 
+	makeDynString(\"$1: Database schema created succesfuly\"));
+EnableAll(TRUE);
+}" 0
+ E E E
+13 8
+"UpgradeSchema"
+""
+1 8 128 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 128 161 156
+
+T 
+1
+LANG:1 13 Update schema
+"main()
+{
+EnableAll(FALSE);
+
+dyn_string exceptionInfo;
+
+fwInstallation_updateDBSchema(g_fwConfigurationDB_DBConnection,exceptionInfo);
+
+if (dynlen(exceptionInfo)) {
+	fwExceptionHandling_display(exceptionInfo);
+	return;
+}
+
+ChildPanelOnCentral(\"fwGeneral/fwMessageInfo1.pnl\",\"DB Schema updated\", 
+	makeDynString(\"$1: Database schema updated succesfuly\"));
+
+EnableAll(TRUE);
+}" 0
+ E E E
+13 9
+"SyncViews"
+""
+1 8 163 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 163 161 191
+
+T 
+1
+LANG:1 12 Update views
+"main()
+{
+EnableAll(FALSE);
+dyn_string exceptionInfo;
+
+_fwConfigurationDB_updateHierarchyView(g_fwConfigurationDB_DBConnection,exceptionInfo);
+if (dynlen(exceptionInfo)) {
+	fwExceptionHandling_display(exceptionInfo);
+	return;
+}
+ChildPanelOnCentral(\"fwGeneral/fwMessageInfo1.pnl\",\"DB Views updated\", 
+	makeDynString(\"$1: Database views updated succesfuly\"));
+EnableAll(TRUE);
+}" 0
+ E E E
+20 10
+"SqlDebugLevel"
+""
+1 190 208 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  190 208 328 320
+4
+T 
+1
+LANG:1 13 Print Selects
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 11 Print Stmts
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 18 #Results in select
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 16 Data from select
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+4
+E E
+E E
+E E
+E E
+"main()
+{
+this.state(0)= (g_fwConfigurationDB_DebugSQL & 1);
+this.state(1)= (g_fwConfigurationDB_DebugSQL & 2);
+this.state(2)= (g_fwConfigurationDB_DebugSQL & 4);
+this.state(3)= (g_fwConfigurationDB_DebugSQL & 8);
+}" 0
+"main(int button, int state)
+{
+
+int lvl=0;
+
+if (this.state(0)) lvl=lvl+1;
+if (this.state(1)) lvl=lvl+2;
+if (this.state(2)) lvl=lvl+4;
+if (this.state(3)) lvl=lvl+8;
+
+g_fwInstallation_DebugSQL=lvl;
+
+DebugN(\"INFO: SQL Debug Level set to\", g_fwInstallation_DebugSQL);
+}" 0
+20 11
+"DebugLevel"
+""
+1 190 73 E E E 0 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  190 73 325 185
+4
+T 
+1
+LANG:1 16 fn name on entry
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 11 timing info
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 17 functional blocks
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 13 massive debug
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+4
+E E
+E E
+E E
+E E
+"main()
+{
+this.state(0)= (g_fwConfigurationDB_Debug & 1);
+this.state(1)= (g_fwConfigurationDB_Debug & 2);
+this.state(2)= (g_fwConfigurationDB_Debug & 4);
+this.state(3)= (g_fwConfigurationDB_Debug & 8);
+}" 0
+"main(int button, int state)
+{
+int lvl=0;
+if (this.state(0)) lvl=lvl+1;
+if (this.state(1)) lvl=lvl+2;
+if (this.state(2)) lvl=lvl+4;
+if (this.state(3)) lvl=lvl+8;
+g_fwConfigurationDB_Debug=lvl;
+DebugN(\"Debug Level set to\",g_fwConfigurationDB_Debug);
+}" 0
+13 12
+"DBBrowser"
+""
+1 31 389 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 293 161 321
+
+T 
+1
+LANG:1 14 DB browser ...
+"main()
+{
+
+ModuleOnWithPanel(\"Database Browser\",-1,-1,0,0,1,1,\"\",
+\"fwConfigurationDB/fwConfigurationDB_DBBrowser.pnl\", \"Database Browser\",
+		makeDynString(),0,0);
+
+}" 0
+ E E E
+1 18 0 "" 0
+0
+6 14
+"bgRectangle"
+""
+1 20 530 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E -1 -1 1268 29
+2 15
+"title"
+""
+1 7.999999999999986 2 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 9.999999999999986 4 182 24
+0 2 0 "0s" 0 0 0 192 0 0  9.999999999999986 4 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,40,0,0,0,0,0
+0 2
+LANG:1 17 DB Advanced Setup
+LANG:10001 47 JCOP Framework Installation Description Creator
+6 16
+"redundancyInfoBg"
+""
+1 0 650 E E E 1 E 1 E N {255,102,102} E N {255,102,102} E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 0 -703 1 E 0 732 1269 754
+2 17
+"txRedundancy"
+""
+1 10 32 E E E 1 E 1 E N "white" E N "_Window" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 10 32 185 46
+0 2 2 "0s" 0 0 0 192 0 0  10 32 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 30 Implementation not functional.
+LANG:10001 12 txRedundancy
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "Group2" -1
+"" ""
+"objects/fwGeneral/fwHelpButton.pnl" 352 12 T 1 1 0 1 -38 -10
+1
+"$sPanelRelativePath""fwConfigurationDB/fwConfigurationDB_DBAdvanced"
+0

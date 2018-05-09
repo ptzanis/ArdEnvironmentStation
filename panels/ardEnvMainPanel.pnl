@@ -1,0 +1,1375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<panel version="14">
+ <properties>
+  <prop name="Name">
+   <prop name="en_US.iso88591"></prop>
+  </prop>
+  <prop name="Size">1220 1000</prop>
+  <prop name="BackColor">_3DFace</prop>
+  <prop name="RefPoint">30 23</prop>
+  <prop name="InitAndTermRef">True</prop>
+  <prop name="SendClick">False</prop>
+  <prop name="RefFileName"></prop>
+  <prop name="DPI">96</prop>
+  <prop name="layoutType">None</prop>
+ </properties>
+ <events>
+  <script name="ScopeLib" isEscaped="1"><![CDATA[public int checkDPTexistance(string dptcheck)
+{
+  dyn_string check=dpTypes(dptcheck);
+  
+if(check==&quot;&quot;)
+  {
+ //  DebugN(&quot;DPT doesn't exist!&quot;);
+   return -1;
+  }  
+else
+  {
+ //  DebugN(&quot;DPT has been found!&quot;);
+   return 0;
+  }  
+
+
+
+}
+
+string getStartTime() {
+    
+    time startTime;
+    string startDateString, startTimeString, startString;
+    
+    string startDateTextBox = &quot;dateSelection.startDateField&quot;;
+    string startTimeTextBox = &quot;dateSelection.startTimeField&quot;;
+    
+    getValue(startDateTextBox, &quot;text&quot;, startDateString);
+    getValue(startTimeTextBox, &quot;text&quot;, startTimeString);
+
+    startString = startDateString + &quot; &quot; + startTimeString;    
+    
+    if (!fwGeneral_hasCorrectFormat(startString)) {
+        DebugN(&quot;The starting time provided is wrong, check again and retry.&quot;);
+        return -1;
+    }
+    
+    startTime = fwGeneral_stringToDate(startString);
+    startString = formatTime(&quot;%Y.%m.%d %H:%M:%S&quot;, startTime);
+    
+    return startString;
+}
+
+string getEndTime() {
+    
+    time endTime;
+    string endDateString, endTimeString, endString;
+ 
+    string endDateTextBox = &quot;dateSelection.endDateField&quot;;
+    string endTimeTextBox = &quot;dateSelection.endTimeField&quot;;
+    
+    getValue(endDateTextBox, &quot;text&quot;, endDateString);
+    getValue(endTimeTextBox, &quot;text&quot;, endTimeString);
+    
+    endString = endDateString + &quot; &quot; + endTimeString;
+    
+    if (!fwGeneral_hasCorrectFormat(endString)) {
+        DebugN(&quot;The ending time provided is wrong, check again and retry.&quot;);
+        return -1;
+    }
+    
+    endTime = fwGeneral_stringToDate(endString);
+    endString = formatTime(&quot;%Y.%m.%d %H:%M:%S&quot;, endTime);
+    
+    return endString;
+}
+
+bool checkOrCreateDirectory(string folderPath)
+{
+  
+    if(isdir(folderPath))
+    return TRUE;
+    else {    
+        mkdir(folderPath, 777);
+        return FALSE;
+    } 
+}
+
+bool exportData(string valueType, dyn_string channels, string start, string end, string folderPath) {
+
+    dyn_dyn_anytype archivedPressure,archivedTemperature,archivedHumidity;
+    string queryPressure,queryTemperature,queryHumidity, currentDate, filePath;
+    
+
+    
+        queryPressure = &quot;SELECT ALL '_original.._stime', '_original.._value' FROM '&quot; + channels[1] + valueType + &quot;' TIMERANGE(\&quot;&quot; + start + &quot;\&quot;,\&quot;&quot; + end +&quot;\&quot;,1,0)&quot;;
+        queryTemperature = &quot;SELECT ALL '_original.._stime', '_original.._value' FROM '&quot; + channels[2] + valueType + &quot;' TIMERANGE(\&quot;&quot; + start + &quot;\&quot;,\&quot;&quot; + end +&quot;\&quot;,1,0)&quot;;
+        queryHumidity = &quot;SELECT ALL '_original.._stime', '_original.._value' FROM '&quot; + channels[3] + valueType + &quot;' TIMERANGE(\&quot;&quot; + start + &quot;\&quot;,\&quot;&quot; + end +&quot;\&quot;,1,0)&quot;;
+
+
+        
+        dpQuery(queryPressure, archivedPressure);
+        dpQuery(queryTemperature, archivedTemperature);
+        dpQuery(queryHumidity, archivedHumidity);
+
+        
+        file export;
+        currentDate = formatTime(&quot;%d_%m_%y&quot;, getCurrentTime());
+        filePath = folderPath + valueType +  &quot;ArdEnvStation_&quot; + currentDate + &quot;.dat&quot;;
+
+        
+        if (isfile(filePath)) {
+            popupMessage(&quot;_Ui_1&quot;, &quot;File Exists&quot;);
+            popupMessage(&quot;_Ui_2&quot;, &quot;File Exists&quot;);
+            popupMessage(&quot;_Ui_3&quot;, &quot;File Exists&quot;);
+            popupMessage(&quot;_Ui_4&quot;, &quot;File Exists&quot;);
+            popupMessage(&quot;_Ui_5&quot;, &quot;File Exists&quot;);
+            return FALSE;
+        }
+        else {
+            export = fopen(filePath, &quot;a&quot;);
+        }
+
+      fprintf(export, &quot;%s \n&quot;,&quot;Time&quot;+ &quot;\t&quot; +&quot;\t&quot; + &quot;\t&quot; +&quot;Pressure(kPa)&quot;+ &quot;\t&quot;+ &quot;Temperature(C)&quot;+&quot;\t&quot;+&quot;Humidity(%)&quot;);        
+        
+        for (int j = 3; j &lt;= dynlen(archivedTemperature); j++) { 
+            fprintf(export, &quot;%s \t %4.2f \t %2.2f \t \t %2.2f  \n&quot;, formatTime(&quot;%d/%m/%Y_%H:%M:%S&quot;, archivedTemperature[j][2]),archivedPressure[j][3],archivedTemperature[j][3],archivedHumidity[j][3]);
+        }
+
+        fclose(export);
+    
+               DebugN(&quot;Data file exported!&quot;);  
+    return TRUE;
+}
+
+
+
+
+]]></script>
+  <script name="Close" isEscaped="1"><![CDATA[main()
+{
+  int i;
+}]]></script>
+  <script name="Initialize" isEscaped="1"><![CDATA[main()
+{
+  
+  if(checkDPTexistance(&quot;Arduino&quot;)==0)
+  {    
+     DebugN(&quot;*Arduino BME280 DPT WAS Ready!&quot;);
+  }
+  else
+  {
+   
+  
+ 
+   dyn_dyn_string elements;
+  dyn_dyn_int types;
+  
+  // Elements // 
+
+elements[1]=makeDynString(&quot;Arduino&quot;,&quot;&quot;);
+
+elements[2]=makeDynString(&quot;&quot;,&quot;pressureMon&quot;);
+elements[3]=makeDynString(&quot;&quot;,&quot;pressureMean&quot;);
+elements[4]=makeDynString(&quot;&quot;,&quot;temperatureMon&quot;);
+elements[5]=makeDynString(&quot;&quot;,&quot;temperatureMean&quot;);
+elements[6]=makeDynString(&quot;&quot;,&quot;humidityMon&quot;);
+elements[7]=makeDynString(&quot;&quot;,&quot;humidityMean&quot;);
+elements[8]=makeDynString(&quot;&quot;,&quot;archiving&quot;);
+elements[9]=makeDynString(&quot;&quot;,&quot;samplingTime&quot;);
+
+
+//// Types  /////
+
+types[1]=makeDynInt(DPEL_STRUCT);
+
+types[2]=makeDynInt(0,DPEL_FLOAT);
+types[3]=makeDynInt(0,DPEL_FLOAT);
+types[4]=makeDynInt(0,DPEL_FLOAT);
+types[5]=makeDynInt(0,DPEL_FLOAT);
+types[6]=makeDynInt(0,DPEL_FLOAT);
+types[7]=makeDynInt(0,DPEL_FLOAT);
+types[8]=makeDynInt(0,DPEL_BOOL);
+types[9]=makeDynInt(0,DPEL_INT);
+
+dpTypeCreate(elements,types);
+
+  
+dpCreate(&quot;BME280&quot;,&quot;Arduino&quot;);
+  
+  
+  
+ 
+  
+  DebugN(&quot;*********Arduino BME280 DPT IS Ready!!!!&quot;);
+
+
+}
+
+  setup();
+} 
+  
+  void setup(){
+   
+  string dpes;
+  dyn_string exceptionInfo;
+ 
+  
+  dpes=getSystemName();  
+  
+  addSymbol(myModuleName(),myPanelName(),&quot;objects/channelArdEnv.pnl&quot;,&quot;MainPanel&quot;,
+            makeDynString(&quot;$dpe:&quot;+dpes,&quot;$x:&quot;+500,&quot;$y:&quot;+231,&quot;$alias:&quot;+&quot;Pressure&quot;,&quot;$purpose:&quot;+&quot;pressure&quot;),500+2,231,0,.95,1);  
+  
+  addSymbol(myModuleName(),myPanelName(),&quot;objects/channelArdEnv.pnl&quot;,&quot;MainPanel&quot;,
+            makeDynString(&quot;$dpe:&quot;+dpes,&quot;$x:&quot;+500,&quot;$y:&quot;+510,&quot;$alias:&quot;+&quot;Temp&quot;,&quot;$purpose:&quot;+&quot;temperature&quot;),500+2,510,0,.95,1);
+  
+  
+  addSymbol(myModuleName(),myPanelName(),&quot;objects/channelArdEnv.pnl&quot;,&quot;MainPanel&quot;,
+            makeDynString(&quot;$dpe:&quot;+dpes,&quot;$x:&quot;+500,&quot;$y:&quot;+789,&quot;$alias:&quot;+&quot;Humidity&quot;,&quot;$purpose:&quot;+&quot;humidity&quot;),500+2,789,0,.95,1);
+  //y=y+30;
+//addSymbol(myModuleName(),myPanelName(),&quot;GasObjects/channel.pnl&quot;,&quot;channel_pnl_Ref&quot;+node,
+           // makeDynString(&quot;$node:&quot;+node,&quot;$dpe:&quot;+dpes,&quot;$x:&quot;+x,&quot;$y:&quot;+y,&quot;$alias:&quot;+massOutletAliasBare,&quot;$purpose:&quot;+&quot;massOutletMonitor&quot;),x+2,y,0,.95,1);
+
+
+  
+   fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), &quot;BME280_Pressure&quot;,makeDynString(&quot;BME280.pressureMon&quot;),
+          22, 135, exceptionInfo, &quot;_BME_Pressure&quot;, 0.9, 0.9);
+   fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), &quot;BME280_Temperature&quot;,makeDynString(&quot;BME280.temperatureMon&quot;),
+          22, 414, exceptionInfo, &quot;_BME_Temperature&quot;, 0.9, 0.9);
+    fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), &quot;BME280_Humidity&quot;,makeDynString(&quot;BME280.humidityMon&quot;),
+          22, 693, exceptionInfo, &quot;_BME_Humidity&quot;, 0.9, 0.9);
+
+ string dpe;
+  dyn_string dyn_dpe;
+  int dpfuct=9;
+  dyn_string dyn_dpfuct;
+
+  int timeInterval;
+  dpGet(&quot;BME280.samplingTime&quot;,timeInterval);
+
+
+
+      dpe=getSystemName()+&quot;BME280.pressureMon:_original.._value&quot;;
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+&quot;BME280.pressureMean:_dp_fct.._type&quot;,63,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._param&quot;,dyn_dpe,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._stat_type&quot;,dyn_dpfuct,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._interval&quot;,timeInterval,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._delay&quot;,0,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._read_archive&quot;,0,       
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._fct&quot;,&quot;p1&quot;);  
+ 
+ dpe=getSystemName()+&quot;BME280.temperatureMon:_original.._value&quot;;
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._type&quot;,63,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._param&quot;,dyn_dpe,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._stat_type&quot;,dyn_dpfuct,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._interval&quot;,timeInterval,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._delay&quot;,0,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._read_archive&quot;,0,       
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._fct&quot;,&quot;p1&quot;); 
+ 
+ dpe=getSystemName()+&quot;BME280.humidityMon:_original.._value&quot;;
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+&quot;BME280.humidityMean:_dp_fct.._type&quot;,63,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._param&quot;,dyn_dpe,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._stat_type&quot;,dyn_dpfuct,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._interval&quot;,timeInterval,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._delay&quot;,0,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._read_archive&quot;,0,       
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._fct&quot;,&quot;p1&quot;);  
+  
+}
+   
+]]></script>
+ </events>
+ <shapes>
+  <shape Name="RECTANGLE1" shapeType="RECTANGLE" layerId="0">
+   <properties>
+    <prop name="serialId">1</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">40 30</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">{0,0,0}</prop>
+    <prop name="BackColor">{193,193,193}</prop>
+    <prop name="TabOrder">1</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[solid]</prop>
+    <prop name="Geometry">1.431578947368421 0 0 1.111111111111111 -67.26315789473684 -33.33333333333334</prop>
+    <prop name="BorderStyle">Normal</prop>
+    <prop name="Location">40 30</prop>
+    <prop name="Size">951 91</prop>
+    <prop name="CornerRadius">0</prop>
+    <prop name="Transformable">True</prop>
+   </properties>
+  </shape>
+  <shape Name="PRIMITIVE_TEXT1" shapeType="PRIMITIVE_TEXT" layerId="0">
+   <properties>
+    <prop name="serialId">3</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">123 31.5</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">FwAtlasBg</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">2</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Location">123 31.5</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,32,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">ArdEnvironment Station</prop>
+    </prop>
+    <prop name="Distance">2</prop>
+    <prop name="BorderOffset">2</prop>
+    <prop name="Bordered">False</prop>
+    <prop name="Fit">True</prop>
+    <prop name="Transformable">False</prop>
+    <prop name="TextFormat">[0s,,,ALIGNMENT_BEGINNING]</prop>
+   </properties>
+  </shape>
+  <shape Name="ELLIPSE1" shapeType="ELLIPSE" layerId="0">
+   <properties>
+    <prop name="serialId">4</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">0 0</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">{0,0,0}</prop>
+    <prop name="BackColor">{255,255,255}</prop>
+    <prop name="TabOrder">3</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">True</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType" SharedPixmap="1">[pattern,[fit,any,pictures/logoPyrforos_highRes.bmp]]</prop>
+    <prop name="Geometry">1 0 0 1 9.157894736842081 5</prop>
+    <prop name="Center">45.3421052631579 45</prop>
+    <prop name="X-Radius">45.5</prop>
+    <prop name="Y-Radius">45</prop>
+   </properties>
+  </shape>
+  <shape Name="PUSH_BUTTON1" shapeType="PUSH_BUTTON" layerId="0">
+   <properties>
+    <prop name="serialId">22</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">839.5000000000002 351.7777777777776</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_ButtonText</prop>
+    <prop name="BackColor">_Button</prop>
+    <prop name="TabOrder">19</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,27,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">839.5000000000001 332.7777777777776</prop>
+    <prop name="Size">141 51</prop>
+    <prop name="BorderStyle">Styled</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Start</prop>
+    </prop>
+   </properties>
+   <events>
+    <script name="Clicked" isEscaped="1"><![CDATA[main()
+{
+  
+   string archiveClassName = &quot;ValueArchive_0000&quot;;
+    int archiveType = DPATTR_ARCH_PROC_SIMPLESM;
+    int smoothProcedure = DPATTR_TIME_SMOOTH;
+    //    int smoothProcedure = DPATTR_TIME_AND_VALUE_SMOOTH;
+    dyn_string exceptionInfo;
+    bool checkClass = TRUE;
+    float deadband;
+    float timeInterval;
+    dyn_string archivedDpes;
+    deadband = 50.0;    
+    dpGet(&quot;BME280.samplingTime&quot;,timeInterval);
+
+    
+     
+     archivedDpes[1]=&quot;BME280.pressureMean&quot;;
+     archivedDpes[2]=&quot;BME280.temperatureMean&quot;;
+     archivedDpes[3]=&quot;BME280.humidityMean&quot;;   
+     
+     for (int i = 1; i&lt;=dynlen(archivedDpes); i++) {
+
+     
+       fwArchive_configMultiple(archivedDpes[i], archiveClassName, archiveType, smoothProcedure,
+                          deadband, timeInterval, exceptionInfo, checkClass);
+        if (dynlen(exceptionInfo)&gt;0) DebugN(exceptionInfo);
+      }
+     
+    
+    
+    // Start archiving
+    
+      for (int i = 1; i &lt;= dynlen(archivedDpes); i++) {
+        fwArchive_startMultiple(archivedDpes[i], exceptionInfo);
+        if (dynlen(exceptionInfo) &gt; 0) DebugN(exceptionInfo);
+      }
+     
+    dpSet(&quot;BME280.archiving&quot;,TRUE);
+     
+  
+    DebugN(&quot;ArdEnvironment archiving in progress...&quot;);
+  
+  
+}]]></script>
+    <script name="Initialize" isEscaped="1"><![CDATA[// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setEnabled();
+}
+
+void EP_setEnabled()
+{
+  dyn_errClass err;
+
+  if( !dpExists( &quot;System1:BME280.archiving:_online.._value&quot;))
+  {
+    setValue(&quot;&quot;, &quot;color&quot;, &quot;_dpdoesnotexist&quot;);
+    return;
+  }
+
+  dpConnect(&quot;EP_setEnabledCB&quot;,
+            &quot;System1:BME280.archiving:_online.._value&quot;);
+  err = getLastError();
+  if (dynlen(err) &gt; 0)
+    setValue(&quot;&quot;, &quot;color&quot;, &quot;_dpdoesnotexist&quot;);
+
+}
+
+
+void EP_setEnabledCB(string dp, bool boNewValue)
+{
+    setValue(&quot;&quot;, &quot;enabled&quot;, !boNewValue);
+}
+
+// SimpleCtrlScript {EP_setEnabled}
+// DP {System1:BME280.archiving}
+// DPConfig {:_online.._value}
+// DPType {bool}
+// Active {0}
+// Operator {less}
+// Value {TRUE}
+// SimpleCtrlScriptEnd {EP_setEnabled}
+]]></script>
+   </events>
+  </shape>
+  <shape Name="PUSH_BUTTON3" shapeType="PUSH_BUTTON" layerId="0">
+   <properties>
+    <prop name="serialId">24</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">1011.722222222222 351.7777777777776</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_ButtonText</prop>
+    <prop name="BackColor">_Button</prop>
+    <prop name="TabOrder">21</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,27,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">1011.722222222223 332.7777777777776</prop>
+    <prop name="Size">141 51</prop>
+    <prop name="BorderStyle">Styled</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Stop</prop>
+    </prop>
+   </properties>
+   <events>
+    <script name="Clicked" isEscaped="1"><![CDATA[main()
+{
+  dyn_string archivedDpes;
+     archivedDpes[1]=&quot;BME280.pressureMean&quot;;
+     archivedDpes[2]=&quot;BME280.temperatureMean&quot;;
+     archivedDpes[3]=&quot;BME280.humidityMean&quot;;  
+  
+  dyn_string exceptionInfo;
+  
+  for (int i = 1; i &lt;= dynlen(archivedDpes); i++) {
+        fwArchive_stopMultiple(archivedDpes[i] , exceptionInfo);
+        if (dynlen(exceptionInfo)&gt;0) DebugN(exceptionInfo);
+        
+      }
+        
+   dpSet(&quot;BME280.archiving&quot;,FALSE);  
+   DebugN(&quot;ArdEnvironment archiving stopped!&quot;);   
+        
+}]]></script>
+    <script name="Initialize" isEscaped="1"><![CDATA[// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setEnabled();
+}
+
+void EP_setEnabled()
+{
+  dyn_errClass err;
+
+  if( !dpExists( &quot;System1:BME280.archiving:_online.._value&quot;))
+  {
+    setValue(&quot;&quot;, &quot;color&quot;, &quot;_dpdoesnotexist&quot;);
+    return;
+  }
+
+  dpConnect(&quot;EP_setEnabledCB&quot;,
+            &quot;System1:BME280.archiving:_online.._value&quot;);
+  err = getLastError();
+  if (dynlen(err) &gt; 0)
+    setValue(&quot;&quot;, &quot;color&quot;, &quot;_dpdoesnotexist&quot;);
+
+}
+
+
+void EP_setEnabledCB(string dp, bool boNewValue)
+{
+    setValue(&quot;&quot;, &quot;enabled&quot;, boNewValue);
+}
+
+// SimpleCtrlScript {EP_setEnabled}
+// DP {System1:BME280.archiving}
+// DPConfig {:_online.._value}
+// DPType {bool}
+// Active {1}
+// Operator {less}
+// Value {TRUE}
+// SimpleCtrlScriptEnd {EP_setEnabled}
+]]></script>
+   </events>
+  </shape>
+  <shape Name="RECTANGLE2" shapeType="RECTANGLE" layerId="0">
+   <properties>
+    <prop name="serialId">30</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">130 210</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_Transparent</prop>
+    <prop name="BackColor">{226,226,226}</prop>
+    <prop name="TabOrder">27</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[solid]</prop>
+    <prop name="Geometry">4.5625 0 0 2.391926932156818 -573.125 -376.3046557529316</prop>
+    <prop name="BorderStyle">Normal</prop>
+    <prop name="Location">130 210</prop>
+    <prop name="Size">161 111</prop>
+    <prop name="CornerRadius">0</prop>
+    <prop name="Transformable">True</prop>
+   </properties>
+  </shape>
+  <shape Name="RECTANGLE3" shapeType="RECTANGLE" layerId="0">
+   <properties>
+    <prop name="serialId">31</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">130 210</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_Transparent</prop>
+    <prop name="BackColor">{226,226,226}</prop>
+    <prop name="TabOrder">28</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[solid]</prop>
+    <prop name="Geometry">4.5625 0 0 2.373737373737374 -573.1250000000007 -91.26262626262644</prop>
+    <prop name="BorderStyle">Normal</prop>
+    <prop name="Location">130 210</prop>
+    <prop name="Size">161 111</prop>
+    <prop name="CornerRadius">0</prop>
+    <prop name="Transformable">True</prop>
+   </properties>
+  </shape>
+  <shape Name="RECTANGLE4" shapeType="RECTANGLE" layerId="0">
+   <properties>
+    <prop name="serialId">32</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">130 210</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_Transparent</prop>
+    <prop name="BackColor">{226,226,226}</prop>
+    <prop name="TabOrder">29</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[solid]</prop>
+    <prop name="Geometry">4.5625 0 0 2.391926932156818 -573.1249999999999 181.5833817098185</prop>
+    <prop name="BorderStyle">Normal</prop>
+    <prop name="Location">130 210</prop>
+    <prop name="Size">161 111</prop>
+    <prop name="CornerRadius">0</prop>
+    <prop name="Transformable">True</prop>
+   </properties>
+  </shape>
+  <shape Name="FRAME10" shapeType="FRAME" layerId="0">
+   <properties>
+    <prop name="serialId">33</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">20 113</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">{0,0,0}</prop>
+    <prop name="TabOrder">30</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Geometry">1.489795918367348 0 0 0.6533957845433253 -9.795918367347298 317.0551652354928</prop>
+    <prop name="BorderStyle">3D</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Temperature</prop>
+    </prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,24,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">20 113</prop>
+    <prop name="Size">491 428</prop>
+   </properties>
+  </shape>
+  <shape Name="FRAME1" shapeType="FRAME" layerId="0">
+   <properties>
+    <prop name="serialId">34</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">20 113</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">{0,0,0}</prop>
+    <prop name="TabOrder">31</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Geometry">1.489795918367348 0 0 0.6533957845433253 -9.795918367347577 37.83294301327068</prop>
+    <prop name="BorderStyle">3D</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Pressure</prop>
+    </prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,24,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">20 113</prop>
+    <prop name="Size">491 428</prop>
+   </properties>
+  </shape>
+  <shape Name="FRAME11" shapeType="FRAME" layerId="0">
+   <properties>
+    <prop name="serialId">35</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">20 113</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">{0,0,0}</prop>
+    <prop name="TabOrder">32</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Geometry">1.489795918367348 0 0 0.6533957845433253 -9.795918367347472 596.3884985688259</prop>
+    <prop name="BorderStyle">3D</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Humidity</prop>
+    </prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,24,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">20 113</prop>
+    <prop name="Size">491 428</prop>
+   </properties>
+  </shape>
+  <shape Name="RECTANGLE6" shapeType="RECTANGLE" layerId="0">
+   <properties>
+    <prop name="serialId">37</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">130 210</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_Transparent</prop>
+    <prop name="BackColor">{226,226,226}</prop>
+    <prop name="TabOrder">34</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[solid]</prop>
+    <prop name="Geometry">2.6875 0 0 1.649489742949418 430.6249999999999 -83.3366714460888</prop>
+    <prop name="BorderStyle">Normal</prop>
+    <prop name="Location">130 210</prop>
+    <prop name="Size">161 111</prop>
+    <prop name="CornerRadius">0</prop>
+    <prop name="Transformable">True</prop>
+   </properties>
+  </shape>
+  <shape Name="FRAME12" shapeType="FRAME" layerId="0">
+   <properties>
+    <prop name="serialId">38</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">20 113</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">{0,0,0}</prop>
+    <prop name="TabOrder">35</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Geometry">0.8775510204081635 0 0 0.468384074941452 762.4489795918365 194.5725995316157</prop>
+    <prop name="BorderStyle">3D</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Archive</prop>
+    </prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,24,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">20 113</prop>
+    <prop name="Size">491 428</prop>
+   </properties>
+  </shape>
+  <shape Name="PUSH_BUTTON5" shapeType="PUSH_BUTTON" layerId="0">
+   <properties>
+    <prop name="serialId">39</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">1073.861111111112 332.8888888888888</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_ButtonText</prop>
+    <prop name="BackColor">_Button</prop>
+    <prop name="TabOrder">36</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,16,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">1145.289682539683 404.3888888888887</prop>
+    <prop name="Size">51 34</prop>
+    <prop name="BorderStyle">Styled</prop>
+    <prop name="Image" SharedPixmap="1">
+     <prop name="BackgroundPixmap">config_params_24.png</prop>
+    </prop>
+   </properties>
+   <events>
+    <script name="Clicked" isEscaped="1"><![CDATA[main()
+{ 
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  ChildPanelOnCentral(&quot;objects/setSampling.pnl&quot;,&quot;Sampling&quot;,makeDynString(&quot;&quot;));
+}
+]]></script>
+   </events>
+  </shape>
+  <shape Name="PRIMITIVE_TEXT2" shapeType="PRIMITIVE_TEXT" layerId="0">
+   <properties>
+    <prop name="serialId">40</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">874.9999999999999 289.722222222222</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">37</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Location">874.9999999999999 289.722222222222</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,19,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Archive Status:</prop>
+    </prop>
+    <prop name="Distance">2</prop>
+    <prop name="BorderOffset">2</prop>
+    <prop name="Bordered">False</prop>
+    <prop name="Fit">True</prop>
+    <prop name="Transformable">False</prop>
+    <prop name="TextFormat">[0s,,,ALIGNMENT_BEGINNING]</prop>
+   </properties>
+  </shape>
+  <shape Name="archiveStatus" shapeType="ELLIPSE" layerId="0">
+   <properties>
+    <prop name="serialId">41</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">1020 290</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">{0,0,0}</prop>
+    <prop name="BackColor">White</prop>
+    <prop name="TabOrder">38</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">True</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[solid]</prop>
+    <prop name="Geometry">1 0 0 1 22.22222222222217 10.722222222222</prop>
+    <prop name="Center">1020 290</prop>
+    <prop name="X-Radius">20</prop>
+    <prop name="Y-Radius">20</prop>
+   </properties>
+   <events>
+    <script name="Initialize" isEscaped="1"><![CDATA[// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setBackColor();
+}
+
+void EP_setBackColor()
+{
+  dyn_errClass err;
+
+  if( !dpExists( &quot;System1:BME280.archiving:_online.._value&quot;))
+  {
+    setValue(&quot;&quot;, &quot;color&quot;, &quot;_dpdoesnotexist&quot;);
+    return;
+  }
+
+  dpConnect(&quot;EP_setBackColorCB&quot;, 
+            &quot;System1:BME280.archiving:_online.._value&quot;);
+  err = getLastError();
+  if (dynlen(err) &gt; 0)
+    setValue(&quot;&quot;, &quot;color&quot;, &quot;_dpdoesnotexist&quot;);
+
+}
+
+void EP_setBackColorCB(string dpSource, bool boNewValue)
+{
+  if (!boNewValue)
+    setValue(&quot;&quot;, &quot;backCol&quot;, &quot;Red&quot;);
+  else
+    setValue(&quot;&quot;, &quot;backCol&quot;, &quot;S7_stateWentUnq&quot;);
+}
+
+// SimpleCtrlScript {EP_setBackColor}
+// DP {System1:BME280.archiving}
+// DPConfig {:_online.._value}
+// DPType {bool}
+// AlertHdl {FALSE}
+// DPEInvalid {}
+// DPEConfigInvalid {}
+// Operator1 {notequal}
+// Operant1 {0}
+// Color1 {Red}
+// Operator2 {equal}
+// Operant2 {1}
+// Color2 {S7_stateWentUnq}
+// SimpleCtrlScriptEnd {EP_setBackColor}
+]]></script>
+   </events>
+  </shape>
+  <shape Name="RECTANGLE7" shapeType="RECTANGLE" layerId="0">
+   <properties>
+    <prop name="serialId">42</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">130 210</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_Transparent</prop>
+    <prop name="BackColor">{226,226,226}</prop>
+    <prop name="TabOrder">39</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[solid]</prop>
+    <prop name="Geometry">2.688194444444444 0 0 2.044562133113685 430.4236111111112 103.8578797920983</prop>
+    <prop name="BorderStyle">Normal</prop>
+    <prop name="Location">130 210</prop>
+    <prop name="Size">161 111</prop>
+    <prop name="CornerRadius">0</prop>
+    <prop name="Transformable">True</prop>
+   </properties>
+  </shape>
+  <shape Name="FRAME13" shapeType="FRAME" layerId="0">
+   <properties>
+    <prop name="serialId">43</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">20 113</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">{0,0,0}</prop>
+    <prop name="TabOrder">40</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Geometry">0.8777777777777783 0 0 0.567265157429092 762.333333333333 453.6768149882903</prop>
+    <prop name="BorderStyle">3D</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Export</prop>
+    </prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,24,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">20 113</prop>
+    <prop name="Size">491 428</prop>
+   </properties>
+  </shape>
+  <shape Name="PUSH_BUTTON6" shapeType="PUSH_BUTTON" layerId="0">
+   <properties>
+    <prop name="serialId">44</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">909.6944444444445 704.7619047619047</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_ButtonText</prop>
+    <prop name="BackColor">_Button</prop>
+    <prop name="TabOrder">41</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,21,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">909.6944444444443 685.7619047619047</prop>
+    <prop name="Size">140 50</prop>
+    <prop name="BorderStyle">Styled</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Export Data</prop>
+    </prop>
+   </properties>
+   <events>
+    <script name="Clicked" isEscaped="1"><![CDATA[main()
+{
+  
+   string start = getStartTime();
+   string end = getEndTime();  
+   string dirPath = destFolderTextField.text;
+       checkOrCreateDirectory(dirPath);
+   dyn_string allChannels;
+
+   allChannels[1]=&quot;BME280.pressureMean&quot;;
+   allChannels[2]=&quot;BME280.temperatureMean&quot;;
+   allChannels[3]=&quot;BME280.humidityMean&quot;;   
+   
+    if (!exportData(&quot;&quot;, allChannels, start, end,dirPath)) 
+        DebugN(&quot;File exists in the specified directory. Please change directory or delete old files.&quot;);    
+  
+}]]></script>
+   </events>
+  </shape>
+  <shape Name="PRIMITIVE_TEXT3" shapeType="PRIMITIVE_TEXT" layerId="0">
+   <properties>
+    <prop name="serialId">46</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">840 610</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">42</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Location">840 610</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Sans Serif,-1,12,5,50,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="Distance">2</prop>
+    <prop name="BorderOffset">2</prop>
+    <prop name="Bordered">False</prop>
+    <prop name="Fit">True</prop>
+    <prop name="Transformable">False</prop>
+    <prop name="TextFormat">[0s,,,ALIGNMENT_BEGINNING]</prop>
+   </properties>
+  </shape>
+  <shape Name="PRIMITIVE_TEXT4" shapeType="PRIMITIVE_TEXT" layerId="0">
+   <properties>
+    <prop name="serialId">92</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">818.1230158730158 559.7222222222221</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">50</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Location">818.1230158730158 559.7222222222221</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,19,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Directory:</prop>
+    </prop>
+    <prop name="Distance">2</prop>
+    <prop name="BorderOffset">2</prop>
+    <prop name="Bordered">False</prop>
+    <prop name="Fit">True</prop>
+    <prop name="Transformable">False</prop>
+    <prop name="TextFormat">[0s,,,ALIGNMENT_BEGINNING]</prop>
+   </properties>
+  </shape>
+  <shape Name="destFolderTextField" shapeType="TEXT_FIELD" layerId="0">
+   <properties>
+    <prop name="serialId">93</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">909.9999999999999 566</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">51</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Sans Serif,-1,12,5,50,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">909.9999999999999 556</prop>
+    <prop name="Size">241 33</prop>
+    <prop name="BorderStyle">Normal</prop>
+    <prop name="Editable">True</prop>
+    <prop name="TextFormat">[0s,,,ALIGNMENT_BEGINNING]</prop>
+   </properties>
+   <events>
+    <script name="Initialize" isEscaped="1"><![CDATA[main()
+{
+  string currentDate=formatTime(&quot;%d_%m_%y&quot;,getCurrentTime());
+  this.text(&quot;C:/&quot;+&quot;ArdEnvStation_Data_&quot;+currentDate+&quot;/&quot;);
+}]]></script>
+   </events>
+  </shape>
+  <shape Name="PUSH_BUTTON7" shapeType="PUSH_BUTTON" layerId="0">
+   <properties>
+    <prop name="serialId">95</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">1157 567</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_ButtonText</prop>
+    <prop name="BackColor">_Button</prop>
+    <prop name="TabOrder">53</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Sans Serif,-1,12,5,50,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">1157 556</prop>
+    <prop name="Size">35 35</prop>
+    <prop name="BorderStyle">Styled</prop>
+    <prop name="Image" SharedPixmap="1">
+     <prop name="BackgroundPixmap">folderNew.png</prop>
+    </prop>
+   </properties>
+   <events>
+    <script name="Clicked" isEscaped="1"><![CDATA[main()
+{
+   
+    string sPath;
+    string systemName;
+    int iErr;
+	
+    if(shapeExists(&quot;cbSystem&quot;))
+        systemName = cbSystem.text;
+    else
+        systemName = &quot;&quot;;
+  
+    sPath = &quot;C:\\Projects\\TBSCS&quot;;
+    iErr = folderSelector( sPath );
+    
+    if(( iErr &gt;= 1 ) &amp;&amp; ( strlen( sPath ) &gt; 0 )) {
+	    sPath += &quot;/&quot;;
+        if (_WIN32) strreplace( sPath, &quot;/&quot;, &quot;//&quot; ); 
+    	strreplace(sPath, &quot;//&quot;, &quot;/&quot;);
+        strreplace(sPath, &quot;//&quot;, &quot;/&quot;);
+	    // update the widget with the directory path
+        destFolderTextField.text = sPath;
+    }
+}]]></script>
+   </events>
+  </shape>
+  <shape Name="PRIMITIVE_TEXT5" shapeType="PRIMITIVE_TEXT" layerId="0">
+   <properties>
+    <prop name="serialId">119</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">123 60.25</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">FwAtlasBg</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">54</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Location">123 60.25</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,19,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">v 1.0</prop>
+    </prop>
+    <prop name="Distance">2</prop>
+    <prop name="BorderOffset">2</prop>
+    <prop name="Bordered">False</prop>
+    <prop name="Fit">True</prop>
+    <prop name="Transformable">False</prop>
+    <prop name="TextFormat">[0s,,,ALIGNMENT_BEGINNING]</prop>
+   </properties>
+  </shape>
+  <shape Name="CLOCK1" shapeType="CLOCK" layerId="0">
+   <properties>
+    <prop name="serialId">121</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">1109.891369047619 30.03125</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">56</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Sans Serif,-1,12,5,50,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">1109.891369047619 30.03125</prop>
+    <prop name="Size">101 52</prop>
+    <prop name="BorderStyle">3D</prop>
+    <prop name="Digital">True</prop>
+    <prop name="ShowDate">True</prop>
+    <prop name="ShowTime">True</prop>
+    <prop name="SingleLine">False</prop>
+    <prop name="TimeFirst">True</prop>
+    <prop name="DateFormat">%d/%m/%Y</prop>
+    <prop name="TimeFormat">%X</prop>
+    <prop name="DateFont">
+     <prop name="en_US.iso88591">Utopia,-1,16,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="TimeFont">
+     <prop name="en_US.iso88591">Utopia,-1,16,5,75,0,0,0,0,0</prop>
+    </prop>
+   </properties>
+  </shape>
+  <shape Name="PUSH_BUTTON8" shapeType="PUSH_BUTTON" layerId="0">
+   <properties>
+    <prop name="serialId">122</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">980.2430555555551 51.24877089478855</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_ButtonText</prop>
+    <prop name="BackColor">_Button</prop>
+    <prop name="TabOrder">57</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,27,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">980.2430555555559 38.7222222222222</prop>
+    <prop name="Size">103 34</prop>
+    <prop name="BorderStyle">Styled</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Exit</prop>
+    </prop>
+   </properties>
+   <events>
+    <script name="Clicked" isEscaped="1"><![CDATA[main()
+{
+PanelOff();
+}]]></script>
+   </events>
+  </shape>
+  <reference parentSerial="-1" Name="dateSelection" referenceId="0">
+   <properties>
+    <prop name="FileName">objects/dateTimeWidget.pnl</prop>
+    <prop name="Location">823 588</prop>
+    <prop name="Geometry">1 0 0 1 -23 22</prop>
+    <prop name="TabOrder">49</prop>
+    <prop name="dollarParameters">
+     <prop name="dollarParameter">
+      <prop name="Dollar">$bDateAndTime</prop>
+      <prop name="Value">TRUE</prop>
+     </prop>
+     <prop name="dollarParameter">
+      <prop name="Dollar">$bEnabled</prop>
+      <prop name="Value">TRUE</prop>
+     </prop>
+     <prop name="dollarParameter">
+      <prop name="Dollar">$bShowTimeZone</prop>
+      <prop name="Value">TRUE</prop>
+     </prop>
+     <prop name="dollarParameter">
+      <prop name="Dollar">$iTimePeriod</prop>
+      <prop name="Value">86400</prop>
+     </prop>
+     <prop name="dollarParameter">
+      <prop name="Dollar">$sEndDate</prop>
+      <prop name="Value"></prop>
+     </prop>
+     <prop name="dollarParameter">
+      <prop name="Dollar">$sEndTime</prop>
+      <prop name="Value"></prop>
+     </prop>
+     <prop name="dollarParameter">
+      <prop name="Dollar">$sStartDate</prop>
+      <prop name="Value"></prop>
+     </prop>
+     <prop name="dollarParameter">
+      <prop name="Dollar">$sStartTime</prop>
+      <prop name="Value"></prop>
+     </prop>
+     <prop name="dollarParameter">
+      <prop name="Dollar">$sTimeZone</prop>
+      <prop name="Value">0</prop>
+     </prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+   </properties>
+  </reference>
+ </shapes>
+</panel>

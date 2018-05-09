@@ -1,0 +1,711 @@
+V 13
+1
+LANG:1 0 
+PANEL,-1 -1 700 345 N "_3DFace" 0
+"main()
+{
+  init();
+}" 0
+ E E E E 1 -1 -1 0  12 30
+""0  1
+E "#uses \"fwInstallationDB.ctl\"
+
+init()
+{
+  bool isOk;
+  dyn_mixed dbInfo, pvssInfo;
+  
+  tfHost.text = getHostname();
+  
+   if(fwInstallationDB_connect())
+   {
+      DebugN(\"Could not connect to DB. Please, check connection parameters and availability of the server.\");
+      return;
+   }
+   
+  if(fwInstallationDBAgent_checkHostInfo(isOk, dbInfo, pvssInfo) != 0)
+  {
+     DebugN(\"ERROR -> Could not check consistency between PVSS and DB for host info\");
+  }
+  else
+  {
+    if(dynlen(pvssInfo) >= FW_INSTALLATION_DB_HOST_IP_1_IDX)
+      tfPvssIp.text = pvssInfo[FW_INSTALLATION_DB_HOST_IP_1_IDX];    
+    if(dynlen(pvssInfo) >= FW_INSTALLATION_DB_HOST_IP_2_IDX)
+      tfPvssIp2.text = pvssInfo[FW_INSTALLATION_DB_HOST_IP_2_IDX];
+    
+    
+    if(dynlen(dbInfo) >= FW_INSTALLATION_DB_HOST_IP_1_IDX)
+      tfDbIp.text = dbInfo[FW_INSTALLATION_DB_HOST_IP_1_IDX];
+    if(dynlen(dbInfo) >= FW_INSTALLATION_DB_HOST_IP_2_IDX)
+      tfDbIp2.text = dbInfo[FW_INSTALLATION_DB_HOST_IP_2_IDX];
+    if(dynlen(dbInfo) >= FW_INSTALLATION_DB_HOST_BMC_IP_IDX)
+      tfBmcIp.text = dbInfo[FW_INSTALLATION_DB_HOST_BMC_IP_IDX];
+    if(dynlen(dbInfo) >= FW_INSTALLATION_DB_HOST_BMC_USER_IDX)
+      tfBmcUser.text = dbInfo[FW_INSTALLATION_DB_HOST_BMC_USER_IDX];
+    
+    if(dynlen(dbInfo) >= FW_INSTALLATION_DB_HOST_BMC_PWD_IDX && dbInfo[FW_INSTALLATION_DB_HOST_BMC_PWD_IDX] != \"\")
+      tfBmcPwd.text = \"*******\";
+    
+    if(pvssInfo[FW_INSTALLATION_DB_HOST_IP_1_IDX] != dbInfo[FW_INSTALLATION_DB_HOST_IP_1_IDX])
+    {
+      tfPvssIp.backCol = \"yellow\";
+      tfDbIp.backCol = \"yellow\";
+    }
+    
+    
+  }
+}
+
+
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 76
+"projectIndicatorBg"
+""
+1 150 440 E E E 1 E 1 E N "lightgrey" E N "lightgrey" E E
+ E E
+139 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 349 299
+6 77
+"databaseIndicatorBg"
+""
+1 480 415 E E E 1 E 1 E N "white" E N "white" E E
+ E E
+140 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -100 0 1 E 450 0 799 299
+2 78
+"projectIndicatorLabel"
+""
+1 -296 333.9999999999999 E E E 1 E 1 E N "white" E N "_Window" E E
+ E E
+141 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 6.123233995736766e-17 -1 1 6.123233995736766e-17 -450 386 0 E 190 460 283 480
+0 2 2 "0s" 0 0 0 192 0 0  190 460 1
+1
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+0 1
+LANG:1 7 PROJECT
+2 79
+"databaseIndicatorLabel"
+""
+1 1354 615.9999999999998 E E E 1 E 1 E N "lightgrey" E N "_Window" E E
+ E E
+142 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 6.123233995736766e-17 1 -1 6.123233995736766e-17 1150 -92 0 E 190 460 294 480
+0 2 2 "0s" 0 0 0 192 0 0  190 460 1
+1
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+0 1
+LANG:1 8 DATABASE
+2 80
+"runningProjectLabel"
+""
+1 40 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+143 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 40 10 136 24
+0 2 2 "0s" 0 0 0 192 0 0  40 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 16 Running project:
+2 81
+"databaseLabel"
+""
+1 360 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+144 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 360 10 421 24
+0 2 2 "0s" 0 0 0 192 0 0  360 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 9 Database:
+13 26
+"btnCheck"
+""
+1 250 280 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 25 Check PVSS_DB consistency
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 308 37 337
+
+P 
+4294967295
+"pictures/StandardIcons/refresh_20.png"
+1
+LANG:1 7 Refresh
+"main()
+{  
+  init();
+}" 0
+ E E E
+2 32
+"hostNameLabel"
+""
+1 54 275 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+55 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 40 211 109 225
+0 2 2 "0s" 0 0 0 192 0 0  40 211 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 10 Host name:
+14 34
+"tfHost"
+""
+1 92 27 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+58 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  112 205 341 231
+2 "0s" 0 0 0 0 0 -1  E E E
+2 44
+"projectIpLabel"
+""
+1 54 62 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+76 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 40 44 58 58
+0 2 2 "0s" 0 0 0 192 0 0  40 44 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 3 IP:
+14 45
+"tfPvssIp"
+""
+1 114 40 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+78 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  112 38 341 64
+2 "0s" 0 0 0 0 0 -1  E E E
+2 46
+"projectIp2Label"
+""
+1 -132 143 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+80 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 40 127 65 141
+0 2 2 "0s" 0 0 0 192 0 0  40 127 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 4 IP2:
+14 47
+"tfPvssIp2"
+""
+1 114 123 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+82 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  112 121 341 147
+2 "0s" 0 0 0 0 0 -1  E E E
+2 48
+"projectMacLabel"
+""
+1 54 66 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 40 74 75 88
+0 2 2 "0s" 0 0 0 192 0 0  40 74 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 4 MAC:
+14 49
+"tfPvssMac"
+""
+1 114 70 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+86 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  112 68 341 94
+2 "0s" 0 0 0 0 0 -1  E E E
+2 50
+"projectMac2Label"
+""
+1 -132 147 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+88 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 40 157 82 171
+0 2 2 "0s" 0 0 0 192 0 0  40 157 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 5 MAC2:
+14 51
+"tfPvssMac2"
+""
+1 114 153 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+90 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  112 151 341 177
+2 "0s" 0 0 0 0 0 -1  E E E
+2 59
+"dbIpLabel"
+""
+1 372 -48 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+106 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 44 378 58
+0 2 2 "0s" 0 0 0 192 0 0  360 44 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 3 IP:
+14 60
+"tfDbIp"
+""
+1 434 39.99999999999966 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+108 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  432 38 661 64
+2 "0s" 0 0 0 0 0 -1  E E E
+2 61
+"dbIp2Label"
+""
+1 186 33 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+110 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 127 385 141
+0 2 2 "0s" 0 0 0 192 0 0  360 127 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 4 IP2:
+14 62
+"tfDbIp2"
+""
+1 641 39.99999999999966 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+112 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  432 121 661 147
+2 "0s" 0 0 0 0 0 -1  E E E
+2 63
+"dbMacLabel"
+""
+1 372 -44 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+114 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 74 395 88
+0 2 2 "0s" 0 0 0 192 0 0  360 74 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 4 MAC:
+14 64
+"tfDbMac"
+""
+1 434 69.99999999999966 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+116 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  432 68 661 94
+2 "0s" 0 0 0 0 0 -1  E E E
+2 65
+"dbMac2Label"
+""
+1 186 37 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 157 402 171
+0 2 2 "0s" 0 0 0 192 0 0  360 157 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 5 MAC2:
+14 66
+"tfDbMac2"
+""
+1 641 69.99999999999966 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+120 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  432 151 661 177
+2 "0s" 0 0 0 0 0 -1  E E E
+2 67
+"bmcIpLabel"
+""
+1 372 65 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+122 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 211 411 225
+0 2 2 "0s" 0 0 0 192 0 0  360 211 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 7 BMC IP:
+14 68
+"tfBmcIp"
+""
+1 -36 237 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+124 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  432 205 661 231
+2 "0s" 0 0 0 0 0 -1  E E E
+13 71
+"closeButton"
+""
+1 615 310 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+130 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  613 308 691 336
+
+T 
+1
+LANG:1 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+2 72
+"bmcUserLabel"
+""
+1 372 95 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+132 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 241 426 255
+0 2 2 "0s" 0 0 0 192 0 0  360 241 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 9 BMC User:
+14 73
+"tfBmcUser"
+""
+1 -34 273 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+134 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  432 235 661 261
+2 "0s" 0 0 0 0 0 -1  E E E
+2 74
+"passwordLabel"
+""
+1 186 122.9999999999997 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+136 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 270.9999999999997 423 285
+0 2 2 "0s" 0 0 0 192 0 0  360 270.9999999999997 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 9 Password:
+14 75
+"tfBmcPwd"
+""
+1 -69 303 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+138 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  432 265 661 291
+2 "0s" 0 0 0 0 0 -1  E E E
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

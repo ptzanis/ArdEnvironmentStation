@@ -1,0 +1,299 @@
+V 14
+2
+LANG:1 8 (NoName)
+LANG:10001 8 (NoName)
+PANEL,-1 -1 410 370 N "_3DFace" 0
+E E E E E 1 -1 -1 0  15 32
+""0  1
+E "#uses \"fwInstallation.ctl\"
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 0
+"installedComponentsLabel"
+""
+1 8 26 E E E 1 E 1 E N "schwarz" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 10 139 25
+0 2 0 "0s" 0 0 0 192 0 0  10 10 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,10,-1,5,75,0,0,0,0,0
+0 3
+LANG:1 21 Installed components:
+LANG:10001 20 Installed Components
+LANG:0 11 DP-Funktion
+25 2
+"tblInstalledComponents"
+""
+1 -243.90625 -308.0952380952381 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  fwInstallation_ui_componentsTableRightClickPopupMenu(getShape(\"\"), row, column);
+}
+" 0
+ "/**	if the user double clicks on the componentName column 
+the panel with the component details is shown
+*/
+main()
+{	
+
+	int xpos;
+	string columnName;
+	int columnNr;
+	string componentName;
+	string descFile = \"\";
+	string typeOfDescription = \"PVSSDB\";
+
+	// get shape of the table	
+	shape tab = getShape(\"tblInstalledComponents\");
+	
+	// get the coordinates of current cell	
+	getValue(tab, \"currentCell\", xpos, columnNr);
+	
+	// get the column name
+	columnName = tab.currentColumn();
+
+	 if(columnName == \"componentName\")
+	 {
+		// get the name of a component  
+		componentName += tab.cellValueRC(xpos, \"componentName\");
+			 
+			// display the panel with component details 
+	 		ChildPanelOnCentral(\"fwInstallation/fwInstallationComponentDetails.pnl\", \"Details of \" + componentName,
+			 makeDynString(\"$componentName:\" + componentName, \"$descFile:\" + descFile , \"$typeOfDescription:\" + typeOfDescription));
+		 }
+
+}
+" 0
+
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  8 28 401 331
+"/** The table with installed components is filled with the installed components
+
+*/
+main()
+{
+  fwInstallation_getInstalledComponentsUI();
+}
+" 0
+"main(int row, string column, string value)
+{
+  string helpComponent;
+  bool centrallyManaged;
+	
+  if(column == \"helpFile\")
+  {
+    getValue(\"\", \"cellValueRC\", row, \"componentName\", helpComponent);
+    if(strpos(helpComponent, \"_\") == 0)
+      helpComponent = substr(helpComponent, 1, strlen(helpComponent));
+       
+		fwInstallation_showHelpFile(helpComponent);
+	}
+
+}
+
+" 0
+ 1 0 1 6 1 "componentName" 15 1 0 "s" 2
+LANG:1 4 Name
+LANG:10001 14 Component Name
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+180 "componentVersion" 4 1 0 "s" 2
+LANG:1 7 Version
+LANG:10001 7 version
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+60 "colStatus" 5 0 0 "s" 2
+LANG:1 8 Delete ?
+LANG:10001 8 Delete ?
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+70 "helpFile" 3 1 0 "s" 2
+LANG:1 4 Help
+LANG:10001 4 Help
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+50 "filesIssuesCount" 6 1 0 "s" 2
+LANG:1 12 Files Issues
+LANG:10001 4 Help
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+80 "filesIssues" 0 0 0 "s" 2
+LANG:1 10 fileIssues
+LANG:10001 4 Help
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+0 
+20 20 "" 1 2
+LANG:1 2 #1
+LANG:10001 2 #1
+8 30
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+20 7
+"ShowInstalledSubComponents"
+""
+1 248 8 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  246 6 414 29
+1
+T 
+2
+LANG:1 19 Show sub-components
+LANG:10001 24 Show also Sub-Components
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+E"main(int button, bool state)
+{
+	// get all installed components and display it in a table
+	fwInstallation_getInstalledComponentsUI();
+}" 0
+2 8
+"fileIssueFeedbackText"
+""
+1 21.99999999999992 302 E E E 1 E 0 E N "red" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 21.99999999999992 340 135 355
+0 2 2 "0s" 0 0 0 192 0 0  21.99999999999992 340 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 19 File issue feedback
+LANG:10001 79 Agent synchronization with System Configuration DB in progress. Please wait....
+10 9
+"fileIssueFeedbackArrow"
+""
+1 10 770 E E E 1 E 0 E N "red" E N "red" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.7259259259259259 0 0.6825000000000002 2.740740740740741 -184.5250000000002 1 E 5 10 770
+10 790
+20 780
+10 770
+10 790
+ 1
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

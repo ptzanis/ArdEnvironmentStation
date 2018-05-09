@@ -1,0 +1,488 @@
+V 13
+1
+LANG:1 0 
+PANEL,-1 -1 700 420 N "_3DFace" 0
+"main()
+{
+  init();
+}" 0
+ E E E E 1 -1 -1 0  12 30
+""0  1
+E "#uses \"fwInstallationDB.ctl\"
+#uses \"fwInstallationDBAgent.ctl\"
+
+// ------------------------------------------------------------------------------------------------
+
+init()
+{
+  bool isOk;
+  dyn_string dbPatches, pvssPatches;
+  dyn_dyn_mixed dbInfo, pvssInfo;
+  
+  clear();
+  
+   if(fwInstallationDB_connect())
+   {
+      DebugN(\"Could not connect to DB. Please, check connection parameters and availability of the server.\");
+      return;
+   }
+   
+  if(fwInstallationDBAgent_checkProjectPvssInfo(isOk, dbInfo, pvssInfo) != 0)
+  {
+     DebugN(\"ERROR -> Could not check consistency between PVSS and DB for PVSS setup info\");
+     return;
+  }
+  else
+  {
+    tfDbVersion.text = dbInfo[FW_INSTALLATION_DB_PVSS_INFO_VERSION_IDX][1];
+    tfPvssVersion.text = pvssInfo[FW_INSTALLATION_DB_PVSS_INFO_VERSION_IDX][1];
+    tfPvssOs.text = pvssInfo[FW_INSTALLATION_DB_PVSS_INFO_OS_IDX][1];
+    tfDbOs.text = dbInfo[FW_INSTALLATION_DB_PVSS_INFO_OS_IDX][1];    
+  }
+  
+  if(fwInstallationDBAgent_checkProjectPvssPatchesInfo(isOk, dbPatches, pvssPatches) != 0)
+  {
+     DebugN(\"ERROR -> Could not check consistency between PVSS and DB for PVSS patches info\");
+  }
+  else
+  {
+    for(int i = 1; i <= dynlen(dbPatches); i++)
+    {
+      slDbPatches.appendLine(\"patch\", dbPatches[i]);
+      if(dynContains(pvssPatches, dbPatches[i]) <= 0)
+      {
+        slDbPatches.cellBackColRC(slDbPatches.lineCount()-1, \"patch\", \"yellow\");
+      }
+    }
+    
+    for(int i = 1; i <= dynlen(pvssPatches); i++)
+    {
+      slPvssPatches.appendLine(\"patch\", pvssPatches[i]);
+      if(dynContains(dbPatches, pvssPatches[i]) <= 0)
+      {
+        slPvssPatches.cellBackColRC(slPvssPatches.lineCount()-1, \"patch\", \"yellow\");
+      }    
+    }
+  } 
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void clear()
+{
+  slPvssPatches.deleteAllLines();
+  slDbPatches.deleteAllLines();
+}
+
+
+
+
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 53
+"projectIndicatorBg"
+""
+1 150 440 E E E 1 E 1 E N "lightgrey" E N "lightgrey" E E
+ E E
+93 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 349 374
+6 54
+"databaseIndicatorBg"
+""
+1 150 440 E E E 1 E 1 E N "white" E N "white" E E
+ E E
+94 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 350 0 699 374
+2 55
+"projectIndicatorLabel"
+""
+1 10.00000000000011 254 E E E 1 E 1 E N "white" E N "_Window" E E
+ E E
+95 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 6.123233995736766e-17 -1 1 6.123233995736767e-17 -450 419 0 E 190 460 283 480
+0 2 2 "0s" 0 0 0 192 0 0  190 460 1
+1
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+0 1
+LANG:1 7 PROJECT
+2 56
+"databaseIndicatorLabel"
+""
+1 949.9999999999999 -104 E E E 1 E 1 E N "lightgrey" E N "_Window" E E
+ E E
+96 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 6.123233995736766e-17 1 -1 6.123233995736767e-17 1150 -59.00000000000003 0 E 190 460 294 480
+0 2 2 "0s" 0 0 0 192 0 0  190 460 1
+1
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+0 1
+LANG:1 8 DATABASE
+13 26
+"btnCheck"
+""
+1 10 385 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 25 Check PVSS_DB consistency
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 383 37 412
+
+P 
+4294967295
+"pictures/StandardIcons/refresh_20.png"
+1
+LANG:1 7 Refresh
+"main()
+{  
+  init();
+}" 0
+ E E E
+14 34
+"tfPvssVersion"
+""
+1 154 10 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+58 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  152 8 341 34
+2 "0s" 0 0 0 0 0 -1  E E E
+14 35
+"tfDbVersion"
+""
+1 10 28 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+60 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  472 8 661 34
+2 "0s" 0 0 0 0 0 -1  E E E
+2 42
+"projectOsLabel"
+""
+1 58 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+73 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 40 47 149 61
+0 2 2 "0s" 0 0 0 192 0 0  40 47 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 17 Operating system:
+14 44
+"tfPvssOs"
+""
+1 290 53 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+77 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  152 41 341 67
+2 "0s" 0 0 0 0 0 -1  E E E
+14 45
+"tfDbOs"
+""
+1 10 71 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+79 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  472 41 661 67
+2 "0s" 0 0 0 0 0 -1  E E E
+13 46
+"closeButton"
+""
+1 615 385 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+81 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  613 383 691 411
+
+T 
+1
+LANG:1 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+2 47
+"projectWinCCLabel"
+""
+1 40 14 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+82 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 40 14 131 28
+0 2 2 "0s" 0 0 0 192 0 0  40 14 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 14 WinCC version:
+2 48
+"dbWinCCLabel"
+""
+1 360 14 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 14 451 28
+0 2 2 "0s" 0 0 0 192 0 0  360 14 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 14 WinCC version:
+2 49
+"dbOsLabel"
+""
+1 360 47 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+86 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 47 469 61
+0 2 2 "0s" 0 0 0 192 0 0  360 47 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 17 Operating system:
+2 51
+"dbPatchesLabel"
+""
+1 360 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+90 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 360 86 485 100
+0 2 2 "0s" 0 0 0 192 0 0  360 86 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 20 Patches in database:
+2 52
+"projectPatchesLabel"
+""
+1 40 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+92 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 40 86 197 100
+0 2 2 "0s" 0 0 0 192 0 0  40 86 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 27 Patches in running project:
+25 57
+"slPvssPatches"
+""
+1 40 106 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+97 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  38 104 341 366
+EE 0 0 1 1 0 "patch" 24 1 0 "s" 1
+LANG:1 5 Patch
+E
+1
+LANG:1 0 
+
+280 
+20 20 10 0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+25 58
+"slDbPatches"
+""
+1 360 240 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+98 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  358 104 661 366
+EE 0 0 1 1 0 "patch" 24 1 0 "s" 1
+LANG:1 5 Patch
+E
+1
+LANG:1 0 
+
+280 
+20 20 10 0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

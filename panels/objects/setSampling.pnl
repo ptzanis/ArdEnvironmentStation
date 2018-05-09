@@ -1,0 +1,290 @@
+V 14
+1
+LANG:1 0 
+PANEL,-1 -1 500 209 N "_3DFace" 0
+E E E E E 1 -1 -1 0  -223 18.49999999999999
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"RECTANGLE1"
+""
+1 40 30 E E E 1 E 1 E N {0,0,0} E N {193,193,193} E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 3 2 1 E 1.431578947368421 0 1.111111111111111 -144.2631578947368 -83.33333333333334 1 E 40 30 990 120
+2 1
+"PRIMITIVE_TEXT1"
+""
+1 117.25 1.625000000000043 E E E 1 E 1 E N "FwAtlasBg" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+"transformable" "0"
+E E 0 1 3 2 1 E U  0 E 117.25 1.625000000000043 383 39
+0 2 2 "0s" 0 0 0 192 0 0  117.25 1.625000000000043 1
+1
+LANG:1 27 Utopia,-1,32,5,75,0,0,0,0,0
+0 1
+LANG:1 16 Archive Sampling
+2 2
+"PRIMITIVE_TEXT2"
+""
+1 74.99999999999994 80.722222222222 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+"transformable" "0"
+E E 0 1 3 2 1 E U  0 E 74.99999999999994 80.722222222222 248 103
+0 2 2 "0s" 0 0 0 192 0 0  74.99999999999994 80.722222222222 1
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 18 Set Sampling Time:
+2 4
+"PRIMITIVE_TEXT3"
+""
+1 311.9999999999999 80.70238095238061 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+"transformable" "0"
+E E 0 1 3 2 1 E U  0 E 311.9999999999999 80.70238095238061 386 103
+0 2 2 "0s" 0 0 0 192 0 0  311.9999999999999 80.70238095238061 1
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 7 minutes
+13 5
+"PUSH_BUTTON1"
+""
+1 205 140 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+5 0 0 0 0 0
+E E E
+8
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0  203 129 297 163
+
+T 
+1
+LANG:1 4 Set 
+"main()
+{
+   int sampling=spinTime.text();
+  dpSet(\"BME280.samplingTime\",sampling*60);
+
+
+  string dpe;
+  dyn_string dyn_dpe;
+  int dpfuct=9;
+  dyn_string dyn_dpfuct;
+
+  int timeInterval;
+  dpGet(\"BME280.samplingTime\",timeInterval);
+
+
+
+      dpe=getSystemName()+\"BME280.pressureMon:_original.._value\";
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+\"BME280.pressureMean:_dp_fct.._type\",63,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._param\",dyn_dpe,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._stat_type\",dyn_dpfuct,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._interval\",timeInterval,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._delay\",0,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._read_archive\",0,       
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._fct\",\"p1\");  
+ 
+ dpe=getSystemName()+\"BME280.temperatureMon:_original.._value\";
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+\"BME280.temperatureMean:_dp_fct.._type\",63,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._param\",dyn_dpe,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._stat_type\",dyn_dpfuct,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._interval\",timeInterval,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._delay\",0,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._read_archive\",0,       
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._fct\",\"p1\"); 
+ 
+ dpe=getSystemName()+\"BME280.humidityMon:_original.._value\";
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+\"BME280.humidityMean:_dp_fct.._type\",63,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._param\",dyn_dpe,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._stat_type\",dyn_dpfuct,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._interval\",timeInterval,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._delay\",0,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._read_archive\",0,       
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._fct\",\"p1\");  
+  
+  
+  PanelOff();
+   
+  
+  
+}" 0
+ E E "main()
+{
+  bool archiving;
+  dpGet(\"BME280.archiving\",archiving);
+
+  if(archiving)
+  {
+  this.enabled(FALSE);
+  archiveStatus.text(\"Archive under progress, stop Archive to set sampling!\");
+  }  
+    
+  
+}" 0
+
+13 6
+"PUSH_BUTTON2"
+""
+1 420 186.51 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+6 0 0 0 0 0
+E E E
+8
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 27 Utopia,-1,16,5,75,0,0,0,0,0
+0  418 178 495 203.7
+
+T 
+1
+LANG:1 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+21 7
+"spinTime"
+""
+1 250 83.73979591836725 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignVCenter"
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0  248 76.74206349206339 312 106.9801587301586
+0
+
+E
+E
+E
+
+N 1 1000 1 1 1 1
+2 9
+"archiveStatus"
+""
+1 12.99999999999989 155.75 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"layoutAlignment" "AlignNone"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+"transformable" "0"
+E E 0 1 3 2 1 E U  0 E 12.99999999999989 155.75 14 178.25
+0 2 2 "0s" 0 0 0 192 0 0  12.99999999999989 155.75 1
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 0 
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

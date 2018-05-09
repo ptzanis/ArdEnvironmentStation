@@ -1,0 +1,233 @@
+V 13
+2
+LANG:1 0 
+LANG:10001 25 fwInstallation_Dependency
+PANEL,-1 -1 500 240 N "_3DFace" 2
+"$componentName"
+"$strErrors"
+"main()
+{
+  dyn_string dsErrors = strsplit($strErrors, \"|\");
+  
+  for(int i = 1; i <= dynlen(dsErrors); i++)
+  {
+    dsErrors[i] = strrtrim(dsErrors[i], \" \");
+    dsErrors[i] = strltrim(dsErrors[i], \" \");
+    
+    errorList.appendItem(dsErrors[i]);
+  }
+  
+	txtWarning1.text = \"Installing \" + $componentName + \" will lead to these errors:\";
+	txtWarning2.text = $componentName + \" may not work properly. Continue?\";
+}
+
+
+
+" 0
+ E E E E 1 -1 -1 0  120 20
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" "main()
+{
+	int i;
+}" 0
+
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 1
+"txtWarning1"
+""
+1 83 8 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 85 10 370 24
+0 2 0 "0s" 0 0 0 192 0 0  85 10 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 51 Installing the component will lead to these errors:
+LANG:10001 11 txtWarning1
+2 2
+"txtWarning2"
+""
+1 83 168 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 85 170 374 184
+0 2 0 "0s" 0 0 0 192 0 0  85 170 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 46 The component may not work properly. Continue?
+LANG:10001 11 txtWarning2
+13 6
+"btnInstall_Delete"
+""
+1 443 315 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 37 Installs component despite the errors
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  331 203 409 231
+
+T 
+2
+LANG:1 2 OK
+LANG:10001 14 Install Anyway
+"main()
+{
+  PanelOffReturn(makeDynFloat(1), makeDynString(\"Install_Delete\"));
+}
+
+" 0
+ E E E
+13 5
+"btnDoNotInstall_Delete"
+""
+1 395 355 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+2
+LANG:1 31 Component will not be installed
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  413 203 491 231
+
+T 
+2
+LANG:1 6 Cancel
+LANG:10001 6 Cancel
+"main()
+{
+  PanelOffReturn(makeDynFloat(1), makeDynString(\"DoNotInstall_DoNotDelete\"));
+}
+" 0
+ E E E
+17 4
+"errorList"
+""
+1 84.99999999999999 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  83 28 491 161
+0
+
+E
+E
+E
+
+0 0
+6 18
+"backgroundRectangle"
+""
+1 110 10 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 74 239
+6 19
+"warningIcon"
+""
+1 10 20 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -2 15 2  0 0  "pictures/warning_nt.xpm" 4294967295 E 20 80 58 118
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

@@ -1,0 +1,10 @@
+ALTER TABLE FW_SYS_STAT_COMPUTER
+ADD (
+RACK_CODE varchar2(10),
+POSITION_IN_RACK number(3)
+);
+
+CREATE OR REPLACE VIEW fw_sys_stat_schema (version) AS
+SELECT '5.0.1'
+FROM dual;
+COMMIT;

@@ -1,0 +1,443 @@
+V 14
+2
+LANG:1 20 Select Directory ...
+LANG:10001 8 (NoName)
+PANEL,-1 -1 500 135 N "_3DFace" 0
+"/**
+
+fwInstallationSelectDirectory.pnl
+
+This panel is run from the main panel if the installation directory is not set. 
+It is used for choosing the installation directory. The user can either write the name of the directory 
+( if it does not exist it will be created ) or he can choose the existing directory. 
+If the chosen directory is not defined in proj_path in the config file - the file is then modified. 
+The new installation directory is also stored in the data point element - 
+fwInstallationDirectory.installationDirectoryPath:_original.._value of type _FwInstallationInformation .
+
+Required $-parameters:
+
+none
+
+Panels called from this panel:
+
+- fwInstallation/fwInstallation_messageInfo.pnl - when asking user if wants to register non-empty directory in config file and use it as installation directory
+
+*/
+
+main()
+{
+  string dp = fwInstallation_getInstallationDp();
+  
+  // create internal fwInstallation dp if it is not created yet
+  if(!dpExists(dp) && dpCreate(dp, \"_FwInstallationInformation\") != 0)
+  {
+    fwInstallation_throw(\"Internal fwInstallation dp does not exist and an attempt to create it failed, cannot continue\");
+    PanelOff();
+    return;
+  }
+  
+  // prepare a list of proposed paths that will be displayed in the drop-down list
+  dyn_string pathsToDisplay = _fwInstallation_proposeInstallationDirs();
+  
+  // retrieve current installation directory path
+  string sPath = \"\";
+  dpGet(dp + \".installationDirectoryPath\", sPath);
+  if(sPath != \"\")
+  {
+    fwInstallation_normalizePath(sPath);
+    int currInstDirPos = dynContains(pathsToDisplay, sPath);
+    if(currInstDirPos > 1)
+      dynRemove(pathsToDisplay, currInstDirPos);
+    if(currInstDirPos != 1)
+      dynInsertAt(pathsToDisplay, sPath, 1); // make sure that the current installation directory appears first
+  }
+  
+  // show directory proposals in the drop-down list
+  cbDestinationDir.items = pathsToDisplay;
+  cbDestinationDir.selectedPos(1);
+  
+  if(isDollarDefined(\"$msg\") && getDollarValue(\"$msg\") != \"\")
+    showErrorInfo(getDollarValue(\"$msg\"));
+}
+
+
+
+
+
+" 0
+ E E E E 1 -1 -1 0  28 56
+""0  1
+E "
+#uses \"fwInstallation.ctl\"
+
+void showErrorInfo(string message)
+{
+  txtWarning.text = message;
+  txtWarning.visible = true;
+  warningArrow.visible = true;
+}
+
+void clearErrorInfo()
+{
+  txtWarning.visible = false;
+  warningArrow.visible = false;
+}
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 3
+"infoLabel"
+""
+1 8 34 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 10 10 249 25
+0 2 0 "0s" 0 0 0 192 0 0  10 10 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 42 Select directory to install components in:
+LANG:10001 59 Select the directory where the components will be installed
+2 11
+"txtWarning"
+""
+1 20 127 E E E 1 E 0 E N {255,0,51} E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 22 104 129 119
+0 2 0 "0s" 0 0 0 192 0 0  22 104 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0 2
+LANG:1 15 Warning message
+LANG:10001 15 Warning message
+13 9
+"btnSelectSourceDir"
+""
+1 464 28 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+2
+LANG:1 20 Select the directory
+LANG:10001 20 Select the directory
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  462 26 491 55
+
+P 
+14215660
+"pictures/StandardIcons/Open_20.png"
+2
+LANG:1 0 
+LANG:10001 0 
+"main()
+{
+  clearErrorInfo();
+  
+  string sPath = cbDestinationDir.selectedText;   // Selected path in combo box
+  int pos = cbDestinationDir.selectedPos();
+  while(!isdir(sPath) && sPath != \"\") 
+    sPath = _fwInstallation_baseDir(sPath);
+  if(folderSelector(sPath) == 1 && strlen(sPath) > 0)
+  {
+    fwInstallation_normalizePath(sPath);
+    int pathPosition = dynContains(cbDestinationDir.items(), sPath);
+    if(pathPosition <= 0)
+    {
+      cbDestinationDir.appendItem(sPath);
+      pathPosition = cbDestinationDir.itemCount();
+    }
+    cbDestinationDir.selectedPos(pathPosition);
+  }
+}
+
+
+
+
+
+" 0
+ E E E
+13 5
+"btnOK"
+""
+1 333 100 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  331 98 409 126
+
+T 
+2
+LANG:1 2 OK
+LANG:10001 2 OK
+"main()
+{
+  clearErrorInfo();
+  
+  string sPath = cbDestinationDir.selectedText;
+  if(sPath == \"\")
+  {
+    showErrorInfo(\"Directory cannot be empty.\");
+    return;
+  }
+  fwInstallation_normalizePath(sPath);
+  
+  // ensure that it is an absolute path
+  bool isAbsolute;
+  if(_WIN32)
+    isAbsolute = (patternMatch(\"//*\", sPath) || patternMatch(\"?:/*\", sPath));
+  else
+    isAbsolute = patternMatch(\"/*\", sPath);
+  
+  if(!isAbsolute)
+  {
+    showErrorInfo(\"Please provide absolute path.\");
+    return;
+  }
+  
+  if(access(sPath, F_OK) == -1) // directory not accessible (doesn't exist)
+  {
+    if(!checkCreateDirectory.state(0)) // 'Create directory' option is not checked
+    {
+      showErrorInfo(\"Directory does not exist.\");
+      return;
+    }
+    
+    if(!mkdir(sPath) || !isdir(sPath)) // create directory
+    {
+      showErrorInfo(\"Failed to create provided directory.\");
+      return;
+    }
+  }
+  
+  // check if path is in config file, if not add it
+  bool isPathInConfig;
+  fwInstallation_isPathInConfigFile(sPath, isPathInConfig);
+  if(!isPathInConfig)
+  {
+    dyn_string fileNames = getFileNames(sPath, \"*\", FILTER_FILES | FILTER_DIRS);
+    int currDirPos = dynContains(fileNames, \".\");
+    if(currDirPos > 0) dynRemove(fileNames, currDirPos);
+    int prevDirPos = dynContains(fileNames, \"..\");
+    if(prevDirPos > 0) dynRemove(fileNames, prevDirPos);
+    if(dynlen(fileNames) > 0) // check if directory to be registered in config is empty
+    {
+      showErrorInfo(\"Given directory is not empty.\");
+      dyn_string ds;
+      dyn_float df;
+      ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallation_messageInfo.pnl\", \"Confirm adding directory to config\",
+                                     makeDynString(\"$text:Given directory is not empty, are you sure\\nthat you want to add it to project config file\\n\" + 
+                                                   \"and use it as installation directory?\"), df, ds);
+      if(dynlen(df) < 1 || df[1] < 1) // user choose not to use non-empty directory as installation path
+        return;
+      
+    }
+    if(fwInstallation_addProjPath(sPath, 999) != 0)
+    {//failed to register provided directory as a project path
+      showErrorInfo(\"Choose directory defined in config file.\");
+      return;
+    }
+  }
+  
+  dpSet(fwInstallation_getInstallationDp() + \".installationDirectoryPath\", sPath);
+  PanelOff();
+}
+
+
+
+
+
+
+
+
+
+" 0
+ E E E
+13 6
+"btnCancel"
+""
+1 415 100 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+4 0 0 0 0 0
+"main()
+{
+  showErrorInfo(\"First project directory will be chosen by default.\");
+}
+
+" 0
+ E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  413 98 491 126
+
+T 
+2
+LANG:1 6 Cancel
+LANG:10001 6 Cancel
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+20 13
+"checkCreateDirectory"
+""
+1 10 60 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,13,5,40,0,0,0,0,0
+0  8 58 172 81
+1
+T 
+2
+LANG:1 16 Create directory
+LANG:10001 18 Create directory ?
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE10 14
+"warningArrow"
+""
+1 10 770 E E E 1 E 0 E N "red" E N "red" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 0.7259259259259259 0 0.6825000000000002 2.740740740740741 -420.5250000000002 1 E 5 10 770
+10 790
+20 780
+10 770
+10 790
+ 1
+22 15
+"cbDestinationDir"
+""
+1 10 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignNone"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 28 462 54
+0
+
+E
+E
+E
+ 1 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

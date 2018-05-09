@@ -1,0 +1,1019 @@
+V 13
+2
+LANG:1 23 Manual Peer Importation
+LANG:10001 0 
+PANEL,-1 -1 700 610 N "_3DFace" 2
+"$componentsToBeInstalled"
+"$componentsToBeRemoved"
+"main()
+{
+  init();
+}
+
+" 0
+ E E E E 1 -1 -1 0  100 210
+""0  1
+E "const string SOURCE_DIR_TEXT = \"Enter path to XML files ...\";
+mapping g_mXmlFilePath, g_mXmlFilePathRemoved;
+
+// ------------------------------------------------------------------------------------------------
+
+void enablePanel(bool enable)
+{
+  btnSelectSourceDir.enabled = enable;
+  btnCancel.enabled = enable;
+  btnSync.enabled = enable;
+  cbScanRecursively.enabled = enable;
+}
+
+// ------------------------------------------------------------------------------------------------
+    
+void init()
+{
+  bool found = false;
+  tblComponentsToBeInstalled.deleteAllLines();
+  tblComponentsToBeRemoved.deleteAllLines();
+  
+  dyn_string componentsToBeInstalledInfo = strsplit($componentsToBeInstalled, \"%\");
+  dyn_string componentsToBeRemovedInfo = strsplit($componentsToBeRemoved, \"%\");
+  
+  txtSourceDir.text = SOURCE_DIR_TEXT;
+  txtSourceDir.foreCol = \"grey\";
+
+  initTables();
+  initUi();
+  
+  for(int i =1; i <= dynlen(componentsToBeInstalledInfo); i++)
+  {
+    strreplace(componentsToBeInstalledInfo[i], \" \", \"\");
+    dyn_string componentInfo = strsplit(componentsToBeInstalledInfo[i], \"|\");
+    
+    //check that the component XML file can be accessed:
+    if(access(componentInfo[FW_INSTALLATION_DB_COMPONENT_DESC_FILE_IDX], R_OK))
+    {
+      fwInstallation_throw(\"Component XML file is not readable: \" + componentInfo[FW_INSTALLATION_DB_COMPONENT_DESC_FILE_IDX], \"WARNING\", 10);
+      found = false;
+    }
+    else
+    {
+      found = true;
+    }
+
+    if(componentInfo[7] == \"TRUE\")
+    {
+      tblComponentsToBeInstalled.appendLine(\"component\", \"_\" + componentInfo[FW_INSTALLATION_DB_COMPONENT_NAME_IDX], 
+                                          \"version\", componentInfo[FW_INSTALLATION_DB_COMPONENT_VERSION_IDX]);
+      g_mXmlFilePath[i-1] = componentInfo[FW_INSTALLATION_DB_COMPONENT_DESC_FILE_IDX];
+    }
+    else
+    {
+      tblComponentsToBeInstalled.appendLine(\"component\", componentInfo[FW_INSTALLATION_DB_COMPONENT_NAME_IDX], 
+                                          \"version\", componentInfo[FW_INSTALLATION_DB_COMPONENT_VERSION_IDX]);
+      g_mXmlFilePath[i-1] = componentInfo[FW_INSTALLATION_DB_COMPONENT_DESC_FILE_IDX];
+    }
+    
+    int n = (tblComponentsToBeInstalled.lineCount()-1); //line number
+    
+    if(!found)
+    {
+      tblComponentsToBeInstalled.cellBackColRC(n, \"component\", \"red\");
+      tblComponentsToBeInstalled.cellBackColRC(n, \"version\", \"red\");
+    }
+  }
+  
+  for(int i =1; i <= dynlen(componentsToBeRemovedInfo); i++)
+  {
+    strreplace(componentsToBeRemovedInfo[i], \" \", \"\");
+    dyn_string componentInfo = strsplit(componentsToBeRemovedInfo[i], \"|\");
+    //check that the component XML file can be accessed:
+    if(access(componentInfo[FW_INSTALLATION_DB_COMPONENT_DESC_FILE_IDX], R_OK))
+    {
+      fwInstallation_throw(\"Component XML file is not readable: \" + componentInfo[FW_INSTALLATION_DB_COMPONENT_DESC_FILE_IDX], \"WARNING\", 10);
+      found = false;
+    }
+    else 
+    {
+      found = true;
+    }
+    
+    if(componentInfo[7] == \"TRUE\")
+    {
+      tblComponentsToBeRemoved.appendLine(\"component\", \"_\" + componentInfo[FW_INSTALLATION_DB_COMPONENT_NAME_IDX], 
+                                          \"version\", componentInfo[FW_INSTALLATION_DB_COMPONENT_VERSION_IDX]);
+      g_mXmlFilePathRemoved[i-1] = componentInfo[FW_INSTALLATION_DB_COMPONENT_DESC_FILE_IDX];
+    }
+    else
+    {
+      tblComponentsToBeRemoved.appendLine(\"component\", componentInfo[FW_INSTALLATION_DB_COMPONENT_NAME_IDX], 
+                                          \"version\", componentInfo[FW_INSTALLATION_DB_COMPONENT_VERSION_IDX]);
+      g_mXmlFilePathRemoved[i-1] = componentInfo[FW_INSTALLATION_DB_COMPONENT_DESC_FILE_IDX];
+    }
+
+    int n = (tblComponentsToBeRemoved.lineCount()-1); //line number
+    
+    if(!found)
+    {
+      tblComponentsToBeRemoved.cellBackColRC(n, \"component\", \"red\");
+      tblComponentsToBeRemoved.cellBackColRC(n, \"version\", \"red\");
+    }    
+  }
+  
+  tblComponentsToBeInstalled.deleteSelection();
+  tblComponentsToBeRemoved.deleteSelection();
+}
+
+// ------------------------------------------------------------------------------------------------
+
+initTables()
+{
+  tblComponentsToBeInstalled.tableMode(TABLE_SELECT_BROWSE);
+  tblComponentsToBeInstalled.selectByClick(TABLE_SELECT_LINE);
+  tblComponentsToBeRemoved.tableMode(TABLE_SELECT_BROWSE);
+  tblComponentsToBeRemoved.selectByClick(TABLE_SELECT_LINE);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+initUi()
+{
+  LayerOff(3);
+  LayerOff(4);
+  LayerOff(5);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void locateXmlFile(int row)
+{
+  string sDescFile = g_mXmlFilePath[row];
+  string component = tblComponentsToBeInstalled.cellValueRC(row, \"component\");
+  string version = tblComponentsToBeInstalled.cellValueRC(row, \"version\");
+  
+  dyn_string ds = strsplit(sDescFile, \"/\");
+  sDescFile = ds[dynlen(ds)];
+  
+  string newDescFile;
+  string sPath;
+  string dp = fwInstallation_getInstallationDp();
+  dpGet(dp + \".lastSourcePath\", sPath);
+  
+  if(access(sPath, F_OK) < 0) //directory does not exist
+    sPath = PROJ_PATH;
+
+  fileSelector(newDescFile, sPath, false, sDescFile);
+  if(newDescFile != \"\")
+  {
+    if (_WIN32)
+    { 
+      strreplace( newDescFile, \"/\", \"//\" );
+    }
+    
+    strreplace(newDescFile, \"//\", \"/\" );
+    //check the version of the component
+    dyn_string values;
+    dyn_anytype attribs;
+    
+    fwInstallationXml_getTag(newDescFile, \"name\", values, attribs);
+    string xmlComponent = \"\";
+    if(dynlen(values)) xmlComponent = values[1];
+    
+    dynClear(values);
+    dynClear(attribs);
+    
+    fwInstallationXml_getTag(newDescFile, \"version\", values, attribs);
+    string xmlVersion = \"\";
+    if(dynlen(values)) xmlVersion = values[1];
+    
+    if(component != xmlComponent)
+    {
+      ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"Invalid component name\", makeDynString(\"$1:Name mismatch. XML: \" + xmlComponent + \" differs from: \" + component + \"\\nThis component cannot be installed\"));
+      return;
+    }
+    
+    if(version != xmlVersion)
+    {
+      ChildPanelOnCentralModal(\"vision/MessageInfo1\", \"Invalid component version\", makeDynString(\"$1:Version mismatch. XML: \" + xmlVersion + \" differs from: \" + version + \"\\nThis component cannot be installed\"));
+      return;
+    }
+    
+    g_mXmlFilePath[row] = newDescFile;
+    tblComponentsToBeInstalled.cellBackColRC(row, \"component\", \"_Window\");
+  }
+}
+
+
+" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+25 1
+"tblComponentsToBeInstalled"
+""
+1 9.999999999999989 55 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  8 53 341 347
+E"main(int row, string column, string value)
+{
+  string sComponentName = this.getLineN(row)[1];
+  string sColor = this.cellBackColRC(row, column);
+  
+  LayerOff(2);
+  LayerOn(3);
+
+  locateXMLButton.enabled(TRUE);  
+  
+  xmlFilePathField.text = g_mXmlFilePath[row];
+  detailFrame.text = \"Details of \" + sComponentName;
+  
+  if(\"red\" == sColor)
+  {
+    xmlStateRectangle.backCol(sColor);
+    xmlStateLabel.text = \"XML file not accessible: \" + sComponentName + \" will not be installed.\";
+  }
+  else
+  {
+    xmlStateRectangle.backCol(\"green\");
+    xmlStateLabel.text = \"XML file OK.\";
+  }
+}
+
+
+" 0
+ 1 0 1 2 0 "component" 21 1 0 "s" 2
+LANG:1 9 Component
+LANG:10001 9 Component
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+240 "version" 5 1 0 "s" 2
+LANG:1 7 Version
+LANG:10001 7 Version
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+70 
+20 20 10 0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+13 4
+"btnCancel"
+""
+1 614.9999999999998 575 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  613 573 691 601
+
+T 
+2
+LANG:1 6 Cancel
+LANG:10001 6 Cancel
+"main()
+{
+  PanelOffReturn(makeDynFloat(0.), makeDynString(\"Cancel\"));
+}
+" 0
+ E E E
+13 5
+"btnSync"
+""
+1 408 575 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  406 573 609 601
+
+T 
+2
+LANG:1 30 Import (I know what I'm doing)
+LANG:10001 29 Import, I know what I'm doing
+"main()
+{
+  dyn_string descFiles = makeDynString();
+  dyn_string allDescFiles = makeDynString();
+  dyn_string wrongComponents = makeDynString();
+  dyn_string allComponents = makeDynString();
+  dyn_string wrongVersions = makeDynString();
+  dyn_string allVersions = makeDynString();
+  
+  for(int i = 0 ; i < tblComponentsToBeInstalled.lineCount(); i++)
+  {
+    dynAppend(allDescFiles,  g_mXmlFilePath[i]);
+    dynAppend(allComponents, tblComponentsToBeInstalled.cellValueRC(i, \"component\"));
+    dynAppend(allVersions, tblComponentsToBeInstalled.cellValueRC(i, \"version\"));
+  }
+  
+  //are all files readable?
+  for(int i = 1; i <= dynlen(allDescFiles); i++)
+  {
+DebugN(access(allDescFiles[i], R_OK));
+
+
+    if(access(allDescFiles[i], R_OK))
+    {
+      dynAppend(wrongComponents, allComponents[i]);
+      dynAppend(wrongVersions, allVersions[i]);
+    }
+    else
+    {
+      dynAppend(descFiles, allDescFiles[i]);
+    }
+  }
+  
+  dyn_string ds;
+  dyn_float df;
+  
+  DebugN(\"wrongComponents, wrongVersions, descFiles\", wrongComponents, wrongVersions, descFiles);
+  
+  if(dynlen(wrongComponents))
+  {
+    ChildPanelOnCentralModalReturn(\"fwInstallation/fwInstallation_reduSyncShowWrongComponents.pnl\", 
+                                   \"Confirm ...\", 
+                                   makeDynString(\"$wrongComponents:\" + wrongComponents, \"$wrongVersions:\" + wrongVersions), 
+                                   df, ds);  
+  }
+  
+  int deleteFiles = cbDeleteFiles.state(0);
+  if((dynlen(wrongComponents) == 0 && dynlen(descFiles))||
+     dynlen(df) && df[1] == 1. && dynlen(descFiles)) PanelOffReturn(makeDynFloat(1., deleteFiles), descFiles);
+  else PanelOffReturn(makeDynFloat(0.), makeDynString());
+}
+
+" 0
+ E E E
+2 7
+"installLocalLabel"
+""
+1 10 35 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 10 35 140 49
+0 2 2 "0s" 0 0 0 192 0 0  10 35 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 24 To be installed locally:
+LANG:10001 34 To be installed in this redu peer:
+2 8
+"removeLocalLabel"
+""
+1 360 35 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 360 35 490 49
+0 2 2 "0s" 0 0 0 192 0 0  360 35 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 22 To be removed locally:
+LANG:10001 33 To be removed from this redu peer
+25 11
+"tblComponentsToBeRemoved"
+""
+1 802 87 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  358 53 691 347
+E"main(int row, string column, string value)
+{
+  string sComponentName = this.getLineN(row)[1];
+  string sColor = this.cellBackColRC(row, column);
+  
+  LayerOff(2);
+  LayerOn(3);
+  
+  locateXMLButton.enabled(FALSE);
+  
+  xmlFilePathField.text = g_mXmlFilePathRemoved[row];
+  detailFrame.text = \"Details of \" + sComponentName;
+  
+  if(\"red\" == sColor)
+  {
+    xmlStateRectangle.backCol(sColor);
+    xmlStateLabel.text = \"XML file not accessible: \" + sComponentName + \" will not be installed.\";
+  }
+  else
+  {
+    xmlStateRectangle.backCol(\"green\");
+    xmlStateLabel.text = \"XML file OK.\";
+  }
+}
+" 0
+ 1 0 1 2 0 "component" 21 1 0 "s" 2
+LANG:1 9 Component
+LANG:10001 9 Component
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+240 "version" 5 1 0 "s" 2
+LANG:1 7 Version
+LANG:10001 7 Version
+E
+2
+LANG:1 0 
+LANG:10001 0 
+
+70 
+20 20 10 0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+30 32
+"globalSettingsFrame"
+""
+1 10 422 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+32 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 0 1 0 1 E 6.008849557522123 0 1.890625 -50.08849557522123 -354.84375 0 E 10 422 124 487
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 15 Global settings
+2 27
+"globalComponentDirectory"
+""
+1 21.00000000000001 465.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 21.00000000000001 465.0000000000001 147 479
+0 2 2 "0s" 0 0 0 192 0 0  21.00000000000001 465.0000000000001 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 20 Component directory:
+14 19
+"txtSourceDir"
+""
+1 430.0000000000001 371 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+19 0 0 0 0 0
+"main()
+{
+  if(this.text == SOURCE_DIR_TEXT)
+  {
+    this.text = \"\";
+    this.foreCol = \"_3DText\";
+  }
+}" 0
+ "main()
+{
+  if(this.text == \"\" || this.text == \" \")
+  {
+    this.text = SOURCE_DIR_TEXT;
+    this.foreCol = \"grey\";
+  }
+}" 0
+ E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  19 483 651 509
+3 "0s" 0 0 0 0 0 -1  E E "main()
+{
+  string systemName; 
+  bool scanRecursively = cbScanRecursively.state(0);
+  
+  if(shapeExists(\"cbSystem\"))
+    systemName = cbSystem.text;
+  else
+    systemName = \"\";
+      
+	fwInstallation_getComponentsInfo(\"tblAvailableComponents\", \"txtSourceDir\", systemName, scanRecursively);
+}" 0
+
+20 23
+"cbDeleteFiles"
+""
+1 190 511 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  19 532 272 555
+1
+T 
+2
+LANG:1 36 Delete files after component removal
+LANG:10001 35 Delete files upon component removal
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+0
+EE20 21
+"cbScanRecursively"
+""
+1 545 493 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  533 461 657 484
+1
+T 
+2
+LANG:1 16 Scan recursively
+LANG:10001 16 Scan recursively
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE13 20
+"btnSelectSourceDir"
+""
+1 183 230.0000000000001 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  651 481 680 510
+
+P 
+14215660
+"pictures/StandardIcons/Open_20.png"
+2
+LANG:1 0 
+LANG:10001 0 
+"main()
+{
+  string sPath;
+  bool scanRecursively = cbScanRecursively.state(0);
+  string dp = fwInstallation_getInstallationDp();
+	
+  txtSourceDir.foreCol = \"_3DText\";
+  dpGet(dp + \".lastSourcePath\", sPath);
+  folderSelector(sPath);
+
+  if(sPath != 0)
+  {
+	    sPath += \"/\";
+     if (_WIN32) strreplace( sPath, \"/\", \"//\" ); 
+     strreplace( sPath, \"//\", \"/\" );
+     txtSourceDir.text = sPath;  
+     dpSet(\"fwInstallationInfo.lastSourcePath\", sPath);
+  }
+  
+  enablePanel(false);
+  // refresh the graphic tables with components
+  dyn_string allFiles;
+  
+  if(cbScanRecursively.state(0))
+    allFiles = fwInstallation_getFileNamesRec(sPath, \"*.xml\");
+  else
+    allFiles = getFileNames(sPath, \"*.xml\");
+  
+  for(int i = 0; i< tblComponentsToBeInstalled.lineCount(); i++)
+  {
+    string sDescFile =  g_mXmlFilePath[i];
+    string component = tblComponentsToBeInstalled.cellValueRC(i, \"component\");
+    string version = tblComponentsToBeInstalled.cellValueRC(i, \"version\");
+    
+    dyn_string ds = strsplit(sDescFile, \"/\");
+    sDescFile = ds[dynlen(ds)];
+    int found = -1;
+    string newDescFile = \"\";
+    string fullPathFilename;
+    
+    for(int j = 1; j <= dynlen(allFiles); j++)
+    {
+      strreplace(allFiles[j], \"\\\\\", \"/\");
+      fullPathFilename = sPath + allFiles[j];
+      if(patternMatch(\"*/\" + sDescFile, fullPathFilename))
+      {
+        //check the version of the component
+        dyn_string values;
+        dyn_anytype attribs;
+
+        dynClear(values);
+        dynClear(attribs);
+        
+        fwInstallationXml_getTag(fullPathFilename, \"name\", values, attribs);
+        string xmlComponent = \"\";
+        if(dynlen(values)) xmlComponent = values[1];
+    
+        dynClear(values);
+        dynClear(attribs);
+    
+        fwInstallationXml_getTag(fullPathFilename, \"version\", values, attribs);
+        string xmlVersion = \"\";
+        if(dynlen(values)) xmlVersion = values[1];
+        
+        dyn_string ds;
+        dyn_float df;
+
+        if(component != xmlComponent)
+        {
+          ChildPanelOnCentralModalReturn(\"vision/MessageInfo1\", \"Invalid component name\", makeDynString(\"$1:\"+component+\": name mismatch.\\nXML: \" + xmlComponent + \" differs from: \" + component + \".\\nThis component cannot be installed\"), df, ds);
+          continue;
+        }
+    
+        if(version != xmlVersion)
+        {
+          ChildPanelOnCentralModalReturn(\"vision/MessageInfo1\", \"Invalid component version\", makeDynString(\"$1:\"+component+\": version mismatch.\\nXML: \" + xmlVersion + \" differs from: \" + version + \".\\nThis component cannot be installed\"), df, ds);
+          continue;
+        }
+        
+        found = i;
+        newDescFile = fullPathFilename;
+        break;
+      }
+    }
+    
+    if(found >= 0 && newDescFile != \"\")
+    {
+      g_mXmlFilePath[found] = newDescFile;
+      tblComponentsToBeInstalled.cellBackColRC(found, \"component\", \"_Window\");      
+    }
+  }  
+  
+  enablePanel(true);
+}
+
+" 0
+ E E E
+4 33
+"separator"
+""
+1 21.00000000000001 522 E E E 1 E 1 E N "darkgrey" E N {255,255,255} E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E  21 522 678 522
+6 34
+"bgRectangle"
+""
+1 20 530 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E -1 -1 1268 29
+2 35
+"title"
+""
+1 7.999999999999986 2 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 9.999999999999986 4 253 24
+0 2 0 "0s" 0 0 0 192 0 0  9.999999999999986 4 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,40,0,0,0,0,0
+0 2
+LANG:1 27 Manual Peer Synchronization
+LANG:10001 47 JCOP Framework Installation Description Creator
+0
+LAYER, 1 
+1
+LANG:1 0 
+6 29
+"noComponentBg"
+""
+1 8 48 E E E 0 E 1 E N {0,0,0} E N "lightgrey" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 7.105427357601002e-15 20 1 E 10 336 689 412
+2 30
+"noComponentText"
+""
+1 348 382 E E E 0 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 232 384 468 404
+0 2 0 "0s" 0 0 0 193 0 0  350 384 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,14,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 26 Please select a component.
+LANG:10001 56 Click "Add" to initialize faceplate trend for this type.
+0
+LAYER, 2 
+1
+LANG:1 0 
+6 15
+"xmlStateRectangle"
+""
+1 270 310 E E E 1 E 1 E N "_Transparent" E N "red" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 614 88.00000000000006 1 E 20 290 35 305
+2 16
+"xmlStateLabel"
+""
+1 627 378 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 302 378 627 392
+0 2 2 "0s" 0 0 0 194 0 0  627 378 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 57 XML file not accessible: Component will not be installed.
+LANG:10001 64 Component Instalaltion will be skipped as XML file is not found.
+14 24
+"xmlFilePathField"
+""
+1 430.0000000000001 337 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  19 396 651 422
+2 "0s" 0 0 0 0 0 -1  E E E
+13 25
+"locateXMLButton"
+""
+1 183 143.0000000000001 E E E 1 E 1 E N {0,0,0} E N "_Button" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+2
+LANG:1 31 Locate the path of the xml file
+LANG:10001 0 
+
+0
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0  651 394 680 423
+
+P 
+14215660
+"pictures/StandardIcons/Open_20.png"
+2
+LANG:1 0 
+LANG:10001 0 
+"main()
+{
+  int iRow = tblComponentsToBeInstalled.getSelectedLines()[1];
+  
+  locateXmlFile(iRow);
+}" 0
+ E E E
+30 26
+"detailFrame"
+""
+1 10 282 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+26 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 0 1 0 1 E 0.8705128205128205 0 0.6440677966101694 1.294871794871802 174.3728813559322 0 E 10 282 791 401
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 20 Details of component
+2 28
+"xmlPathLabel"
+""
+1 21.00000000000001 378.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 21.00000000000001 378.0000000000001 101 392
+0 2 2 "0s" 0 0 0 192 0 0  21.00000000000001 378.0000000000001 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 14 XML file path:
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

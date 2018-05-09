@@ -1,0 +1,394 @@
+V 13
+1
+LANG:1 21 DB Sync Configuration
+PANEL,-1 -1 300 285 N "_3DFace" 0
+"main()
+{
+  int exportComponents;
+  dyn_int options;
+  
+  fwInstallationDBAgent_getSynchronizationOptions(options);
+  if(fwInstallationDB_getCentrallyManaged())
+  {
+    exportComponents = options[FW_INSTALLATION_DB_FW_COMPONENTS_FLAG_IDX];
+    setValue(\"cbFwComponents\", \"enabled\", true);
+  }else
+  {
+    exportComponents = 0;
+    setValue(\"cbFwComponents\", \"enabled\", false);
+  }
+        
+  setMultiValue(\"cbComputer\", \"state\", 0, options[FW_INSTALLATION_DB_COMPUTER_FLAG_IDX],
+                \"cbPvss\", \"state\", 0, options[FW_INSTALLATION_DB_PVSS_FLAG_IDX],
+                \"cbProject\", \"state\", 0, options[FW_INSTALLATION_DB_PROJECT_FLAG_IDX],
+                \"cbManagers\", \"state\", 0, options[FW_INSTALLATION_DB_MANAGERS_FLAG_IDX],
+                \"cbFwComponents\", \"state\", 0, exportComponents,
+                \"cbExternalProcesses\", \"state\", 0, options[FW_INSTALLATION_DB_EXTERNAL_PROCESSES_FLAG_IDX],
+                \"cbDistPeers\", \"state\", 0, options[FW_INSTALLATION_DB_DIST_PEERS_FLAG_IDX]);
+      
+}" 0
+ E E E E 1 -1 -1 0  34 38
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+20 1
+"cbComputer"
+""
+1 20 88 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 58 242 81
+1
+T 
+1
+LANG:1 20 Computer information
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE20 2
+"cbPvss"
+""
+1 22 113 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 83 242 106
+1
+T 
+1
+LANG:1 28 PVSS version and patch level
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE20 3
+"cbProject"
+""
+1 22 138 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 108 242 131
+1
+T 
+1
+LANG:1 35 PVSS system and project information
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE20 4
+"cbManagers"
+""
+1 22 163 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 133 242 156
+1
+T 
+1
+LANG:1 26 PVSS Manager configuration
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE20 5
+"cbFwComponents"
+""
+1 10 160 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 158 242 181
+1
+T 
+1
+LANG:1 32 Framework components information
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE20 7
+"cbExternalProcesses"
+""
+1 20 238 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 208 242 231
+1
+T 
+1
+LANG:1 30 External processes information
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE13 8
+"okButton"
+""
+1 133 250 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  131 248 209 276
+
+T 
+1
+LANG:1 2 OK
+"main()
+{
+  int computerInfo;
+  int pvssInfo;
+  int projectInfo;
+  int managersInfo;
+  int fwComponentsInfo;
+  int externalProcessesInfo;
+  int distPeersInfo;
+
+  getMultiValue(\"cbComputer\", \"state\", 0, computerInfo,
+                \"cbPvss\", \"state\", 0, pvssInfo,
+                \"cbProject\", \"state\", 0, projectInfo,
+                \"cbManagers\", \"state\", 0, managersInfo,
+                \"cbFwComponents\", \"state\", 0, fwComponentsInfo,
+                \"cbExternalProcesses\", \"state\", 0, externalProcessesInfo,
+                \"cbDistPeers\", \"state\", 0, distPeersInfo);
+  
+  fwInstallationDBAgent_setSynchronizationOptions(makeDynInt(computerInfo, pvssInfo, projectInfo, managersInfo, fwComponentsInfo, externalProcessesInfo, distPeersInfo));
+  
+  PanelOffReturn(makeDynFloat(computerInfo, pvssInfo, projectInfo, managersInfo, fwComponentsInfo, externalProcessesInfo, distPeersInfo), makeDynString(\"OK\"));
+}" 0
+ E E E
+13 9
+"cancelButton"
+""
+1 215 250 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  213 248 291 276
+
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+  bool computerInfo;
+  bool pvssInfo;
+  bool projectInfo;
+  bool managersInfo;
+  bool fwComponentsInfo;
+  bool externalProcessesInfo;
+  
+  
+  PanelOffReturn(makeDynFloat(0.), makeDynString(\"Cancel\"));
+}" 0
+ E E E
+20 10
+"cbDistPeers"
+""
+1 20 213 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 183 242 206
+1
+T 
+1
+LANG:1 22 Dist Peers information
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E
+EE2 11
+"infoLabel"
+""
+1 10 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 10 30 137 44
+0 2 2 "0s" 0 0 0 192 0 0  10 30 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 20 Synchronise with DB:
+6 12
+"redundancyInfoBg"
+""
+1 0 650 E E E 1 E 1 E N {255,102,102} E N {255,102,102} E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 0 -732 1 E 0 732 1269 754
+2 13
+"txRedundancy"
+""
+1 10 3 E E E 1 E 1 E N "white" E N "_Window" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  0 E 10 3 185 17
+0 2 2 "0s" 0 0 0 192 0 0  10 3 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 25 Arial,8,-1,5,50,0,0,0,0,0
+0 2
+LANG:1 30 Implementation not functional.
+LANG:10001 12 txRedundancy
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

@@ -1,0 +1,262 @@
+V 14
+1
+LANG:1 0 
+PANEL,-1 -1 500 240 N "_3DFace" 2
+"$componentName"
+"$strDependentNames"
+"/**
+  This panel displays the list of the components which require the component being deleted ( component deletion ) 
+
+  Required $-parameters:
+
+  $strDependentNames - string - the names of components, separated with |, which require the component being deleted ( deleting ), the names of components=versions, separated by |, which require the comonent being installed (installing)
+  $componentName - string - the name of the component which requires other components ( installing ) or is required by other components ( deleting )
+
+  Panels called from this panel:
+
+  none
+*/
+
+main()
+{
+	string sComponentName;
+	dyn_string dsDependentComponents;
+
+	dsDependentComponents = strsplit($strDependentNames, \"|\");
+	
+	for(int i = 1; i <= dynlen(dsDependentComponents); i++)
+	{
+		sComponentName = strsplit(dsDependentComponents[i], \"=\")[1];
+		
+    sComponentName = strrtrim(sComponentName, \" \");
+    sComponentName = strltrim(sComponentName, \" \");
+    
+		dependentComponentsList.appendItem(sComponentName);
+	}
+	
+	txtWarning1.text = $componentName + \" is required by these components:\";
+	txtWarning2.text = \"Deleting \" + $componentName + \" may corrupt them. Continue?\";
+}
+" 0
+ E E E E 1 -1 -1 0  120 20
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" "main()
+{
+	int i;
+}" 0
+
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 1
+"txtWarning1"
+""
+1 83 8 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 85 10 350 25
+0 2 0 "0s" 0 0 0 192 0 0  85 10 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 42 Component is required by these components:
+2 2
+"txtWarning2"
+""
+1 83 168 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 85 170 374 185
+0 2 0 "0s" 0 0 0 192 0 0  85 170 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 46 Deleting component may corrupt them. Continue?
+13 6
+"okButton"
+""
+1 333 205 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 35 Deletes only the selected component
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  331 203 409 231
+
+T 
+1
+LANG:1 2 OK
+"main()
+{
+	dyn_float value1;
+	dyn_string value2;
+
+// begin  setting the return values for the parent panel
+ 
+	value1 = makeDynFloat(1);
+	value2 = makeDynString(\"Install_Delete\");
+	 
+// return values to the parent panel
+  PanelOffReturn(value1, value2);
+}
+
+
+" 0
+ E E E
+13 5
+"cancelButton"
+""
+1 415 205 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 23 Nothing will be deleted
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  413 203 491 231
+
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+
+	dyn_float value1;
+	dyn_string value2;
+
+// begin  setting the return values for the parent panel
+ 
+	value1 = makeDynFloat(1);
+	value2 = makeDynString(\"DoNotInstall_DoNotDelete\");
+	 
+// return values to the parent panel
+  PanelOffReturn(value1, value2);
+}
+
+
+" 0
+ E E E
+17 4
+"dependentComponentsList"
+""
+1 85 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  83 28 491 161
+0
+
+E
+E
+E
+
+0 0
+6 14
+"backgroundRectangle"
+""
+1 110 10 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 74 239
+6 15
+"warningIcon"
+""
+1 10 20 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -2 15 2  0 0  "pictures/warning_nt.xpm" 4294967295 E 20 80 58 118
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

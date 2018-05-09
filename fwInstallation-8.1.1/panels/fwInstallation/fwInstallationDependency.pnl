@@ -1,0 +1,371 @@
+V 14
+2
+LANG:1 0 
+LANG:10001 25 fwInstallation_Dependency
+PANEL,-1 -1 500 240 N "_3DFace" 4
+"$componentName"
+"$fileComponentName"
+"$fileComponentVersion"
+"$strDependentNames"
+"/**
+  This panel displays the list of the components which require the component being deleted ( component deletion ) 
+  or the list with components which are not installed and required by the component being installed ( component installation ).
+
+  Required $-parameters:
+
+  $strDependentNames - string - the names of components, separated with |, which require the component being deleted ( deleting ), the names of components=versions, separated by |, which require the comonent being installed (installing)
+  $componentName - string - the name of the component which requires other components ( installing ) or is required by other components ( deleting )
+
+  Panels called from this panel:
+
+  none
+*/
+
+// ------------------------------------------------------------------------------------------------
+
+main()
+{
+	string sDependentComponentName;
+	string sRequiredVersion;
+  string sAvailableVersion;
+
+	dyn_string dsComponentNames;
+	dyn_string dsComponentVersions;
+
+	
+	dyn_string dsDependentComponents;
+	dyn_string dsComponentNameVersion;
+	int i;
+
+  if(isDollarDefined(\"$fileComponentName\") && isDollarDefined(\"$fileComponentVersion\"))
+  {
+    dsComponentNames = strsplit($fileComponentName, \"|\");
+    dsComponentVersions = strsplit($fileComponentVersion, \"|\");
+	
+	  for(int index = 1; index <= dynlen(dsComponentNames); index++)
+    {
+	    strreplace(dsComponentNames[index],\" \", \"\");
+	    strreplace(dsComponentVersions[index],\" \", \"\");
+	    strreplace(dsComponentVersions[index],\" \", \"\");
+	    strreplace(dsComponentVersions[index],\" \", \"\");
+    }
+	}
+		
+	dsDependentComponents = strsplit($strDependentNames, \"|\");
+	
+	for (i = 1; i <= dynlen(dsDependentComponents); i++)
+	{
+		dsComponentNameVersion = strsplit(dsDependentComponents[i], \"=\");
+		sDependentComponentName = dsComponentNameVersion[1];
+		
+		if(dynlen(dsComponentNameVersion) > 1)
+		{
+			sRequiredVersion = dsComponentNameVersion[2];
+		}
+		else
+		{
+			sRequiredVersion = \"N/A\";
+		}
+		
+    // get available component version
+		for(int kk = 1; kk <= dynlen(dsComponentNames); kk++)
+    {
+		  if(patternMatch(\"*\" + sDependentComponentName + \"*\", dsComponentNames[kk]))
+      {
+        sAvailableVersion = dsComponentVersions[kk];
+      }
+    }
+
+		requiredComponentsTable.appendLine(\"name\", sDependentComponentName, \"requiredVersion\", sRequiredVersion, \"availableVersion\", sAvailableVersion);
+	}
+
+  if(dynlen(dsComponentNames) > 1)
+  {
+    txtWarning1.text = $componentName + \" requires the following component versions:\";	
+  }
+  else
+  {
+	  txtWarning1.text = $componentName + \" requires the following component version:\";	
+  }
+}
+
+
+
+
+
+" 0
+ E E E E 1 -1 -1 0  120 20
+""0  1
+E E 3
+"CBRef" "1"
+"EClose" "main()
+{
+	int i;
+}" 0
+
+"dpi" "96"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 1
+"txtWarning1"
+""
+1 83 8 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+4
+"sizePolicy" "Fixed Fixed"
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 85 10 401 25
+0 2 0 "0s" 0 0 0 192 0 0  85 10 1
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0 2
+LANG:1 52 Component requires the following component versions:
+LANG:10001 11 txtWarning1
+13 6
+"installButton"
+""
+1 229 250 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+2
+LANG:1 56 Install only original component without any dependencies
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  124 203 312 231
+
+T 
+2
+LANG:1 28 Install without dependencies
+LANG:10001 16 Install Selected
+"main()
+{
+	dyn_float value1;
+	dyn_string value2;
+
+// begin setting the return values for the parent panel
+ 
+	value1 = makeDynFloat(1);
+	value2 = makeDynString(\"Install_Delete\");
+	 
+// return values to the parent panel
+  PanelOffReturn(value1, value2);
+}
+
+
+" 0
+ E E E
+13 5
+"cancelButton"
+""
+1 415 205 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 30 No component will be installed
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  413 203 491 231
+
+T 
+2
+LANG:1 6 Cancel
+LANG:10001 6 Cancel
+"main()
+{
+
+	dyn_float value1;
+	dyn_string value2;
+
+// begin setting the return values for the parent panel
+ 
+	value1 = makeDynFloat(1);
+	value2 = makeDynString(\"DoNotInstall_DoNotDelete\");
+	 
+// return values to the parent panel
+  PanelOffReturn(value1, value2);
+}
+
+" 0
+ E E E
+13 11
+"installAllButton"
+""
+1 318 205 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+2
+LANG:1 40 Install all available component versions
+LANG:10001 0 
+
+1
+"layoutAlignment" "AlignCenter"
+2
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,11,5,50,0,0,0,0,0
+0  316 203 409 231
+
+T 
+2
+LANG:1 11 Install all
+LANG:10001 11 Install All
+"main()
+{
+	dyn_float value1;
+	dyn_string value2;
+    
+// begin setting the return values for the parent panel
+ 
+	value1 = makeDynFloat(1);
+	value2 = makeDynString(\"InstallAll_DeleteAll\");
+	 
+// return values to the parent panel
+  PanelOffReturn(value1, value2);
+}
+
+
+" 0
+ E E "main()
+{
+  if(!isDollarDefined(\"$fileComponentName\") || $fileComponentName == \"\")
+  {
+    this.visible	= false;    
+  }
+}
+
+
+" 0
+
+25 18
+"requiredComponentsTable"
+""
+1 85 30 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"layoutAlignment" "AlignCenter"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  83 28 491 186
+EE 1 0 1 3 0 "name" 20 1 0 "s" 1
+LANG:1 4 Name
+E
+1
+LANG:1 0 
+
+235 "requiredVersion" 6 1 0 "s" 1
+LANG:1 8 Required
+E
+1
+LANG:1 16 Required version
+
+75 "availableVersion" 6 1 0 "s" 1
+LANG:1 9 Available
+E
+1
+LANG:1 17 Available version
+
+75 
+20 20 10 0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 0 2 0 4 7
+1 0
+6 19
+"backgroundRectangle"
+""
+1 110 10 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 0 0 74 239
+6 20
+"warningIcon"
+""
+1 10 20 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"layoutAlignment" "AlignCenter"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E 1 0 1 -2 15 2  0 0  "pictures/warning_nt.xpm" 4294967295 E 20 80 58 118
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

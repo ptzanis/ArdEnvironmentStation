@@ -1,0 +1,537 @@
+V 13
+1
+LANG:1 0 
+PANEL,-1 -1 350 550 N "_3DFace" 0
+"#uses \"fwInstallation.ctl\"
+#uses \"fwInstallationDB.ctl\"
+        
+main()
+{
+  tbHosts.tableMode(TABLE_SELECT_MULTIPLE); // Set the table mode TABLE_SELECT_MULTIPLE so that several lines can be selected simultaneously via selectByClick
+  tbHosts.selectByClick(TABLE_SELECT_LINE); // Selects lines
+
+  if(fwInstallationDB_connect())
+  {
+    ChildPanelOnCentral(\"vision/MessageInfo1\", \"DB connection error\", makeDynString(\"DB connection error.\"));
+    enableControls(FALSE);
+    return;
+  }
+  
+  dyn_dyn_mixed hostsInfo;
+  
+  if(fwInstallationDB_getHostsInfo(hostsInfo))
+  {
+    ChildPanelOnCentral(\"vision/MessageInfo1\", \"DB access error\", makeDynString(\"Could not retrieve the list of hosts from the DB.\"));
+    enableControls(FALSE);
+    return;
+  }
+    
+  g_bInit = TRUE;
+
+  for(int i = 1; i <= dynlen(hostsInfo); i++)
+  {
+    tbHosts.appendLine(\"host\", hostsInfo[i][FW_INSTALLATION_DB_HOST_NAME_IDX]);
+  }
+  
+  tbHosts.deleteSelection();
+  
+  g_bInit = FALSE;
+}" 0
+ E E E E 1 -1 -1 0  280 60
+""0  1
+E "bool g_bInit;
+
+enableControls(bool bState)
+{
+  tbHosts.enabled(bState);
+  tfPattern.enabled(bState);
+  cbManagerType.enabled(bState);
+  cbAction.enabled(bState);
+}" 0
+ 3
+"CBRef" "1"
+"EClose" E
+"dpi" "96.4557"
+0 0 0
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+14 0
+"tfPattern"
+""
+1 104 412 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  102 410 341 436
+3 "0s" 0 0 0 0 0 -1  E E E
+22 1
+"cbManagerType"
+""
+1 104 442 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  102 440 281 466
+9
+1
+LANG:1 8 PVSS00ui
+
+0
+1
+LANG:1 10 PVSS00Perf
+
+0
+1
+LANG:1 10 PVSS00ctrl
+
+0
+1
+LANG:1 10 PVSS00dist
+
+0
+1
+LANG:1 9 PVSS00opc
+
+0
+1
+LANG:1 9 PVSS00dim
+
+0
+1
+LANG:1 9 PVSS00dip
+
+0
+1
+LANG:1 9 PVSS00sim
+
+0
+1
+LANG:1 9 PVSS00mod
+
+0
+
+E
+E
+E
+ 0 0
+2 2
+"managerTypeLabel"
+""
+1 10 446 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 10 446 95 460
+0 2 2 "0s" 0 0 0 192 0 0  10 446 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 13 Manager type:
+2 3
+"commandLabel"
+""
+1 10 416 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 10 416 99 430
+0 2 2 "0s" 0 0 0 192 0 0  10 416 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 13 Command line:
+22 4
+"cbAction"
+""
+1 104 472 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  102 470 281 496
+3
+1
+LANG:1 5 Start
+
+0
+1
+LANG:1 7 Restart
+
+0
+1
+LANG:1 4 Stop
+
+0
+
+E
+E
+E
+ 0 0
+2 5
+"actionLabel"
+""
+1 10 476 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E 10 476 53 490
+0 2 2 "0s" 0 0 0 192 0 0  10 476 1
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 7 Action:
+13 6
+"sendButton"
+""
+1 179 504 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  285 440 341 496
+
+T 
+1
+LANG:1 4 Send
+"main()
+{
+  string type = cbManagerType.selectedText;
+  string pattern = tfPattern.text;
+  string action = cbAction.selectedText;
+  string host;
+  
+  dyn_int lines;
+  
+  lines = tbHosts.getSelectedLines();
+
+  for(int i = 1; i <= dynlen(lines); i++)
+  {
+    getValue(\"tbHosts\", \"cellValueRC\", lines[i], \"host\", host);
+    DebugN(\"Sending action \" + action + \" onto \" + host + \" returns: \" + sendPmonCommand(host, action, type, pattern));
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+synchronized int sendPmonCommand(string host, string action, string manager, string commandLine)
+{
+  int pos = -1;
+  string startMode = \"\";
+  dyn_string cmds;
+  string user, pwd;
+  int err = 0;
+  int port = 4999;
+  
+  dynClear(cmds);
+  findManager(host, manager, commandLine, pos);
+
+  if(pos < 0)
+  {
+    DebugN(\"ERROR: sendPmonCommand() -> Manager not found: \", manager, commandLine);
+    return -1;
+  }
+  
+  switch(strtoupper(action))
+  {
+    case \"START\": dynAppend(cmds, user + \"#\" + pwd + \"#SINGLE_MGR:PROP_PUT \" + pos + \" always 30 3 3 \" + commandLine);
+                  dynAppend(cmds, user + \"#\" + pwd + \"#SINGLE_MGR:START \" + pos); 
+                  break;
+    case \"STOP\": dynAppend(cmds, user + \"#\" + pwd + \"#SINGLE_MGR:PROP_PUT \" + pos + \" manual 30 3 3 \" + commandLine);
+                 dynAppend(cmds, user + \"#\" + pwd + \"#SINGLE_MGR:STOP \" + pos); 
+                 break;
+    case \"RESTART\":dynAppend(cmds, user + \"#\" + pwd + \"#SINGLE_MGR:START \" + pos); 
+                   dynAppend(cmds, user + \"#\" + pwd + \"#SINGLE_MGR:PROP_PUT \" + pos + \" always 30 3 3 \" + commandLine);
+                   dynAppend(cmds, user + \"#\" + pwd + \"#SINGLE_MGR:STOP \" + pos); 
+                   break;
+    default: DebugN(\"ERROR: sendPmonCommand() -> Unknown action: \" + action + \". Valid actions are: START, STOP, RESTART\");
+      return -1;
+  }
+  
+  for(int i = 1; i <= dynlen(cmds); i++)
+  {
+    //DebugN(\"Seding pmon command: \" + cmds[i]);
+    if(pmon_command(cmds[i], host, port, false, true))
+    {
+      ++err;
+      DebugN(\"ERROR: fwInstallation_managerCommand() -> Failed to execute command: \" + cmds[i] + \" on host \" + host); 
+    }
+    if(i < dynlen(cmds)) //wait only if necessary
+      delay(5);
+  }
+  
+  if(err)
+    return -1;
+  
+  
+  return 0; 
+}   
+
+// ------------------------------------------------------------------------------------------------
+
+synchronized int findManager(string host, string manager, string commandLine, int &managerPos)
+{
+  dyn_int diManPos, diStartMode, diSecKill, diRestartCount, diResetMin;
+  dyn_string dsManager, dsCommandLine, dsProps;
+  string str;
+  int port = 4999;
+             
+  managerPos = -1;
+        
+  if(getManagers(host, diManPos, dsManager, diStartMode, diSecKill, 
+                 diRestartCount, diResetMin, dsCommandLine))
+  return -1;
+        
+  if(dynContains(dsManager, manager))
+  {
+	for(int i=1; i<=dynlen(dsManager); i++)
+	{
+		if((dsManager[i] == manager) && (dsCommandLine[i] == commandLine))
+		{
+                        managerPos = i-1;
+			return 0;
+		}
+		else if((dsManager[i] == manager) && patternMatch(\"*\" + commandLine + \"*\", dsCommandLine[i])) //allow also the case where the user does not specify the manager number
+		{
+                        managerPos = i-1;
+			return 0;
+		}
+	}
+  }
+  
+  return 0;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+synchronized int  getManagers(string host,
+	                      dyn_int &manPos, 
+                              dyn_string &manager, 
+                              dyn_int &startMode, 
+	                      dyn_int &secKill, 
+                              dyn_int &restartCount, 
+                              dyn_int &resetMin,
+	                      dyn_string &commandLine)
+{
+	string str;
+	int port = 4999;
+	dyn_dyn_string dsResult;
+        bool err = false;
+        
+	dynClear(manPos);
+	dynClear(manager);
+	dynClear(startMode);
+	dynClear(secKill);
+	dynClear(restartCount);
+	dynClear(resetMin);
+	dynClear(commandLine);
+	
+	str = \"##MGRLIST:LIST\";
+	
+	err = pmon_query(str, host, port, dsResult, FALSE, TRUE);
+	
+        if(err)
+        {
+          DebugN(\"ERROR: Failed to execute the pmon commnad \" + str + \" on host:\" + host );
+          return -1;
+        }
+	
+	if(dynlen(dsResult)>0)
+	  for(int i=1; i<=dynlen(dsResult); i++)
+	  {
+		dynAppend(manPos, i);
+		dynAppend(manager, dsResult[i][1]);
+		dynAppend(startMode, dsResult[i][2]);
+		dynAppend(secKill, dsResult[i][3]);
+		dynAppend(restartCount,	dsResult[i][4]);
+		dynAppend(resetMin, dsResult[i][5]);
+                
+		if(dynlen(dsResult[i]) == 6)
+		  dynAppend(commandLine,	dsResult[i][6]);
+		else
+		  dynAppend(commandLine,  \"\");
+          }
+        
+       return err;
+}" 0
+ E E E
+13 7
+"closeButton"
+""
+1 265 515 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  263 513 341 541
+
+T 
+1
+LANG:1 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+25 8
+"tbHosts"
+""
+1 10 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"selectionChangedCB" "synchronized main()
+{
+  if(!g_bInit)
+  {
+    sendButton.enabled(TRUE);
+  }
+}"
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0  8 38 341 403
+EE 1 0 1 1 0 "host" 27 1 0 "s" 1
+LANG:1 4 Host
+E
+1
+LANG:1 0 
+
+310 
+20 20 10 10
+1
+LANG:1 26 Arial,-1,13,5,50,0,0,0,0,0
+0 0 2 1 1 7
+1 0
+6 10
+"bgRectangle"
+""
+1 20 530 E E E 1 E 1 E N "_Transparent" E N "FwInstallationCorporateColor" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+2
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 2 1 E U  1 E -1 -1 1268 29
+2 11
+"title"
+""
+1 7.999999999999986 2 E E E 1 E 1 E N "white" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:10001 0 
+
+3
+"sizePolicy" "Fixed Fixed"
+"dashclr"N "_Transparent"
+"antiAliased" "0"
+E E 0 1 1 0 1 E U  0 E 9.999999999999986 4 170 24
+0 2 0 "0s" 0 0 0 192 0 0  9.999999999999986 4 1
+2
+LANG:1 26 Arial,-1,19,5,50,0,0,0,0,0
+LANG:10001 26 Arial,-1,19,5,40,0,0,0,0,0
+0 2
+LANG:1 13 PMON Commands
+LANG:10001 47 JCOP Framework Installation Description Creator
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
