@@ -14,3 +14,5 @@ SCK -> SCL
  * FieldPoint: 10.0.0.5
  * Linux: 10.0.0.4
  * Windows 10.0.0.1
+ * 
+ (Subnet: 255.255.255.0)
