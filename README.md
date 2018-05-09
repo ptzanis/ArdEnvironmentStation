@@ -16,3 +16,15 @@ SCK -> SCL
  * Windows 10.0.0.1
  * 
  (Subnet: 255.255.255.0)
+
+
+#Config File (Windows Project)
+OPC DA Client -> -num 10
+[opc_10]
+server="ArduinoOPCServer""ArduinoOPCServer.2"
+
+#Disable Firewall
+systemctl disable firewalld
+systemctl stop firewalld
+
+
