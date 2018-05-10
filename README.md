@@ -25,6 +25,14 @@ OPC DA Client -> -num 10 -event 10.0.0.4 -data 10.0.0.4
 
 server="ArduinoOPCServer""ArduinoOPCServer.2"
 
+[data]
+
+keepLastTimeSmoothedValue = 1
+
+[ctrl]
+
+LoadCtrlLibs = "email.ctl"
+
 
 
 #OPC DPT Creation
