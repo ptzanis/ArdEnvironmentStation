@@ -6,8 +6,12 @@
 
 #Communication: i2c Protocol
 
-SD0 -> SDA
-SCK -> SCL
+SD0 -> SDA1 (brown-white)
+
+SCK -> SCL1 (green-white/ethernet side)
+
+5V -> Green (ethernet side)
+GND-> Brown
 
  #Static IPs:
  * Arduino : 10.0.0.10
