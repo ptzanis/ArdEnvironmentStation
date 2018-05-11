@@ -50,4 +50,14 @@ systemctl disable firewalld
 
 systemctl stop firewalld
 
+#OPC Arduino
+
+1.open Arduino OPC as admin
+2.configuration-> Ethernet(10.0.0.10) and Port:80
+3.close
+4.register as admin
+5.open Arduino OPC
+
+(in case of arduino power off or ethernet disconnect unregister and register OPC via OPC Arduino)
+
 
