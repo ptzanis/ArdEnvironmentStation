@@ -1,0 +1,1190 @@
+V 12
+1
+LANG:1 0 
+PANEL,-1 -1 1220 952 N "_3DFace" 0
+"main()
+{
+  
+  if(checkDPTexistance(\"Arduino\")==0)
+  {    
+     DebugN(\"*Arduino BME280 DPT WAS Ready!\");
+  }
+  else
+  {
+   
+  
+ 
+   dyn_dyn_string elements;
+  dyn_dyn_int types;
+  
+  // Elements // 
+
+elements[1]=makeDynString(\"Arduino\",\"\");
+
+elements[2]=makeDynString(\"\",\"pressureMon\");
+elements[3]=makeDynString(\"\",\"pressureMean\");
+elements[4]=makeDynString(\"\",\"temperatureMon\");
+elements[5]=makeDynString(\"\",\"temperatureMean\");
+elements[6]=makeDynString(\"\",\"humidityMon\");
+elements[7]=makeDynString(\"\",\"humidityMean\");
+elements[8]=makeDynString(\"\",\"archiving\");
+elements[9]=makeDynString(\"\",\"samplingTime\");
+
+
+//// Types  /////
+
+types[1]=makeDynInt(DPEL_STRUCT);
+
+types[2]=makeDynInt(0,DPEL_FLOAT);
+types[3]=makeDynInt(0,DPEL_FLOAT);
+types[4]=makeDynInt(0,DPEL_FLOAT);
+types[5]=makeDynInt(0,DPEL_FLOAT);
+types[6]=makeDynInt(0,DPEL_FLOAT);
+types[7]=makeDynInt(0,DPEL_FLOAT);
+types[8]=makeDynInt(0,DPEL_BOOL);
+types[9]=makeDynInt(0,DPEL_INT);
+
+dpTypeCreate(elements,types);
+
+  
+dpCreate(\"BME280\",\"Arduino\");
+  
+  
+  
+ 
+  
+  DebugN(\"*********Arduino BME280 DPT IS Ready!!!!\");
+
+
+}
+
+  setup();
+} 
+  
+  void setup(){
+   
+  string dpes;
+  dyn_string exceptionInfo;
+ 
+  
+  dpes=getSystemName();  
+  
+  addSymbol(myModuleName(),myPanelName(),\"objects/channelArdEnv.pnl\",\"MainPanel\",
+            makeDynString(\"$dpe:\"+dpes,\"$x:\"+500,\"$y:\"+231,\"$alias:\"+\"Pressure\",\"$purpose:\"+\"pressure\"),500+2,231,0,.95,1);  
+  
+  addSymbol(myModuleName(),myPanelName(),\"objects/channelArdEnv.pnl\",\"MainPanel\",
+            makeDynString(\"$dpe:\"+dpes,\"$x:\"+500,\"$y:\"+510,\"$alias:\"+\"Temp\",\"$purpose:\"+\"temperature\"),500+2,510,0,.95,1);
+  
+  
+  addSymbol(myModuleName(),myPanelName(),\"objects/channelArdEnv.pnl\",\"MainPanel\",
+            makeDynString(\"$dpe:\"+dpes,\"$x:\"+500,\"$y:\"+789,\"$alias:\"+\"Humidity\",\"$purpose:\"+\"humidity\"),500+2,789,0,.95,1);
+  //y=y+30;
+//addSymbol(myModuleName(),myPanelName(),\"GasObjects/channel.pnl\",\"channel_pnl_Ref\"+node,
+           // makeDynString(\"$node:\"+node,\"$dpe:\"+dpes,\"$x:\"+x,\"$y:\"+y,\"$alias:\"+massOutletAliasBare,\"$purpose:\"+\"massOutletMonitor\"),x+2,y,0,.95,1);
+
+
+  
+   fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), \"BME280_Pressure\",makeDynString(\"BME280.pressureMon\"),
+          22, 135, exceptionInfo, \"_BME_Pressure\", 0.9, 0.9);
+   fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), \"BME280_Temperature\",makeDynString(\"BME280.temperatureMon\"),
+          22, 414, exceptionInfo, \"_BME_Temperature\", 0.9, 0.9);
+    fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), \"BME280_Humidity\",makeDynString(\"BME280.humidityMon\"),
+          22, 693, exceptionInfo, \"_BME_Humidity\", 0.9, 0.9);
+
+ string dpe;
+  dyn_string dyn_dpe;
+  int dpfuct=9;
+  dyn_string dyn_dpfuct;
+
+  int timeInterval;
+  dpGet(\"BME280.samplingTime\",timeInterval);
+
+
+
+      dpe=getSystemName()+\"BME280.pressureMon:_original.._value\";
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+\"BME280.pressureMean:_dp_fct.._type\",63,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._param\",dyn_dpe,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._stat_type\",dyn_dpfuct,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._interval\",timeInterval,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._delay\",0,
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._read_archive\",0,       
+            getSystemName()+\"BME280.pressureMean:_dp_fct.._fct\",\"p1\");  
+ 
+ dpe=getSystemName()+\"BME280.temperatureMon:_original.._value\";
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+\"BME280.temperatureMean:_dp_fct.._type\",63,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._param\",dyn_dpe,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._stat_type\",dyn_dpfuct,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._interval\",timeInterval,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._delay\",0,
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._read_archive\",0,       
+            getSystemName()+\"BME280.temperatureMean:_dp_fct.._fct\",\"p1\"); 
+ 
+ dpe=getSystemName()+\"BME280.humidityMon:_original.._value\";
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+\"BME280.humidityMean:_dp_fct.._type\",63,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._param\",dyn_dpe,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._stat_type\",dyn_dpfuct,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._interval\",timeInterval,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._delay\",0,
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._read_archive\",0,       
+            getSystemName()+\"BME280.humidityMean:_dp_fct.._fct\",\"p1\");  
+  
+}
+   
+" 0
+ E E E E 1 -1 -1 0  -7 0
+""0  1
+E "public int checkDPTexistance(string dptcheck)
+{
+  dyn_string check=dpTypes(dptcheck);
+  
+if(check==\"\")
+  {
+ //  DebugN(\"DPT doesn't exist!\");
+   return -1;
+  }  
+else
+  {
+ //  DebugN(\"DPT has been found!\");
+   return 0;
+  }  
+
+
+
+}
+
+string getStartTime() {
+    
+    time startTime;
+    string startDateString, startTimeString, startString;
+    
+    string startDateTextBox = \"dateSelection.startDateField\";
+    string startTimeTextBox = \"dateSelection.startTimeField\";
+    
+    getValue(startDateTextBox, \"text\", startDateString);
+    getValue(startTimeTextBox, \"text\", startTimeString);
+
+    startString = startDateString + \" \" + startTimeString;    
+    
+    if (!fwGeneral_hasCorrectFormat(startString)) {
+        DebugN(\"The starting time provided is wrong, check again and retry.\");
+        return -1;
+    }
+    
+    startTime = fwGeneral_stringToDate(startString);
+    startString = formatTime(\"%Y.%m.%d %H:%M:%S\", startTime);
+    
+    return startString;
+}
+
+string getEndTime() {
+    
+    time endTime;
+    string endDateString, endTimeString, endString;
+ 
+    string endDateTextBox = \"dateSelection.endDateField\";
+    string endTimeTextBox = \"dateSelection.endTimeField\";
+    
+    getValue(endDateTextBox, \"text\", endDateString);
+    getValue(endTimeTextBox, \"text\", endTimeString);
+    
+    endString = endDateString + \" \" + endTimeString;
+    
+    if (!fwGeneral_hasCorrectFormat(endString)) {
+        DebugN(\"The ending time provided is wrong, check again and retry.\");
+        return -1;
+    }
+    
+    endTime = fwGeneral_stringToDate(endString);
+    endString = formatTime(\"%Y.%m.%d %H:%M:%S\", endTime);
+    
+    return endString;
+}
+
+bool checkOrCreateDirectory(string folderPath)
+{
+  
+    if(isdir(folderPath))
+    return TRUE;
+    else {    
+        mkdir(folderPath, 777);
+        return FALSE;
+    } 
+}
+
+bool exportData(string valueType, dyn_string channels, string start, string end, string folderPath) {
+
+    dyn_dyn_anytype archivedPressure,archivedTemperature,archivedHumidity;
+    string queryPressure,queryTemperature,queryHumidity, currentDate, filePath;
+    
+
+    
+        queryPressure = \"SELECT ALL '_original.._stime', '_original.._value' FROM '\" + channels[1] + valueType + \"' TIMERANGE(\\\"\" + start + \"\\\",\\\"\" + end +\"\\\",1,0)\";
+        queryTemperature = \"SELECT ALL '_original.._stime', '_original.._value' FROM '\" + channels[2] + valueType + \"' TIMERANGE(\\\"\" + start + \"\\\",\\\"\" + end +\"\\\",1,0)\";
+        queryHumidity = \"SELECT ALL '_original.._stime', '_original.._value' FROM '\" + channels[3] + valueType + \"' TIMERANGE(\\\"\" + start + \"\\\",\\\"\" + end +\"\\\",1,0)\";
+
+
+        
+        dpQuery(queryPressure, archivedPressure);
+        dpQuery(queryTemperature, archivedTemperature);
+        dpQuery(queryHumidity, archivedHumidity);
+
+        
+        file export;
+        currentDate = formatTime(\"%d_%m_%y\", getCurrentTime());
+        filePath = folderPath + valueType +  \"ArdEnvStation_\" + currentDate + \".dat\";
+
+        
+        if (isfile(filePath)) {
+            popupMessage(\"_Ui_1\", \"File Exists\");
+            popupMessage(\"_Ui_2\", \"File Exists\");
+            popupMessage(\"_Ui_3\", \"File Exists\");
+            popupMessage(\"_Ui_4\", \"File Exists\");
+            popupMessage(\"_Ui_5\", \"File Exists\");
+            return FALSE;
+        }
+        else {
+            export = fopen(filePath, \"a\");
+        }
+
+      fprintf(export, \"%s \\n\",\"Time\"+ \"\\t\" +\"\\t\" + \"\\t\" +\"Pressure(kPa)\"+ \"\\t\"+ \"Temperature(C)\"+\"\\t\"+\"Humidity(%)\");        
+        
+        for (int j = 3; j <= dynlen(archivedTemperature); j++) { 
+            fprintf(export, \"%s \\t %4.2f \\t %2.2f \\t \\t %2.2f  \\n\", formatTime(\"%d/%m/%Y_%H:%M:%S\", archivedTemperature[j][2]),archivedPressure[j][3],archivedTemperature[j][3],archivedHumidity[j][3]);
+        }
+
+        fclose(export);
+    
+               DebugN(\"Data file exported!\");  
+    return TRUE;
+}
+
+string alertViaEmail(string recipient, string sender, string subject, string mainBody) {
+ 
+    dyn_string emailContent;
+    int ret; 
+    string status; 
+    string smtpServer = \"cernmx.cern.ch\";
+    string hostName = getHostname(); 
+    
+    emailContent[1] = recipient;
+    emailContent[2] = sender;
+    emailContent[3] = subject;
+    emailContent[4] = mainBody;
+  
+    emSendMail(smtpServer, hostName, emailContent, ret);
+    if (ret == 0)  status = \"Message sent\";
+    else status = \"Message sent failed\";
+    return status;
+}
+
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" "main()
+{
+  int i;
+}" 0
+
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"RECTANGLE1"
+""
+1 40 30 E E E 1 E 1 E N {0,0,0} E N {193,193,193} E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 1.431578947368421 0 1.111111111111111 -67.26315789473685 -33.33333333333333 1 E 40 30 990 120
+2 1
+"PRIMITIVE_TEXT1"
+""
+1 123 31.50000000000001 E E E 1 E 1 E N "FwAtlasBg" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E U  0 E 123 31.50000000000001 495 69
+0 2 2 "0s" 0 0 0 192 0 0  123 31.50000000000001 1
+1
+LANG:1 27 Utopia,-1,32,5,75,0,0,0,0,0
+0 1
+LANG:1 22 ArdEnvironment Station
+2 2
+"PRIMITIVE_TEXT5"
+""
+1 123 60.25000000000001 E E E 1 E 1 E N "FwAtlasBg" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E U  0 E 123 60.25000000000001 166 82
+0 2 2 "0s" 0 0 0 192 0 0  123 60.25000000000001 1
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 5 v 1.0
+15 3
+"CLOCK1"
+""
+1 1109.891369047619 30.03125000000001 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 31 Sans Serif,-1,12,5,50,0,0,0,0,0
+0  1110 30 1210 81
+E 1 1 "%X" "%d/%m/%Y"
+1 0 1 1
+1
+LANG:1 27 Utopia,-1,16,5,75,0,0,0,0,0
+0  1
+LANG:1 27 Utopia,-1,16,5,75,0,0,0,0,0
+0 
+13 4
+"PUSH_BUTTON8"
+""
+1 980.2430555555551 51.24877089478856 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 27 Utopia,-1,24,5,75,0,0,0,0,0
+0  978 37 1084 74
+
+T 
+1
+LANG:1 4 Exit
+"main()
+{
+PanelOff();
+}" 0
+ E E E
+7 5
+"ELLIPSE1"
+""
+1 57 47 E E E 1 E 1 E N {0,0,0} E N "white" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  2  1 0  "pictures/logoPyrforos_highRes.png" 4294967295 E 54 50 46 46
+13 6
+"PUSH_BUTTON1"
+""
+1 830.7351190476196 397.4279061131131 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 27 Utopia,-1,24,5,75,0,0,0,0,0
+0  829 376 974 431
+
+T 
+1
+LANG:1 5 Start
+"main()
+{
+  
+   string archiveClassName = \"GTS_ARCHIVE_BB5\";
+    int archiveType = DPATTR_ARCH_PROC_SIMPLESM;
+    int smoothProcedure = DPATTR_TIME_SMOOTH;
+    //    int smoothProcedure = DPATTR_TIME_AND_VALUE_SMOOTH;
+    dyn_string exceptionInfo;
+    bool checkClass = TRUE;
+    float deadband;
+    float timeInterval;
+    dyn_string archivedDpes;
+    deadband = 50.0;    
+    dpGet(\"BME280.samplingTime\",timeInterval);
+
+    
+     
+     archivedDpes[1]=\"BME280.pressureMean\";
+     archivedDpes[2]=\"BME280.temperatureMean\";
+     archivedDpes[3]=\"BME280.humidityMean\";   
+     
+     for (int i = 1; i<=dynlen(archivedDpes); i++) {
+
+     
+       fwArchive_configMultiple(archivedDpes[i], archiveClassName, archiveType, smoothProcedure,
+                          deadband, timeInterval, exceptionInfo, checkClass);
+        if (dynlen(exceptionInfo)>0) DebugN(exceptionInfo);
+      }
+     
+    
+    
+    // Start archiving
+    
+      for (int i = 1; i <= dynlen(archivedDpes); i++) {
+        fwArchive_startMultiple(archivedDpes[i], exceptionInfo);
+        if (dynlen(exceptionInfo) > 0) DebugN(exceptionInfo);
+      }
+     
+    dpSet(\"BME280.archiving\",TRUE);
+     
+  
+    DebugN(\"ArdEnvironment archiving in progress...\");
+  
+  
+}" 0
+ E E "// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setEnabled();
+}
+
+void EP_setEnabled()
+{
+  dyn_errClass err;
+
+  if( !dpExists( \"System1:BME280.archiving:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_setEnabledCB\",
+            \"System1:BME280.archiving:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+void EP_setEnabledCB(string dp, bool boNewValue)
+{
+    setValue(\"\", \"enabled\", !boNewValue);
+}
+
+// SimpleCtrlScript {EP_setEnabled}
+// DP {System1:BME280.archiving}
+// DPConfig {:_online.._value}
+// DPType {bool}
+// Active {0}
+// Operator {less}
+// Value {TRUE}
+// SimpleCtrlScriptEnd {EP_setEnabled}
+" 0
+
+13 7
+"PUSH_BUTTON3"
+""
+1 1002.957341269842 397.4279061131131 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 27 Utopia,-1,24,5,75,0,0,0,0,0
+0  1001 376 1146 431
+
+T 
+1
+LANG:1 4 Stop
+"main()
+{
+  dyn_string archivedDpes;
+     archivedDpes[1]=\"BME280.pressureMean\";
+     archivedDpes[2]=\"BME280.temperatureMean\";
+     archivedDpes[3]=\"BME280.humidityMean\";  
+  
+  dyn_string exceptionInfo;
+  
+  for (int i = 1; i <= dynlen(archivedDpes); i++) {
+        fwArchive_stopMultiple(archivedDpes[i] , exceptionInfo);
+        if (dynlen(exceptionInfo)>0) DebugN(exceptionInfo);
+        
+      }
+        
+   dpSet(\"BME280.archiving\",FALSE);  
+   DebugN(\"ArdEnvironment archiving stopped!\");   
+        
+}" 0
+ E E "// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setEnabled();
+}
+
+void EP_setEnabled()
+{
+  dyn_errClass err;
+
+  if( !dpExists( \"System1:BME280.archiving:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_setEnabledCB\",
+            \"System1:BME280.archiving:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+void EP_setEnabledCB(string dp, bool boNewValue)
+{
+    setValue(\"\", \"enabled\", boNewValue);
+}
+
+// SimpleCtrlScript {EP_setEnabled}
+// DP {System1:BME280.archiving}
+// DPConfig {:_online.._value}
+// DPType {bool}
+// Active {1}
+// Operator {less}
+// Value {TRUE}
+// SimpleCtrlScriptEnd {EP_setEnabled}
+" 0
+
+6 8
+"RECTANGLE2"
+""
+1 130 210 E E E 1 E 1 E N "_Transparent" E N {226,226,226} E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 4.5625 0 2.391926932156818 -576.4107142857142 -388.4475128957887 1 E 130 210 290 320
+6 9
+"RECTANGLE3"
+""
+1 130 210 E E E 1 E 1 E N "_Transparent" E N {226,226,226} E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 4.5625 0 2.373737373737374 -576.4107142857149 -103.4054834054836 1 E 130 210 290 320
+6 10
+"RECTANGLE4"
+""
+1 130 210 E E E 1 E 1 E N "_Transparent" E N {226,226,226} E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 4.5625 0 2.391926932156818 -576.4107142857141 169.4405245669614 1 E 130 210 290 320
+30 11
+"FRAME10"
+""
+1 20 113 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+12 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 1.489795918367348 0 0.6533957845433253 -13.08163265306152 304.9123080926357 0 E 20 113 511 541
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 11 Temperature
+30 12
+"FRAME1"
+""
+1 20 113 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+13 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 1.489795918367348 0 0.6533957845433253 -13.0816326530618 25.69008587041357 0 E 20 113 511 541
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 8 Pressure
+30 13
+"FRAME11"
+""
+1 20 113 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+14 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 1.489795918367348 0 0.6533957845433253 -13.08163265306169 584.2456414259688 0 E 20 113 511 541
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 8 Humidity
+6 14
+"RECTANGLE6"
+""
+1 130 210 E E E 1 E 1 E N "_Transparent" E N {226,226,226} E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 2.6875 0 1.704168960947741 421.8601190476193 -56.17417910968903 1 E 130 210 290 320
+30 15
+"FRAME12"
+""
+1 20 113 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+16 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 0.8775510204081635 0 0.468384074941452 753.6840986394558 236.9449963868984 0 E 20 113 511 541
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Archive
+13 16
+"PUSH_BUTTON5"
+""
+1 1065.096230158732 378.5390172242243 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 27 Utopia,-1,16,5,75,0,0,0,0,0
+0  1135 448 1189 485
+
+P 
+4294967295
+"pictures/config_params_24.png"
+1
+LANG:1 0 
+"main()
+{ 
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  ChildPanelOnCentral(\"objects/setSampling.pnl\",\"Sampling\",makeDynString(\"\"));
+}
+" 0
+ E E E
+2 17
+"PRIMITIVE_TEXT2"
+""
+1 866.2351190476193 335.3723505575575 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E U  0 E 866.2351190476193 335.3723505575575 1001 357
+0 2 2 "0s" 0 0 0 192 0 0  866.2351190476193 335.3723505575575 1
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 15 Archive Status:
+7 18
+"archiveStatus"
+""
+1 1020 290 E E E 1 E 1 E N {0,0,0} E N "White" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setBackColor();
+}
+
+void EP_setBackColor()
+{
+  dyn_errClass err;
+
+  if( !dpExists( \"System1:BME280.archiving:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_setBackColorCB\", 
+            \"System1:BME280.archiving:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+void EP_setBackColorCB(string dpSource, bool boNewValue)
+{
+  if (!boNewValue)
+    setValue(\"\", \"backCol\", \"Red\");
+  else
+    setValue(\"\", \"backCol\", \"S7_stateWentUnq\");
+}
+
+// SimpleCtrlScript {EP_setBackColor}
+// DP {System1:BME280.archiving}
+// DPConfig {:_online.._value}
+// DPType {bool}
+// AlertHdl {FALSE}
+// DPEInvalid {}
+// DPEConfigInvalid {}
+// Operator1 {notequal}
+// Operant1 {0}
+// Color1 {Red}
+// Operator2 {equal}
+// Operant2 {1}
+// Color2 {S7_stateWentUnq}
+// SimpleCtrlScriptEnd {EP_setBackColor}
+" 0
+ E 0 1 3 2 1 E 1 0 1 13.45734126984155 56.37235055755752 1 E 1020 290 20 20
+6 19
+"RECTANGLE7"
+""
+1 130 210 E E E 1 E 1 E N "_Transparent" E N {226,226,226} E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 2.688194444444444 0 2.080909904369039 422.9561631944449 93.48682324151679 1 E 130 210 290 320
+30 20
+"FRAME13"
+""
+1 20 113 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+21 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 0.8777777777777783 0 0.567265157429092 754.8658854166666 453.0548076278996 0 E 20 113 511 541
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 6 Export
+13 21
+"PUSH_BUTTON6"
+""
+1 902.237413194445 704.027528284481 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 27 Utopia,-1,21,5,75,0,0,0,0,0
+0  900 683 1044 737
+
+T 
+1
+LANG:1 11 Export Data
+"main()
+{
+  
+   string start = getStartTime();
+   string end = getEndTime();  
+   string dirPath = destFolderTextField.text;
+       checkOrCreateDirectory(dirPath);
+   dyn_string allChannels;
+
+   allChannels[1]=\"BME280.pressureMean\";
+   allChannels[2]=\"BME280.temperatureMean\";
+   allChannels[3]=\"BME280.humidityMean\";   
+   
+    if (!exportData(\"\", allChannels, start, end,dirPath)) 
+        DebugN(\"File exists in the specified directory. Please change directory or delete old files.\");    
+  
+}" 0
+ E E E
+2 22
+"PRIMITIVE_TEXT3"
+""
+1 832.5429687500006 609.2656235225763 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E U  0 E 832.5429687500006 609.2656235225763 834 623
+0 2 2 "0s" 0 0 0 192 0 0  832.5429687500006 609.2656235225763 1
+1
+LANG:1 31 Sans Serif,-1,12,5,50,0,0,0,0,0
+0 1
+LANG:1 0 
+2 23
+"PRIMITIVE_TEXT4"
+""
+1 810.6659846230164 558.9878457447985 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E U  0 E 810.6659846230164 558.9878457447985 903 581
+0 2 2 "0s" 0 0 0 192 0 0  810.6659846230164 558.9878457447985 1
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 10 Directory:
+14 24
+"destFolderTextField"
+""
+1 902.5429687500005 565.2656235225764 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 31 Sans Serif,-1,12,5,50,0,0,0,0,0
+0  901 553 1145 590
+3 "0s" 0 0 0 0 0 -1  E "main()
+{
+  string currentDate=formatTime(\"%d_%m_%y\",getCurrentTime());
+  this.text(\"C:/\"+\"ArdEnvStation_Data_\"+currentDate+\"/\");
+}" 0
+ E
+13 25
+"PUSH_BUTTON7"
+""
+1 1149.542968750001 566.2656235225764 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 31 Sans Serif,-1,12,5,50,0,0,0,0,0
+0  1148 553 1186 592
+
+P 
+4294967295
+"pictures/folderNew.png"
+1
+LANG:1 0 
+"main()
+{
+   
+    string sPath;
+    string systemName;
+    int iErr;
+	
+    if(shapeExists(\"cbSystem\"))
+        systemName = cbSystem.text;
+    else
+        systemName = \"\";
+  
+    sPath = \"C:\\\\Projects\\\\TBSCS\";
+    iErr = folderSelector( sPath );
+    
+    if(( iErr >= 1 ) && ( strlen( sPath ) > 0 )) {
+	    sPath += \"/\";
+        if (_WIN32) strreplace( sPath, \"/\", \"//\" ); 
+    	strreplace(sPath, \"//\", \"/\");
+        strreplace(sPath, \"//\", \"/\");
+	    // update the widget with the directory path
+        destFolderTextField.text = sPath;
+    }
+}" 0
+ E E E
+14 26
+"TEXT_FIELD1"
+""
+1 844.6053015969826 212.2178244282475 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 27 Utopia,-1,15,5,75,0,0,0,0,0
+0  898 135 1084 165
+3 "0s" 0 0 0 0 0 -1  E "main()
+{
+  
+    int used,free;
+    dpGet(getSystemName() + \"_ArchivDisk.UsedKB\", used);
+    dpGet(getSystemName() + \"_ArchivDisk.FreeKB\", free);
+    
+    float usedGB = used / 1024 / 1024;
+    float freeGB = free / 1024 / 1024;
+    
+        this.text(\"Used/Free: \" + usedGB + \"GB / \" + freeGB + \"GB\");
+    
+}" 0
+ E
+29 27
+"PROGRESS_BAR1"
+""
+1 762.4915917505321 154.8292218993632 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"format" "string %p%"
+"alignment" "enum 1"
+1
+LANG:1 27 Utopia,-1,16,5,75,0,0,0,0,0
+0  901 183 1083 221
+11 ProgressBar
+0
+"main()
+{
+    int used,free;
+    dpGet(getSystemName() + \"_ArchivDisk.UsedKB\", used);
+    dpGet(getSystemName() + \"_ArchivDisk.FreeKB\", free);
+    
+    float usedGB = used / 1024 / 1024;
+    float freeGB = free / 1024 / 1024;
+    
+    this.progress(usedGB);
+    this.totalSteps(freeGB);
+    
+    
+}" 0
+6 28
+"RECTANGLE8"
+""
+1 130 210 E E E 1 E 1 E N "_Transparent" E N {226,226,226} E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 1.756290774001289 0 1.252017598747436 623.1705292102614 -150.0665528798184 1 E 130 210 290 320
+30 29
+"FRAME14"
+""
+1 20 113 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+30 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 3 2 1 E 0.5734827017147065 0 0.3538901899557637 839.2925607474521 60.47837614324874 0 E 20 113 511 541
+1
+LANG:1 27 Utopia,-1,19,5,75,0,0,0,0,0
+0 1
+LANG:1 20 Available Disk Space
+0
+LAYER, 1 
+1
+LANG:1 0 
+1 30 0 "" 14
+0
+1 31 0 "" 15
+0
+1 32 0 "" 21
+0
+1 33 0 "" 22
+0
+1 34 0 "" 0
+0
+1 35 0 "" 1
+0
+1 36 0 "" 25
+0
+1 37 0 "" 23
+0
+1 38 0 "" 20
+0
+1 39 0 "" 27
+0
+1 40 0 "" 28
+0
+1 41 0 "" 31
+0
+1 42 0 "" 32
+0
+1 43 0 "" 29
+0
+1 44 0 "" 30
+0
+1 45 0 "" 34
+0
+1 46 0 "" 33
+0
+1 47 0 "" 16
+0
+1 48 0 "" 17
+0
+1 49 0 "" 24
+0
+1 50 0 "" 19
+0
+1 51 0 "" 18
+0
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "dateSelection" -1
+"objects/dateTimeWidget.pnl" 823 588 T 6 1 0 1 -30.45703124999943 21.26562352257639
+9
+"$bDateAndTime""TRUE"
+"$bEnabled""TRUE"
+"$bShowTimeZone""TRUE"
+"$iTimePeriod""86400"
+"$sEndDate"""
+"$sEndTime"""
+"$sStartDate"""
+"$sStartTime"""
+"$sTimeZone""0"
+0
