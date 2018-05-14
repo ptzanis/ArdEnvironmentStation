@@ -54,6 +54,8 @@ systemctl disable firewalld
 
 systemctl stop firewalld
 
+(in case of FATAL error-WCCOdata(0) connection expired in Windows WinCC-0A, delete dbase.touch file in both projec(linux+windows) and restarts projects and vm)
+
 #OPC Arduino
 
 1.open Arduino OPC as admin
