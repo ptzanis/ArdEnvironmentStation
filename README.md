@@ -1,4 +1,4 @@
-# ArdEnvironment Station v1.0 WinCC-OA
+# ArdEnvironment Station v1.0 WinCC-OA 3.15
 
 #Sensor: Adafruit BME280
 
