@@ -33,10 +33,6 @@ server="ArduinoOPCServer""ArduinoOPCServer.2"
 
 keepLastTimeSmoothedValue = 1
 
-[ctrl]
-
-LoadCtrlLibs = "email.ctl"
-
 
 
 #OPC DPT Creation
