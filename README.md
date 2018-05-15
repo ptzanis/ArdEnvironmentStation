@@ -65,4 +65,5 @@ systemctl stop firewalld
 
 (in case of arduino power off or ethernet disconnect unregister and register OPC via OPC Arduino)
 
+https://we.tl/sLnGjpB6Wf
 
