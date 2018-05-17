@@ -219,7 +219,7 @@ bool checkOrCreateDirectory(string folderPath)
     } 
 }
 
-bool exportData(string valueType, dyn_string channels, string start, string end, string folderPath) {
+bool exportData(string valueType, dyn_string channels, string start, string end, string folderPath,string startData,string endData) {
 
     dyn_dyn_anytype archivedPressure,archivedTemperature,archivedHumidity;
     string queryPressure,queryTemperature,queryHumidity, currentDate, filePath;
@@ -239,7 +239,7 @@ bool exportData(string valueType, dyn_string channels, string start, string end,
         
         file export;
         currentDate = formatTime(\"%d_%m_%y\", getCurrentTime());
-        filePath = folderPath + valueType +  \"ArdEnvStation_\" + currentDate + \".dat\";
+        filePath = folderPath + valueType +  \"ArdEnvStation_\" +startData+\"_TO_\"+endData+\".dat\";
 
         
         if (isfile(filePath)) {
@@ -266,24 +266,59 @@ bool exportData(string valueType, dyn_string channels, string start, string end,
     return TRUE;
 }
 
-string alertViaEmail(string recipient, string sender, string subject, string mainBody) {
- 
-    dyn_string emailContent;
-    int ret; 
-    string status; 
-    string smtpServer = \"cernmx.cern.ch\";
-    string hostName = getHostname(); 
+bool exportTempData(string valueType, dyn_string channels, string start, string end, string folderPath) {
+
+    dyn_dyn_anytype archivedPressure,archivedTemperature,archivedHumidity;
+    string queryPressure,queryTemperature,queryHumidity, currentDate, filePath;
     
-    emailContent[1] = recipient;
-    emailContent[2] = sender;
-    emailContent[3] = subject;
-    emailContent[4] = mainBody;
-  
-    emSendMail(smtpServer, hostName, emailContent, ret);
-    if (ret == 0)  status = \"Message sent\";
-    else status = \"Message sent failed\";
-    return status;
+
+    
+        queryPressure = \"SELECT ALL '_original.._stime', '_original.._value' FROM '\" + channels[1] + valueType + \"' TIMERANGE(\\\"\" + start + \"\\\",\\\"\" + end +\"\\\",1,0)\";
+        queryTemperature = \"SELECT ALL '_original.._stime', '_original.._value' FROM '\" + channels[2] + valueType + \"' TIMERANGE(\\\"\" + start + \"\\\",\\\"\" + end +\"\\\",1,0)\";
+        queryHumidity = \"SELECT ALL '_original.._stime', '_original.._value' FROM '\" + channels[3] + valueType + \"' TIMERANGE(\\\"\" + start + \"\\\",\\\"\" + end +\"\\\",1,0)\";
+
+
+        
+        dpQuery(queryPressure, archivedPressure);
+        dpQuery(queryTemperature, archivedTemperature);
+        dpQuery(queryHumidity, archivedHumidity);
+
+        
+        file export;
+        currentDate = formatTime(\"%d_%m_%y\", getCurrentTime());
+        filePath = folderPath + valueType +\"temp\"+\".dat\";
+
+        
+        if (isfile(filePath)) {
+            popupMessage(\"_Ui_1\", \"File Exists\");
+            popupMessage(\"_Ui_2\", \"File Exists\");
+            popupMessage(\"_Ui_3\", \"File Exists\");
+            popupMessage(\"_Ui_4\", \"File Exists\");
+            popupMessage(\"_Ui_5\", \"File Exists\");
+            return FALSE;
+        }
+        else {
+            export = fopen(filePath, \"a\");
+        }
+
+      fprintf(export, \"%s \\n\",\"Time\"+ \"\\t\" +\"\\t\" + \"\\t\" +\"Pressure(kPa)\"+ \"\\t\"+ \"Temperature(C)\"+\"\\t\"+\"Humidity(%)\");        
+        
+        for (int j = 3; j <= dynlen(archivedTemperature); j++) { 
+            fprintf(export, \"%s \\t %4.2f \\t %2.2f \\t \\t %2.2f  \\n\", formatTime(\"%d/%m/%Y_%H:%M:%S\", archivedTemperature[j][2]),archivedPressure[j][3],archivedTemperature[j][3],archivedHumidity[j][3]);
+        }
+
+        fclose(export);
+    
+               DebugN(\"Data file exported!\");  
+    return TRUE;
 }
+
+int runTerminal(string path){
+  
+  return system(\"sh \"+path);
+  
+}
+
 
 
 " 0
@@ -844,7 +879,7 @@ LANG:1 6 Export
 13 21
 "PUSH_BUTTON6"
 ""
-1 901.5022941468254 716.599622171368 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 840.5022941468254 716.599622171368 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 22 0 0 0 0 0
 E E E
@@ -855,7 +890,7 @@ LANG:1 0
 0
 1
 LANG:1 27 Utopia,-1,21,5,75,0,0,0,0,0
-0  899 696 1043 750
+0  838 696 982 750
 
 T 
 1
@@ -873,7 +908,51 @@ LANG:1 11 Export Data
    allChannels[2]=\"BME280.temperatureMean\";
    allChannels[3]=\"BME280.humidityMean\";   
    
-    if (!exportData(\"\", allChannels, start, end,dirPath)) 
+   //===========================================================================================
+    time startTime;
+    string startDateString, startTimeString, startString;
+    
+    string startDateTextBox = \"dateSelection.startDateField\";
+    string startTimeTextBox = \"dateSelection.startTimeField\";
+    
+    getValue(startDateTextBox, \"text\", startDateString);
+    getValue(startTimeTextBox, \"text\", startTimeString);
+
+    startString = startDateString + \" \" + startTimeString;    
+    
+    if (!fwGeneral_hasCorrectFormat(startString)) {
+        DebugN(\"The starting time provided is wrong, check again and retry.\");
+        return -1;
+    }
+    
+    startTime = fwGeneral_stringToDate(startString);
+    startString = formatTime(\"%d_%m_%Y_%H_%M_%S\", startTime);
+   
+   
+   //
+   
+   time endTime;
+    string endDateString, endTimeString, endString;
+ 
+    string endDateTextBox = \"dateSelection.endDateField\";
+    string endTimeTextBox = \"dateSelection.endTimeField\";
+    
+    getValue(endDateTextBox, \"text\", endDateString);
+    getValue(endTimeTextBox, \"text\", endTimeString);
+    
+    endString = endDateString + \" \" + endTimeString;
+    
+    if (!fwGeneral_hasCorrectFormat(endString)) {
+        DebugN(\"The ending time provided is wrong, check again and retry.\");
+        return -1;
+    }
+    
+    endTime = fwGeneral_stringToDate(endString);
+    endString = formatTime(\"%d_%m_%Y_%H_%M_%S\", endTime);
+   
+   //===========================================================================================
+   
+    if (!exportData(\"\", allChannels, start, end,dirPath,startString,endString)) 
         DebugN(\"File exists in the specified directory. Please change directory or delete old files.\");    
   
 }" 0
@@ -934,7 +1013,7 @@ LANG:1 31 Sans Serif,-1,12,5,50,0,0,0,0,0
 3 "0s" 0 0 0 0 0 -1  E "main()
 {
   string currentDate=formatTime(\"%d_%m_%y\",getCurrentTime());
-  this.text(\"C:/\"+\"ArdEnvStation_Data_\"+currentDate+\"/\");
+  this.text(PROJ_PATH+\"ArdEnvStation_Data/\");
 }" 0
  E
 13 25
@@ -1104,53 +1183,142 @@ LANG:1 4 Exit
   
 }" 0
  E E E
+13 75
+"PUSH_BUTTON8"
+""
+1 1009.502294146825 716.599622171368 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 27 Utopia,-1,21,5,75,0,0,0,0,0
+0  1007 696 1151 750
+
+T 
+1
+LANG:1 11 Export Plot
+"main()
+{
+  
+   string start = getStartTime();
+   string end = getEndTime();  
+   string dirPath = PROJ_PATH+\"temp/\";
+      // checkOrCreateDirectory(dirPath);
+   dyn_string allChannels;
+
+   allChannels[1]=\"BME280.pressureMean\";
+   allChannels[2]=\"BME280.temperatureMean\";
+   allChannels[3]=\"BME280.humidityMean\";   
+   
+   if (!exportTempData(\"\", allChannels, start, end,dirPath)) 
+        DebugN(\"File exists in the specified directory. Please change directory or delete old files.\");    
+   
+   runTerminal(PROJ_PATH+\"scripts/arduino.sh\");
+   
+   //===========================================================================================
+    time startTime;
+    string startDateString, startTimeString, startString;
+    
+    string startDateTextBox = \"dateSelection.startDateField\";
+    string startTimeTextBox = \"dateSelection.startTimeField\";
+    
+    getValue(startDateTextBox, \"text\", startDateString);
+    getValue(startTimeTextBox, \"text\", startTimeString);
+
+    startString = startDateString + \" \" + startTimeString;    
+    
+    if (!fwGeneral_hasCorrectFormat(startString)) {
+        DebugN(\"The starting time provided is wrong, check again and retry.\");
+        return -1;
+    }
+    
+    startTime = fwGeneral_stringToDate(startString);
+    startString = formatTime(\"%d_%m_%Y_%H_%M_%S\", startTime);
+   
+   
+   //
+   
+   time endTime;
+    string endDateString, endTimeString, endString;
+ 
+    string endDateTextBox = \"dateSelection.endDateField\";
+    string endTimeTextBox = \"dateSelection.endTimeField\";
+    
+    getValue(endDateTextBox, \"text\", endDateString);
+    getValue(endTimeTextBox, \"text\", endTimeString);
+    
+    endString = endDateString + \" \" + endTimeString;
+    
+    if (!fwGeneral_hasCorrectFormat(endString)) {
+        DebugN(\"The ending time provided is wrong, check again and retry.\");
+        return -1;
+    }
+    
+    endTime = fwGeneral_stringToDate(endString);
+    endString = formatTime(\"%d_%m_%Y_%H_%M_%S\", endTime);
+   
+   //===========================================================================================
+    
+    string dirPathProject=destFolderTextField.text();
+    
+    system(\"mv \"+PROJ_PATH+\"temp/arduino.png \"+dirPathProject+\"ArdEnvStation_Plot_\"+startString+\"_TO_\"+endString+\".png\");
+   
+  
+  
+}" 0
+ E E E
 0
 LAYER, 1 
 1
 LANG:1 0 
-1 53 0 "" 14
+1 76 0 "" 14
 0
-1 54 0 "" 15
+1 77 0 "" 15
 0
-1 55 0 "" 21
+1 78 0 "" 21
 0
-1 56 0 "" 22
+1 79 0 "" 22
 0
-1 57 0 "" 0
+1 80 0 "" 0
 0
-1 58 0 "" 1
+1 81 0 "" 1
 0
-1 59 0 "" 25
+1 82 0 "" 25
 0
-1 60 0 "" 23
+1 83 0 "" 23
 0
-1 61 0 "" 20
+1 84 0 "" 20
 0
-1 62 0 "" 27
+1 85 0 "" 27
 0
-1 63 0 "" 28
+1 86 0 "" 28
 0
-1 64 0 "" 31
+1 87 0 "" 31
 0
-1 65 0 "" 32
+1 88 0 "" 32
 0
-1 66 0 "" 29
+1 89 0 "" 29
 0
-1 67 0 "" 30
+1 90 0 "" 30
 0
-1 68 0 "" 34
+1 91 0 "" 34
 0
-1 69 0 "" 33
+1 92 0 "" 33
 0
-1 70 0 "" 16
+1 93 0 "" 16
 0
-1 71 0 "" 17
+1 94 0 "" 17
 0
-1 72 0 "" 24
+1 95 0 "" 24
 0
-1 73 0 "" 19
+1 96 0 "" 19
 0
-1 74 0 "" 18
+1 97 0 "" 18
 0
 0
 LAYER, 2 
@@ -1178,7 +1346,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 0 "dateSelection" -1
-"objects/dateTimeWidget.pnl" 823 588 T 6 1 0 1 -31.19215029761904 33.83771740946332
+"objects/dateTimeWidget.pnl" 823 588 T 6 1 0 1 -31 34
 9
 "$bDateAndTime""TRUE"
 "$bEnabled""TRUE"
