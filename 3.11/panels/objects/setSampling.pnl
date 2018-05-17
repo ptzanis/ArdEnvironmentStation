@@ -135,7 +135,7 @@ LANG:1 3 Set
 {
   
   int sampling=spinTime.text();
-  dpSet(\"BME280.samplingTime\",sampling*60);
+  dpSet(\"BME280.samplingTime\",sampling*60/2);
 
 
   string dpe;
