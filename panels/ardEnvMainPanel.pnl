@@ -4,7 +4,7 @@
   <prop name="Name">
    <prop name="en_US.iso88591"></prop>
   </prop>
-  <prop name="Size">1220 952</prop>
+  <prop name="Size">1219 945</prop>
   <prop name="BackColor">_3DFace</prop>
   <prop name="RefPoint">30 23</prop>
   <prop name="InitAndTermRef">True</prop>
@@ -92,7 +92,7 @@ bool checkOrCreateDirectory(string folderPath)
     } 
 }
 
-bool exportData(string valueType, dyn_string channels, string start, string end, string folderPath) {
+bool exportData(string valueType, dyn_string channels, string start, string end, string folderPath,string startData,string endData) {
 
     dyn_dyn_anytype archivedPressure,archivedTemperature,archivedHumidity;
     string queryPressure,queryTemperature,queryHumidity, currentDate, filePath;
@@ -112,7 +112,7 @@ bool exportData(string valueType, dyn_string channels, string start, string end,
         
         file export;
         currentDate = formatTime(&quot;%d_%m_%y&quot;, getCurrentTime());
-        filePath = folderPath + valueType +  &quot;ArdEnvStation_&quot; + currentDate + &quot;.dat&quot;;
+        filePath = folderPath + valueType +  &quot;ArdEnvStation_&quot; + startData+&quot;_TO_&quot;+endData+&quot;.dat&quot;;
 
         
         if (isfile(filePath)) {
@@ -139,6 +139,54 @@ bool exportData(string valueType, dyn_string channels, string start, string end,
     return TRUE;
 }
 
+bool exportTempData(string valueType, dyn_string channels, string start, string end, string folderPath) {
+
+    dyn_dyn_anytype archivedPressure,archivedTemperature,archivedHumidity;
+    string queryPressure,queryTemperature,queryHumidity, currentDate, filePath;
+    
+
+    
+        queryPressure = &quot;SELECT ALL '_original.._stime', '_original.._value' FROM '&quot; + channels[1] + valueType + &quot;' TIMERANGE(\&quot;&quot; + start + &quot;\&quot;,\&quot;&quot; + end +&quot;\&quot;,1,0)&quot;;
+        queryTemperature = &quot;SELECT ALL '_original.._stime', '_original.._value' FROM '&quot; + channels[2] + valueType + &quot;' TIMERANGE(\&quot;&quot; + start + &quot;\&quot;,\&quot;&quot; + end +&quot;\&quot;,1,0)&quot;;
+        queryHumidity = &quot;SELECT ALL '_original.._stime', '_original.._value' FROM '&quot; + channels[3] + valueType + &quot;' TIMERANGE(\&quot;&quot; + start + &quot;\&quot;,\&quot;&quot; + end +&quot;\&quot;,1,0)&quot;;
+
+
+        
+        dpQuery(queryPressure, archivedPressure);
+        dpQuery(queryTemperature, archivedTemperature);
+        dpQuery(queryHumidity, archivedHumidity);
+
+        
+        file export;
+        currentDate = formatTime(&quot;%d_%m_%y&quot;, getCurrentTime());
+        filePath = folderPath + valueType +  &quot;temp&quot;+&quot;.dat&quot;;
+
+        
+        if (isfile(filePath)) {
+            popupMessage(&quot;_Ui_1&quot;, &quot;File Exists&quot;);
+            popupMessage(&quot;_Ui_2&quot;, &quot;File Exists&quot;);
+            popupMessage(&quot;_Ui_3&quot;, &quot;File Exists&quot;);
+            popupMessage(&quot;_Ui_4&quot;, &quot;File Exists&quot;);
+            popupMessage(&quot;_Ui_5&quot;, &quot;File Exists&quot;);
+            return FALSE;
+        }
+        else {
+            export = fopen(filePath, &quot;a&quot;);
+        }
+
+      fprintf(export, &quot;%s \n&quot;,&quot;Time&quot;+ &quot;\t&quot; +&quot;\t&quot; + &quot;\t&quot; +&quot;Pressure(kPa)&quot;+ &quot;\t&quot;+ &quot;Temperature(C)&quot;+&quot;\t&quot;+&quot;Humidity(%)&quot;);        
+        
+        for (int j = 3; j &lt;= dynlen(archivedTemperature); j++) { 
+            fprintf(export, &quot;%s \t %4.2f \t %2.2f \t \t %2.2f  \n&quot;, formatTime(&quot;%d/%m/%Y_%H:%M:%S&quot;, archivedTemperature[j][2]),archivedPressure[j][3],archivedTemperature[j][3],archivedHumidity[j][3]);
+        }
+
+        fclose(export);
+    
+               DebugN(&quot;Data file exported!&quot;);  
+    return TRUE;
+}
+
+
 string alertViaEmail(string recipient, string sender, string subject, string mainBody) {
  
     dyn_string emailContent;
@@ -156,6 +204,11 @@ string alertViaEmail(string recipient, string sender, string subject, string mai
     if (ret == 0)  status = &quot;Message sent&quot;;
     else status = &quot;Message sent failed&quot;;
     return status;
+}
+
+int runTerminal(string path)
+{
+  return system(&quot;sh &quot;+path);
 }
 
 
@@ -411,7 +464,7 @@ dpCreate(&quot;BME280&quot;,&quot;Arduino&quot;);
     <prop name="Font">
      <prop name="en_US.iso88591">Utopia,-1,24,5,75,0,0,0,0,0</prop>
     </prop>
-    <prop name="Location">834.0208333333337 390.5707632559702</prop>
+    <prop name="Location">834.0208333333336 390.5707632559702</prop>
     <prop name="Size">142 51</prop>
     <prop name="BorderStyle">Styled</prop>
     <prop name="Text">
@@ -791,7 +844,7 @@ void EP_setEnabledCB(string dp, bool boNewValue)
     <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
     <prop name="BorderZoomable">False</prop>
     <prop name="FillType">[solid]</prop>
-    <prop name="Geometry">2.6875 0 0 1.704168960947741 425.1458333333335 -44.03132196683192</prop>
+    <prop name="Geometry">2.6875 0 0 1.704168960947741 425.1458333333335 -44.03132196683191</prop>
     <prop name="BorderStyle">Normal</prop>
     <prop name="Location">130 210</prop>
     <prop name="Size">161 111</prop>
@@ -1043,7 +1096,7 @@ void EP_setBackColorCB(string dpSource, bool boNewValue)
    <properties>
     <prop name="serialId">44</prop>
     <prop name="Type"></prop>
-    <prop name="RefPoint">905.5231274801592 716.1703854273381</prop>
+    <prop name="RefPoint">829.5231274801592 716.1703854273381</prop>
     <prop name="Enable">True</prop>
     <prop name="Visible">True</prop>
     <prop name="ForeColor">_ButtonText</prop>
@@ -1057,7 +1110,7 @@ void EP_setBackColorCB(string dpSource, bool boNewValue)
     <prop name="Font">
      <prop name="en_US.iso88591">Utopia,-1,21,5,75,0,0,0,0,0</prop>
     </prop>
-    <prop name="Location">905.5231274801592 697.1703854273381</prop>
+    <prop name="Location">829.5231274801594 697.1703854273381</prop>
     <prop name="Size">140 51</prop>
     <prop name="BorderStyle">Styled</prop>
     <prop name="Text">
@@ -1076,9 +1129,55 @@ void EP_setBackColorCB(string dpSource, bool boNewValue)
 
    allChannels[1]=&quot;BME280.pressureMean&quot;;
    allChannels[2]=&quot;BME280.temperatureMean&quot;;
-   allChannels[3]=&quot;BME280.humidityMean&quot;;   
+   allChannels[3]=&quot;BME280.humidityMean&quot;;
+
+//===========================================================
+  
+  string dirPathProject=destFolderTextField.text();
+  
+   time startTime;
+    string startDateString, startTimeString, startString;
+    
+    string startDateTextBox = &quot;dateSelection.startDateField&quot;;
+    string startTimeTextBox = &quot;dateSelection.startTimeField&quot;;
+    
+    getValue(startDateTextBox, &quot;text&quot;, startDateString);
+    getValue(startTimeTextBox, &quot;text&quot;, startTimeString);
+
+    startString = startDateString + &quot; &quot; + startTimeString;    
+    
+    if (!fwGeneral_hasCorrectFormat(startString)) {
+        DebugN(&quot;The starting time provided is wrong, check again and retry.&quot;);
+        return -1;
+    }
+    
+    startTime = fwGeneral_stringToDate(startString);
+    startString = formatTime(&quot;%d_%m_%Y_%H_%M_%S&quot;, startTime);
+  
+    // 
+    
+     time endTime;
+    string endDateString, endTimeString, endString;
+ 
+    string endDateTextBox = &quot;dateSelection.endDateField&quot;;
+    string endTimeTextBox = &quot;dateSelection.endTimeField&quot;;
+    
+    getValue(endDateTextBox, &quot;text&quot;, endDateString);
+    getValue(endTimeTextBox, &quot;text&quot;, endTimeString);
+    
+    endString = endDateString + &quot; &quot; + endTimeString;
+    
+    if (!fwGeneral_hasCorrectFormat(endString)) {
+        DebugN(&quot;The ending time provided is wrong, check again and retry.&quot;);
+        return -1;
+    }
+    
+    endTime = fwGeneral_stringToDate(endString);
+    endString = formatTime(&quot;%d_%m_%Y_%H_%M_%S&quot;, endTime);
+    
+//===========================================================   
    
-    if (!exportData(&quot;&quot;, allChannels, start, end,dirPath)) 
+    if (!exportData(&quot;&quot;, allChannels, start, end,dirPath,startString,endString)) 
         DebugN(&quot;File exists in the specified directory. Please change directory or delete old files.&quot;);    
   
 }]]></script>
@@ -1172,7 +1271,7 @@ void EP_setBackColorCB(string dpSource, bool boNewValue)
     <prop name="Font">
      <prop name="en_US.iso88591">Sans Serif,-1,12,5,50,0,0,0,0,0</prop>
     </prop>
-    <prop name="Location">905.8286830357147 567.4084806654334</prop>
+    <prop name="Location">905.8286830357149 567.4084806654334</prop>
     <prop name="Size">241 34</prop>
     <prop name="BorderStyle">Normal</prop>
     <prop name="Editable">True</prop>
@@ -1182,7 +1281,7 @@ void EP_setBackColorCB(string dpSource, bool boNewValue)
     <script name="Initialize" isEscaped="1"><![CDATA[main()
 {
   string currentDate=formatTime(&quot;%d_%m_%y&quot;,getCurrentTime());
-  this.text(&quot;C:/&quot;+&quot;ArdEnvStation_Data_&quot;+currentDate+&quot;/&quot;);
+  this.text(PROJ_PATH+&quot;ArdEnvStation_Data/&quot;);
 }]]></script>
    </events>
   </shape>
@@ -1327,7 +1426,7 @@ void EP_setBackColorCB(string dpSource, bool boNewValue)
     <prop name="Font">
      <prop name="en_US.iso88591">Utopia,-1,24,5,75,0,0,0,0,0</prop>
     </prop>
-    <prop name="Location">980.2430555555559 38.7222222222222</prop>
+    <prop name="Location">980.243055555556 38.7222222222222</prop>
     <prop name="Size">103 34</prop>
     <prop name="BorderStyle">Styled</prop>
     <prop name="Text">
@@ -1359,7 +1458,7 @@ PanelOff();
     <prop name="Font">
      <prop name="en_US.iso88591">Utopia,-1,15,5,75,0,0,0,0,0</prop>
     </prop>
-    <prop name="Location">903.7740441161434 148.8609679311092</prop>
+    <prop name="Location">903.7740441161435 148.8609679311092</prop>
     <prop name="Size">182 27</prop>
     <prop name="BorderStyle">Normal</prop>
     <prop name="Editable">True</prop>
@@ -1486,11 +1585,106 @@ PanelOff();
     <prop name="Size">491 428</prop>
    </properties>
   </shape>
+  <shape Name="PUSH_BUTTON9" shapeType="PUSH_BUTTON" layerId="0">
+   <properties>
+    <prop name="serialId">174</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">1016.039341517858 716.0037187606714</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_ButtonText</prop>
+    <prop name="BackColor">_Button</prop>
+    <prop name="TabOrder">63</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,21,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">1016.039341517858 697.0037187606714</prop>
+    <prop name="Size">141 51</prop>
+    <prop name="BorderStyle">Styled</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Export Plot</prop>
+    </prop>
+   </properties>
+   <events>
+    <script name="Clicked" isEscaped="1"><![CDATA[main()
+{
+  
+   string start = getStartTime();
+   string end = getEndTime();  
+   string dirPath = PROJ_PATH+&quot;temp/&quot;;
+      // checkOrCreateDirectory(dirPath);
+   dyn_string allChannels;
+
+   allChannels[1]=&quot;BME280.pressureMean&quot;;
+   allChannels[2]=&quot;BME280.temperatureMean&quot;;
+   allChannels[3]=&quot;BME280.humidityMean&quot;;   
+   
+    if (!exportTempData(&quot;&quot;, allChannels, start, end,dirPath)) 
+        DebugN(&quot;File exists in the specified directory. Please change directory or delete old files.&quot;);  
+  
+    
+  runTerminal(PROJ_PATH+&quot;scripts/arduino.sh&quot;);
+  
+  //===========================================================
+  
+  string dirPathProject=destFolderTextField.text();
+  
+   time startTime;
+    string startDateString, startTimeString, startString;
+    
+    string startDateTextBox = &quot;dateSelection.startDateField&quot;;
+    string startTimeTextBox = &quot;dateSelection.startTimeField&quot;;
+    
+    getValue(startDateTextBox, &quot;text&quot;, startDateString);
+    getValue(startTimeTextBox, &quot;text&quot;, startTimeString);
+
+    startString = startDateString + &quot; &quot; + startTimeString;    
+    
+    if (!fwGeneral_hasCorrectFormat(startString)) {
+        DebugN(&quot;The starting time provided is wrong, check again and retry.&quot;);
+        return -1;
+    }
+    
+    startTime = fwGeneral_stringToDate(startString);
+    startString = formatTime(&quot;%d_%m_%Y_%H_%M_%S&quot;, startTime);
+    
+     time endTime;
+    string endDateString, endTimeString, endString;
+ 
+    string endDateTextBox = &quot;dateSelection.endDateField&quot;;
+    string endTimeTextBox = &quot;dateSelection.endTimeField&quot;;
+    
+    getValue(endDateTextBox, &quot;text&quot;, endDateString);
+    getValue(endTimeTextBox, &quot;text&quot;, endTimeString);
+    
+    endString = endDateString + &quot; &quot; + endTimeString;
+    
+    if (!fwGeneral_hasCorrectFormat(endString)) {
+        DebugN(&quot;The ending time provided is wrong, check again and retry.&quot;);
+        return -1;
+    }
+    
+    endTime = fwGeneral_stringToDate(endString);
+    endString = formatTime(&quot;%d_%m_%Y_%H_%M_%S&quot;, endTime);
+    
+//===========================================================
+  
+  system(&quot;mv &quot;+PROJ_PATH+&quot;temp/arduino.png &quot;+dirPathProject+&quot;ArdEnvStation_Plot_&quot; + startString+&quot;_TO_&quot;+endString+&quot;.png&quot;);
+
+  
+}]]></script>
+   </events>
+  </shape>
   <reference parentSerial="-1" Name="dateSelection" referenceId="0">
    <properties>
     <prop name="FileName">objects/dateTimeWidget.pnl</prop>
     <prop name="Location">823 588</prop>
-    <prop name="Geometry">1 0 0 1 -27.17131696428521 33.4084806654335</prop>
+    <prop name="Geometry">1 0 0 1 -26.99999999999996 33</prop>
     <prop name="TabOrder">49</prop>
     <prop name="dollarParameters">
      <prop name="dollarParameter">
