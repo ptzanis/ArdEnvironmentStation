@@ -37,7 +37,7 @@ void setup() {
   
   myArduinoMEGA.setup(); 
     
-
+  myArduinoMEGA.addItem("_",opc_read, opc_int, readwrite_analog);
   myArduinoMEGA.addItem("A0",opc_read, opc_int, readwrite_analog);
   myArduinoMEGA.addItem("A1",opc_read, opc_int, readwrite_analog);
   myArduinoMEGA.addItem("A2",opc_read, opc_int, readwrite_analog);
