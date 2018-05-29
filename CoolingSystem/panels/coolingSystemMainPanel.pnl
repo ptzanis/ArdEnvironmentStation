@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<panel version="14">
+ <properties>
+  <prop name="Name">
+   <prop name="en_US.iso88591"></prop>
+  </prop>
+  <prop name="Size">1233 843</prop>
+  <prop name="BackColor">_3DFace</prop>
+  <prop name="RefPoint">30 23</prop>
+  <prop name="InitAndTermRef">True</prop>
+  <prop name="SendClick">False</prop>
+  <prop name="RefFileName"></prop>
+  <prop name="DPI">96</prop>
+  <prop name="layoutType">None</prop>
+ </properties>
+ <events>
+  <script name="ScopeLib" isEscaped="1"><![CDATA[public int checkDPTexistance(string dptcheck)
+{
+  dyn_string check=dpTypes(dptcheck);
+  
+if(check==&quot;&quot;)
+  {
+ //  DebugN(&quot;DPT doesn't exist!&quot;);
+   return -1;
+  }  
+else
+  {
+ //  DebugN(&quot;DPT has been found!&quot;);
+   return 0;
+  }  
+
+
+
+}
+
+]]></script>
+  <script name="Close" isEscaped="1"><![CDATA[main()
+{
+  int i;
+}]]></script>
+  <script name="Initialize" isEscaped="1"><![CDATA[main()
+{
+  
+  if(checkDPTexistance(&quot;ArduinoAnalog&quot;)==0)
+  {    
+     DebugN(&quot;*Arduino Analog WAS Ready!&quot;);
+  }
+  else
+  {
+   
+  
+ 
+   dyn_dyn_string elements;
+  dyn_dyn_int types;
+  
+  // Elements // 
+
+elements[1]=makeDynString(&quot;ArduinoAnalog&quot;,&quot;&quot;,&quot;&quot;);
+
+elements[2]=makeDynString(&quot;&quot;,&quot;Channel0&quot;,&quot;&quot;);
+elements[3]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[4]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[5]=makeDynString(&quot;&quot;,&quot;Channel1&quot;,&quot;&quot;);
+elements[6]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[7]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[8]=makeDynString(&quot;&quot;,&quot;Channel2&quot;,&quot;&quot;);
+elements[9]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[10]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[11]=makeDynString(&quot;&quot;,&quot;Channel3&quot;,&quot;&quot;);
+elements[12]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[13]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[14]=makeDynString(&quot;&quot;,&quot;Channel4&quot;,&quot;&quot;);
+elements[15]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[16]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[17]=makeDynString(&quot;&quot;,&quot;Channel5&quot;,&quot;&quot;);
+elements[18]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[19]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[20]=makeDynString(&quot;&quot;,&quot;Channel6&quot;,&quot;&quot;);
+elements[21]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[22]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[23]=makeDynString(&quot;&quot;,&quot;Channel7&quot;,&quot;&quot;);
+elements[24]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[25]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[26]=makeDynString(&quot;&quot;,&quot;Channel8&quot;,&quot;&quot;);
+elements[27]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[28]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[29]=makeDynString(&quot;&quot;,&quot;Channel9&quot;,&quot;&quot;);
+elements[30]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[31]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[32]=makeDynString(&quot;&quot;,&quot;Channel10&quot;,&quot;&quot;);
+elements[33]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[34]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[35]=makeDynString(&quot;&quot;,&quot;Channel11&quot;,&quot;&quot;);
+elements[36]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[37]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[38]=makeDynString(&quot;&quot;,&quot;Channel12&quot;,&quot;&quot;);
+elements[39]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[40]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[41]=makeDynString(&quot;&quot;,&quot;Channel13&quot;,&quot;&quot;);
+elements[42]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[43]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[44]=makeDynString(&quot;&quot;,&quot;Channel14&quot;,&quot;&quot;);
+elements[45]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[46]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+
+elements[47]=makeDynString(&quot;&quot;,&quot;Channel15&quot;,&quot;&quot;);
+elements[48]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;actual&quot;);
+elements[49]=makeDynString(&quot;&quot;,&quot;&quot;,&quot;vMon&quot;);
+//// Types  /////
+
+types[1]=makeDynInt(DPEL_STRUCT);
+
+types[2]=makeDynInt(0,DPEL_STRUCT);
+types[3]=makeDynInt(0,0,DPEL_INT);
+types[4]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[5]=makeDynInt(0,DPEL_STRUCT);
+types[6]=makeDynInt(0,0,DPEL_INT);
+types[7]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[8]=makeDynInt(0,DPEL_STRUCT);
+types[9]=makeDynInt(0,0,DPEL_INT);
+types[10]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[11]=makeDynInt(0,DPEL_STRUCT);
+types[12]=makeDynInt(0,0,DPEL_INT);
+types[13]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[14]=makeDynInt(0,DPEL_STRUCT);
+types[15]=makeDynInt(0,0,DPEL_INT);
+types[16]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[17]=makeDynInt(0,DPEL_STRUCT);
+types[18]=makeDynInt(0,0,DPEL_INT);
+types[19]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[20]=makeDynInt(0,DPEL_STRUCT);
+types[21]=makeDynInt(0,0,DPEL_INT);
+types[22]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[23]=makeDynInt(0,DPEL_STRUCT);
+types[24]=makeDynInt(0,0,DPEL_INT);
+types[25]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[26]=makeDynInt(0,DPEL_STRUCT);
+types[27]=makeDynInt(0,0,DPEL_INT);
+types[28]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[29]=makeDynInt(0,DPEL_STRUCT);
+types[30]=makeDynInt(0,0,DPEL_INT);
+types[31]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[32]=makeDynInt(0,DPEL_STRUCT);
+types[33]=makeDynInt(0,0,DPEL_INT);
+types[34]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[35]=makeDynInt(0,DPEL_STRUCT);
+types[36]=makeDynInt(0,0,DPEL_INT);
+types[37]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[38]=makeDynInt(0,DPEL_STRUCT);
+types[39]=makeDynInt(0,0,DPEL_INT);
+types[40]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[41]=makeDynInt(0,DPEL_STRUCT);
+types[42]=makeDynInt(0,0,DPEL_INT);
+types[43]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[44]=makeDynInt(0,DPEL_STRUCT);
+types[45]=makeDynInt(0,0,DPEL_INT);
+types[46]=makeDynInt(0,0,DPEL_FLOAT);
+
+types[47]=makeDynInt(0,DPEL_STRUCT);
+types[48]=makeDynInt(0,0,DPEL_INT);
+types[49]=makeDynInt(0,0,DPEL_FLOAT);
+
+dpTypeCreate(elements,types);
+
+  
+dpCreate(&quot;Analog&quot;,&quot;ArduinoAnalog&quot;);
+  
+  
+  
+ 
+  
+
+
+  
+  for(int i=0;i&lt;=15;i++)
+  {
+    string analogActual=&quot;Analog.Channel&quot;+i+&quot;.actual:_original.._value&quot;;
+    dyn_string dynanalogActual=makeDynString(analogActual);
+    dpSetWait(&quot;Analog.Channel&quot;+i+&quot;.vMon:_dp_fct.._type&quot;,60,
+              &quot;Analog.Channel&quot;+i+&quot;.vMon:_dp_fct.._param&quot;,dynanalogActual,              
+              &quot;Analog.Channel&quot;+i+&quot;.vMon:_dp_fct.._fct&quot;,&quot;p1*5.0/1023.0&quot;);
+    
+    dpSetAlias(getSystemName()+&quot;Analog.Channel&quot;+i+&quot;.vMon&quot;,&quot;CH &quot;+i);
+    
+  }
+  
+    DebugN(&quot;*********Arduino Analog DPT IS Ready!!!!&quot;);
+  
+  
+}
+  
+  
+  string dpes;
+  dyn_string exceptionInfo;
+ 
+  
+  dpes=getSystemName();  
+  int rowAdd=210;
+  
+  for(int i=0;i&lt;=15;i++)
+  {
+  addSymbol(myModuleName(),myPanelName(),&quot;objects/channelArdAnalog.pnl&quot;,&quot;CH&quot;+i,
+            makeDynString(&quot;$dpe:&quot;+&quot;Analog.Channel&quot;+i,&quot;$x:&quot;+100,&quot;$y:&quot;+rowAdd,&quot;$alias:&quot;+&quot;CH &quot;+i),100+2,rowAdd,0,.95,1);
+  rowAdd=rowAdd+35;
+  }
+  
+  
+  
+}
+  
+/*
+  setup();
+} 
+  
+  void setup(){
+   
+  string dpes;
+  dyn_string exceptionInfo;
+ 
+  
+  dpes=getSystemName();  
+  
+  addSymbol(myModuleName(),myPanelName(),&quot;objects/channelArdEnv.pnl&quot;,&quot;MainPanel&quot;,
+            makeDynString(&quot;$dpe:&quot;+dpes,&quot;$x:&quot;+500,&quot;$y:&quot;+231,&quot;$alias:&quot;+&quot;Pressure&quot;,&quot;$purpose:&quot;+&quot;pressure&quot;),500+2,231,0,.95,1);  
+  
+  addSymbol(myModuleName(),myPanelName(),&quot;objects/channelArdEnv.pnl&quot;,&quot;MainPanel&quot;,
+            makeDynString(&quot;$dpe:&quot;+dpes,&quot;$x:&quot;+500,&quot;$y:&quot;+510,&quot;$alias:&quot;+&quot;Temp&quot;,&quot;$purpose:&quot;+&quot;temperature&quot;),500+2,510,0,.95,1);
+  
+  
+  addSymbol(myModuleName(),myPanelName(),&quot;objects/channelArdEnv.pnl&quot;,&quot;MainPanel&quot;,
+            makeDynString(&quot;$dpe:&quot;+dpes,&quot;$x:&quot;+500,&quot;$y:&quot;+789,&quot;$alias:&quot;+&quot;Humidity&quot;,&quot;$purpose:&quot;+&quot;humidity&quot;),500+2,789,0,.95,1);
+  //y=y+30;
+//addSymbol(myModuleName(),myPanelName(),&quot;GasObjects/channel.pnl&quot;,&quot;channel_pnl_Ref&quot;+node,
+           // makeDynString(&quot;$node:&quot;+node,&quot;$dpe:&quot;+dpes,&quot;$x:&quot;+x,&quot;$y:&quot;+y,&quot;$alias:&quot;+massOutletAliasBare,&quot;$purpose:&quot;+&quot;massOutletMonitor&quot;),x+2,y,0,.95,1);
+
+
+  
+   fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), &quot;BME280_Pressure&quot;,makeDynString(&quot;BME280.pressureMon&quot;),
+          22, 135, exceptionInfo, &quot;_BME_Pressure&quot;, 0.9, 0.9);
+   fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), &quot;BME280_Temperature&quot;,makeDynString(&quot;BME280.temperatureMon&quot;),
+          22, 414, exceptionInfo, &quot;_BME_Temperature&quot;, 0.9, 0.9);
+    fwTrending_addQuickFaceplate(myModuleName(),myPanelName(), &quot;BME280_Humidity&quot;,makeDynString(&quot;BME280.humidityMon&quot;),
+          22, 693, exceptionInfo, &quot;_BME_Humidity&quot;, 0.9, 0.9);
+
+ string dpe;
+  dyn_string dyn_dpe;
+  int dpfuct=9;
+  dyn_string dyn_dpfuct;
+
+  int timeInterval;
+  dpGet(&quot;BME280.samplingTime&quot;,timeInterval);
+
+
+
+      dpe=getSystemName()+&quot;BME280.pressureMon:_original.._value&quot;;
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+&quot;BME280.pressureMean:_dp_fct.._type&quot;,63,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._param&quot;,dyn_dpe,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._stat_type&quot;,dyn_dpfuct,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._interval&quot;,timeInterval,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._delay&quot;,0,
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._read_archive&quot;,0,       
+            getSystemName()+&quot;BME280.pressureMean:_dp_fct.._fct&quot;,&quot;p1&quot;);  
+ 
+ dpe=getSystemName()+&quot;BME280.temperatureMon:_original.._value&quot;;
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._type&quot;,63,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._param&quot;,dyn_dpe,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._stat_type&quot;,dyn_dpfuct,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._interval&quot;,timeInterval,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._delay&quot;,0,
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._read_archive&quot;,0,       
+            getSystemName()+&quot;BME280.temperatureMean:_dp_fct.._fct&quot;,&quot;p1&quot;); 
+ 
+ dpe=getSystemName()+&quot;BME280.humidityMon:_original.._value&quot;;
+      dyn_dpe=makeDynString(dpe);
+      dyn_dpfuct=makeDynString(dpfuct);
+      
+  dpSetWait(getSystemName()+&quot;BME280.humidityMean:_dp_fct.._type&quot;,63,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._param&quot;,dyn_dpe,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._stat_type&quot;,dyn_dpfuct,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._interval&quot;,timeInterval,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._delay&quot;,0,
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._read_archive&quot;,0,       
+            getSystemName()+&quot;BME280.humidityMean:_dp_fct.._fct&quot;,&quot;p1&quot;);  
+  
+  
+  */
+  
+
+   
+]]></script>
+ </events>
+ <shapes>
+  <shape Name="RECTANGLE1" shapeType="RECTANGLE" layerId="0">
+   <properties>
+    <prop name="serialId">1</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">40 30</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">{0,0,0}</prop>
+    <prop name="BackColor">{193,193,193}</prop>
+    <prop name="TabOrder">1</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[solid]</prop>
+    <prop name="Geometry">1.431578947368421 0 0 1.111111111111111 -67.26315789473685 -33.33333333333334</prop>
+    <prop name="BorderStyle">Normal</prop>
+    <prop name="Location">40 30</prop>
+    <prop name="Size">951 91</prop>
+    <prop name="CornerRadius">0</prop>
+    <prop name="Transformable">True</prop>
+   </properties>
+  </shape>
+  <shape Name="PRIMITIVE_TEXT1" shapeType="PRIMITIVE_TEXT" layerId="0">
+   <properties>
+    <prop name="serialId">3</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">123 31.5</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">FwAtlasBg</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">2</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Location">123 31.5</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,32,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">CoolingSystemLV</prop>
+    </prop>
+    <prop name="Distance">2</prop>
+    <prop name="BorderOffset">2</prop>
+    <prop name="Bordered">False</prop>
+    <prop name="Fit">True</prop>
+    <prop name="Transformable">False</prop>
+    <prop name="TextFormat">[0s,,,ALIGNMENT_BEGINNING]</prop>
+   </properties>
+  </shape>
+  <shape Name="ELLIPSE1" shapeType="ELLIPSE" layerId="0">
+   <properties>
+    <prop name="serialId">4</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">0 0</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">{0,0,0}</prop>
+    <prop name="BackColor">{255,255,255}</prop>
+    <prop name="TabOrder">3</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">True</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType" SharedPixmap="1">[pattern,[fit,any,pictures/logoPyrforos_highRes.bmp]]</prop>
+    <prop name="Geometry">1 0 0 1 9.157894736842081 5</prop>
+    <prop name="Center">45.3421052631579 45</prop>
+    <prop name="X-Radius">45.5</prop>
+    <prop name="Y-Radius">45</prop>
+   </properties>
+  </shape>
+  <shape Name="PRIMITIVE_TEXT5" shapeType="PRIMITIVE_TEXT" layerId="0">
+   <properties>
+    <prop name="serialId">119</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">123 60.25</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">FwAtlasBg</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">54</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Location">123 60.25</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,19,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">v 1.0</prop>
+    </prop>
+    <prop name="Distance">2</prop>
+    <prop name="BorderOffset">2</prop>
+    <prop name="Bordered">False</prop>
+    <prop name="Fit">True</prop>
+    <prop name="Transformable">False</prop>
+    <prop name="TextFormat">[0s,,,ALIGNMENT_BEGINNING]</prop>
+   </properties>
+  </shape>
+  <shape Name="CLOCK1" shapeType="CLOCK" layerId="0">
+   <properties>
+    <prop name="serialId">121</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">1109.891369047619 30.03125</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">_Window</prop>
+    <prop name="TabOrder">56</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Sans Serif,-1,12,5,50,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">1109.891369047619 30.03125</prop>
+    <prop name="Size">101 52</prop>
+    <prop name="BorderStyle">3D</prop>
+    <prop name="Digital">True</prop>
+    <prop name="ShowDate">True</prop>
+    <prop name="ShowTime">True</prop>
+    <prop name="SingleLine">False</prop>
+    <prop name="TimeFirst">True</prop>
+    <prop name="DateFormat">%d/%m/%Y</prop>
+    <prop name="TimeFormat">%X</prop>
+    <prop name="DateFont">
+     <prop name="en_US.iso88591">Utopia,-1,16,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="TimeFont">
+     <prop name="en_US.iso88591">Utopia,-1,16,5,75,0,0,0,0,0</prop>
+    </prop>
+   </properties>
+  </shape>
+  <shape Name="PUSH_BUTTON8" shapeType="PUSH_BUTTON" layerId="0">
+   <properties>
+    <prop name="serialId">122</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">980.2430555555551 51.24877089478855</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_ButtonText</prop>
+    <prop name="BackColor">_Button</prop>
+    <prop name="TabOrder">57</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,24,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">980.243055555556 38.7222222222222</prop>
+    <prop name="Size">103 34</prop>
+    <prop name="BorderStyle">Styled</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Exit</prop>
+    </prop>
+   </properties>
+   <events>
+    <script name="Clicked" isEscaped="1"><![CDATA[main()
+{
+PanelOff();
+}]]></script>
+   </events>
+  </shape>
+  <shape Name="FRAME1" shapeType="FRAME" layerId="0">
+   <properties>
+    <prop name="serialId">198</prop>
+    <prop name="Type"></prop>
+    <prop name="RefPoint">20 113</prop>
+    <prop name="Enable">True</prop>
+    <prop name="Visible">True</prop>
+    <prop name="ForeColor">_WindowText</prop>
+    <prop name="BackColor">{0,0,0}</prop>
+    <prop name="TabOrder">64</prop>
+    <prop name="ToolTipText">
+     <prop name="en_US.iso88591"></prop>
+    </prop>
+    <prop name="layoutAlignment">AlignNone</prop>
+    <prop name="snapMode">Point</prop>
+    <prop name="DashBackColor">_Transparent</prop>
+    <prop name="AntiAliased">False</prop>
+    <prop name="LineType">[solid,oneColor,JoinBevel,CapProjecting,1]</prop>
+    <prop name="BorderZoomable">False</prop>
+    <prop name="FillType">[outline]</prop>
+    <prop name="Geometry">0.6959183673469401 0 0 1.658860265417643 -4.91836734693949 -65.7845433255273</prop>
+    <prop name="BorderStyle">3D</prop>
+    <prop name="Text">
+     <prop name="en_US.iso88591">Channels</prop>
+    </prop>
+    <prop name="Font">
+     <prop name="en_US.iso88591">Utopia,-1,19,5,75,0,0,0,0,0</prop>
+    </prop>
+    <prop name="Location">20 113</prop>
+    <prop name="Size">491 428</prop>
+   </properties>
+  </shape>
+ </shapes>
+</panel>
