@@ -425,7 +425,7 @@ E E 0 1 1 2 1 E U  2  1 0  "pictures/logoPyrforos_highRes.png" 4294967295 E 54 5
 13 6
 "PUSH_BUTTON1"
 ""
-1 830 410.0000000000001 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 830 408.0026894283492 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -436,7 +436,7 @@ LANG:1 0
 0
 1
 LANG:1 27 Utopia,-1,24,5,75,0,0,0,0,0
-0  828 389 973 444
+0  828 387 973 442
 
 T 
 1
@@ -444,7 +444,8 @@ LANG:1 5 Start
 "main()
 {
   
-   string archiveClassName = \"GTS_ARCHIVE_BB5\";
+  // string archiveClassName = \"GTS_ARCHIVE_BB5\";
+  string archiveClassName =  \"05) State archive\";
     int archiveType = DPATTR_ARCH_PROC_SIMPLESM;
     int smoothProcedure = DPATTR_TIME_SMOOTH;
     //    int smoothProcedure = DPATTR_TIME_AND_VALUE_SMOOTH;
@@ -460,7 +461,10 @@ LANG:1 5 Start
      
      archivedDpes[1]=\"BME280.pressureMean\";
      archivedDpes[2]=\"BME280.temperatureMean\";
-     archivedDpes[3]=\"BME280.humidityMean\";   
+     archivedDpes[3]=\"BME280.humidityMean\"; 
+     archivedDpes[4]=\"BME280.pressureMon\";
+     archivedDpes[5]=\"BME280.temperatureMon\";
+     archivedDpes[6]=\"BME280.humidityMon\";   
      
      for (int i = 1; i<=dynlen(archivedDpes); i++) {
 
@@ -550,7 +554,10 @@ LANG:1 4 Stop
   dyn_string archivedDpes;
      archivedDpes[1]=\"BME280.pressureMean\";
      archivedDpes[2]=\"BME280.temperatureMean\";
-     archivedDpes[3]=\"BME280.humidityMean\";  
+     archivedDpes[3]=\"BME280.humidityMean\"; 
+     archivedDpes[4]=\"BME280.pressureMon\";
+     archivedDpes[5]=\"BME280.temperatureMon\";
+     archivedDpes[6]=\"BME280.humidityMon\";   
   
   dyn_string exceptionInfo;
   
