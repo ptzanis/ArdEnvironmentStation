@@ -7,6 +7,9 @@
 
 OPCSerial myArduinoMEGA;
 
+opcAccessRights analog_status_input[1];
+
+
 #define SEALEVELPRESSURE_HPA (1013.25)
 
 
@@ -23,6 +26,28 @@ float OPCoperation(const char *itemID, const opcOperation opcOP, const float val
 }
 float callbackHumidity(const char *itemID, const opcOperation opcOP, const float value){
   return bme.readHumidity();
+}
+
+int readwrite_analog(const char *itemID, const opcOperation opcOP, const int value) 
+{
+  byte port;
+    
+  OPCItemType aOPCItem = myArduinoMEGA.getOPCItem(itemID);                     
+
+  port = atoi(&itemID[1]);
+           
+  if (opcOP == opc_opread) {
+    if ((aOPCItem.opcAccessRight == opc_read) || (aOPCItem.opcAccessRight == opc_readwrite)) {
+      
+      if (analog_status_input[port] != opc_read) {
+        pinMode(port, INPUT);
+        analog_status_input[port] = opc_read;
+      }
+    
+      return analogRead(port);
+    }
+  } 
+  
 }
 
 
@@ -44,6 +69,7 @@ pinMode(LED,OUTPUT);
   myArduinoMEGA.addItem("BME280.Pressure",opc_read, opc_float, callbackPressure);
   myArduinoMEGA.addItem("BME280.Humidity",opc_read, opc_float, callbackHumidity);
   myArduinoMEGA.addItem("BME280.ArduinoOperation",opc_read, opc_float, OPCoperation);
+  myArduinoMEGA.addItem("A0",opc_read, opc_int, readwrite_analog);
 
 
 
